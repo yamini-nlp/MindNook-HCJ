@@ -124,7 +124,7 @@ This dual-layer design ensures graceful degradation: if the LLM call fails, core
 | Framework Layer | Description | Status |
 |---|---|---|
 | L1 — Sentiment Detection | Polarity classification via LLM + client-side lexicon | ✅ Implemented |
-| L2 — Pragmatic Analysis | Speech act classification | 📋 Planned |
+| L2 — Pragmatic Analysis | Speech act classification | 📋 Ongoing |
 | L3 — Temporal Pattern Recognition | LSTM-based sentiment trend modeling | 📋 Planned |
 | L4 — Goal Alignment | Mapping detected patterns to user goals | 📋 Planned |
 | L5 — Utility-Based Action Selection | Optimal action under asymmetric intervention costs | 📋 Planned |
