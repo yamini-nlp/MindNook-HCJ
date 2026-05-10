@@ -2,26 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="canvas.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="personal_baseline.js"></script>
     <title>MindNook | Canvas Editor</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#1b2e2b;
+            --bg2:#152422;
+            --bg3:#0d1a18;
+            --card:#1f3430;
+            --card2:#243b37;
+            --border:rgba(217,197,178,0.12);
+            --border2:rgba(217,197,178,0.22);
+            --gold:#d9c5b2;
+            --gold2:#c9a882;
+            --gold3:#e8d8c8;
+            --text:#f0ece2;
+            --text2:rgba(240,236,226,0.65);
+            --text3:rgba(240,236,226,0.38);
+            --sage:#7aad8f;
+            --sage2:#4e8a68;
+            --teal:#5bc4a8;
+            --teal2:#2e8c70;
+            --rose:#c47a8a;
+            --rose2:#9e4e60;
+            --amber:#c4963a;
+            --amber2:#a87828;
+        }
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+        .canvas-picker-view{background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:80px 20px;color:var(--text)}
+        .picker-headline{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:400;letter-spacing:1px;line-height:1.1;margin-bottom:8px;text-align:center}
+        .picker-headline em{font-style:italic;color:var(--gold2)}
+        .picker-sub{color:var(--text2);font-size:0.9rem;letter-spacing:0.3px;margin-bottom:10px}
+        .page-title-rule{width:40px;height:2px;background:var(--gold2);border-radius:2px;margin:10px auto 48px}
+        .canvas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:900px;width:100%}
+        .canvas-square{padding:28px 15px;background:var(--card);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);position:relative;overflow:hidden}
+        .canvas-square::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;background:transparent;transition:background 0.3s}
+        .canvas-square:hover{background:var(--card2);transform:translateY(-4px);border-color:var(--border2)}
+        .canvas-square:hover::before{background:var(--teal)}
+        .canvas-square.active{background:var(--card2);border-color:var(--gold2)}
+        .canvas-square.active::before{background:var(--gold2)}
+        .canvas-square-icon{font-size:2rem}
+        .canvas-square p{font-size:0.8rem;color:var(--text2);letter-spacing:0.5px;font-family:'DM Sans',sans-serif;font-weight:400;text-align:center}
+        .canvas-square.active p{color:var(--gold)}
+        .picker-footer-nav{margin-top:48px;display:flex;gap:14px;align-items:center}
+        .nav-btn{padding:10px 28px;border-radius:50px;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;letter-spacing:0.5px}
+        .nav-btn.secondary{background:transparent;border:1px solid var(--border2);color:var(--text2);text-decoration:none;display:inline-block}
+        .nav-btn.secondary:hover{background:rgba(217,197,178,0.08);color:var(--text);border-color:var(--gold)}
+        .nav-btn.primary{background:var(--gold);color:var(--bg3);border:none;font-weight:500}
+        .nav-btn.primary:hover{background:var(--gold3)}
+        .nav-btn.primary.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed;border:1px solid var(--border)}
+        .editor-view{min-height:100vh;background:var(--bg);padding-bottom:50px}
+        .editor-top-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 60px;border-bottom:1px solid var(--border)}
+        .nav-action-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:8px 20px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.25s;letter-spacing:0.5px}
+        .nav-action-btn:hover{background:rgba(217,197,178,0.08);color:var(--text)}
+        .nav-action-btn.primary{background:var(--gold);color:var(--bg3);border-color:var(--gold);font-weight:500}
+        .nav-action-btn.primary:hover{background:var(--gold3)}
+        .canvas-badge{font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--gold2);opacity:0.9;letter-spacing:1px}
+        .paper-container{display:flex;flex-direction:column;align-items:center;padding:32px 20px}
+        .ql-toolbar.ql-snow{background:var(--card)!important;border:1px solid var(--border2)!important;border-radius:50px!important;padding:8px 24px!important;margin-bottom:24px;box-shadow:none;display:flex;justify-content:center;width:fit-content}
+        .ql-toolbar.ql-snow .ql-stroke{stroke:var(--text2)!important}
+        .ql-toolbar.ql-snow .ql-fill{fill:var(--text2)!important}
+        .ql-toolbar.ql-snow button:hover .ql-stroke,.ql-toolbar.ql-snow button.ql-active .ql-stroke{stroke:var(--gold)!important}
+        .ql-toolbar.ql-snow button:hover .ql-fill,.ql-toolbar.ql-snow button.ql-active .ql-fill{fill:var(--gold)!important}
+        .ql-toolbar.ql-snow .ql-picker-label{color:var(--text2)!important}
+        .ql-toolbar.ql-snow .ql-picker-label:hover{color:var(--gold)!important}
+        .ql-toolbar.ql-snow .ql-picker-options{background:var(--card2)!important;border:1px solid var(--border2)!important;border-radius:12px!important;color:var(--text)!important}
+        .ql-toolbar.ql-snow .ql-picker-item{color:var(--text2)!important}
+        .ql-toolbar.ql-snow .ql-picker-item:hover{color:var(--gold)!important;background:rgba(217,197,178,0.08)!important}
+        .ql-container.ql-snow{border:none!important;width:100%;max-width:800px;margin:0 auto}
+        .ql-editor{background-color:#fff!important;min-height:75vh;padding:50px!important;box-shadow:0 4px 40px rgba(0,0,0,0.3);border-radius:4px;font-family:'Times New Roman',serif!important;font-size:1.1rem!important;color:#333!important}
+        .theme-floral .ql-editor{background-color:#f5c9d7!important;background-image:url('https://www.transparenttextures.com/patterns/rose-petals.png')!important}
+        .theme-ruled .ql-editor{background-image:linear-gradient(#e0e0e0 1px,transparent 1px)!important;background-size:100% 3rem!important;line-height:3rem!important;background-color:#fffaf0!important}
+        .theme-midnight .ql-editor{background-color:#001f3f!important;color:#77ffff!important;text-shadow:0 0 5px #77ffff,0 0 10px #77ffff,0 0 20px #00d2ff}
+        .editor-view.theme-parchment .ql-editor{background-color:#f4e4bc!important;background-image:url('https://www.transparenttextures.com/patterns/parchment.png')!important;color:#5f4b32!important}
+        .theme-lavender .ql-editor{background-color:#e6e6fa!important;background-image:radial-gradient(#d8bfd8 15%,transparent 16%),radial-gradient(#d8bfd8 15%,transparent 16%)!important;background-size:40px 40px!important;color:#4b0082!important}
+        .theme-minimal .ql-editor{background-color:#ffffff!important;color:#333!important}
+        .theme-matcha .ql-editor{background:linear-gradient(180deg,#d1e2c4 0%,#f0f7ea 20%,#ffffff 100%)!important;color:#3e5a2e!important;border:2px solid #a8c69f!important}
+        .theme-sunset .ql-editor{background:linear-gradient(180deg,#ffef96 0%,#ffb458 50%,#f96161 100%)!important;color:#fffaf0!important}
+        .theme-noir .ql-editor{background-color:#000000!important;color:#d4af37!important;font-family:'Snell Roundhand',cursive!important}
+        .theme-ocean .ql-editor{background:linear-gradient(180deg,#001f3f 0%,#003366 50%,#005b96 100%)!important;color:#e0f7fa!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="times"]::before{content:"Times New Roman"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="apple-chancery"]::before{content:"Apple Chancery"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="bradley-hand"]::before{content:"Bradley Hand"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="chalkduster"]::before{content:"Chalkduster"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="papyrus"]::before{content:"Papyrus"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="noteworthy"]::before{content:"Noteworthy"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="bookman"]::before{content:"Bookman"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="big-caslon"]::before{content:"Big Caslon"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="copperplate"]::before{content:"Copperplate"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="impact"]::before{content:"Impact"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="market-felt"]::before{content:"Market Felt"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="luminari"]::before{content:"Luminari"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="palatino"]::before{content:"Palatino"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="rockhand"]::before{content:"Rockhand"!important}
+        .ql-picker.ql-font .ql-picker-item[data-value="snell-roundhand"]::before{content:"Snell Roundhand"!important}
+        .ql-font-times{font-family:'Times',serif!important}
+        .ql-font-bookman{font-family:'Bookman Old Style',serif!important}
+        .ql-font-apple-chancery{font-family:'Apple Chancery',cursive!important}
+        .ql-font-big-caslon{font-family:'Big Caslon',serif!important}
+        .ql-font-bradley-hand{font-family:'Bradley Hand',cursive!important}
+        .ql-font-chalkduster{font-family:'Chalkduster',cursive!important}
+        .ql-font-copperplate{font-family:'Copperplate',serif!important}
+        .ql-font-impact{font-family:'Impact',sans-serif!important}
+        .ql-font-market-felt{font-family:'Market Felt',cursive!important}
+        .ql-font-luminari{font-family:'Luminari',fantasy!important}
+        .ql-font-noteworthy{font-family:'Noteworthy',sans-serif!important}
+        .ql-font-palatino{font-family:'Palatino',serif!important}
+        .ql-font-rockhand{font-family:'Rockwell',cursive!important}
+        .ql-font-snell-roundhand{font-family:'Snell Roundhand',cursive!important}
+        .ql-font-papyrus{font-family:'Papyrus',fantasy!important}
+        .ql-picker.ql-size .ql-picker-item::before{content:attr(data-value)!important}
+        .ql-size-10px{font-size:10px!important}.ql-size-11px{font-size:11px!important}.ql-size-12px{font-size:12px!important}.ql-size-13px{font-size:13px!important}.ql-size-14px{font-size:14px!important}.ql-size-15px{font-size:15px!important}.ql-size-16px{font-size:16px!important}.ql-size-17px{font-size:17px!important}.ql-size-18px{font-size:18px!important}.ql-size-19px{font-size:19px!important}.ql-size-20px{font-size:20px!important}.ql-size-21px{font-size:21px!important}.ql-size-22px{font-size:22px!important}.ql-size-23px{font-size:23px!important}.ql-size-24px{font-size:24px!important}.ql-size-25px{font-size:25px!important}.ql-size-26px{font-size:26px!important}.ql-size-27px{font-size:27px!important}.ql-size-28px{font-size:28px!important}.ql-size-29px{font-size:29px!important}.ql-size-30px{font-size:30px!important}
+        .ql-picker.ql-font .ql-picker-label::before{content:"Font"!important}
+        .ql-picker.ql-font.ql-expanded .ql-picker-label::before,.ql-picker.ql-font .ql-picker-label[data-value]:not([data-value=""])::before{content:attr(data-value)!important;text-transform:capitalize}
+        .ql-picker.ql-size .ql-picker-label::before{content:"Size"!important}
+        .ql-picker.ql-size.ql-expanded .ql-picker-label::before,.ql-picker.ql-size .ql-picker-label[data-value]:not([data-value=""])::before{content:attr(data-value)!important}
+        @media(max-width:900px){
+            .editor-top-nav{padding:14px 20px}
+            .canvas-picker-view{padding:40px 16px}
+            .picker-headline{font-size:2rem}
+            .canvas-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+            .canvas-square{padding:20px 10px}
+            .canvas-square-icon{font-size:1.6rem}
+            .picker-footer-nav{flex-direction:column;align-items:stretch;gap:10px;margin-top:32px}
+            .nav-btn{width:100%;text-align:center;padding:12px 20px;font-size:0.88rem}
+            .paper-container{padding:16px 10px}
+            .ql-toolbar.ql-snow{border-radius:12px!important;padding:6px 12px!important;flex-wrap:wrap;width:100%!important}
+            .ql-container.ql-snow{max-width:100%}
+            .ql-editor{padding:24px 18px!important;font-size:1rem!important;min-height:60vh}
+        }
+        @media(max-width:380px){
+            .canvas-grid{grid-template-columns:1fr 1fr;gap:10px}
+            .picker-headline{font-size:1.6rem}
+        }
+    </style>
 </head>
 <body>
 
     <div id="picker-view" class="canvas-picker-view">
-        <h1 class="picker-headline">Select Your Canvas</h1>
+        <h1 class="picker-headline">Select Your <em>Canvas</em></h1>
+        <p class="picker-sub">Choose a style that matches your mood today</p>
+        <div class="page-title-rule"></div>
         <div class="canvas-grid" id="canvas-grid"></div>
         <div class="picker-footer-nav">
-            <a href="index.html" style="text-decoration: none;">
-                <button class="nav-btn secondary">Return to Home</button>
-              </a>
+            <a href="dashboard.html" style="text-decoration:none">
+                <button class="nav-btn secondary">← Dashboard</button>
+            </a>
             <button id="start-writing" class="nav-btn primary disabled" disabled>Start Writing →</button>
         </div>
     </div>
 
-    <div id="editor-view" class="editor-view" style="display: none;">
+    <div id="editor-view" class="editor-view" style="display:none">
         <div class="editor-top-nav">
             <button class="nav-action-btn" id="back-btn">← Back</button>
             <span class="canvas-badge" id="badge"></span>
@@ -33,15 +170,185 @@
     </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="canvas.js"></script>
+    <script>
+        const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
+        const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
+        const{createClient}=supabase;
+        const supabaseClient=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-    <div id="analysis-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:999;">
-        <div class="modal-content" style="background:#1b2e2b; border:1px solid #d9c5b2; border-radius:16px; padding:40px; max-width:480px; width:90%; text-align:center; color:#f0ece2;">
-            <h2 id="sentiment-title" style="font-family:'Playfair Display',serif; margin-bottom:16px;"></h2>
-            <p id="mood-lifter-text" style="color:rgba(240,236,226,0.8); margin-bottom:28px; line-height:1.6;"></p>
-            <button onclick="closeModal()" style="background:#d9c5b2; color:#0d1a18; border:none; padding:12px 32px; border-radius:50px; font-weight:600; cursor:pointer;">Continue to Vocab Dashboard</button>
-        </div>
-    </div>
+        const POS_WORDS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','victorious','vibrant','alive','appreciative','brave','caring','creative','eager','free','generous','gentle','glowing','graceful','healing','honest','imaginative','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','smiling','enjoy','enjoyed','enjoying','celebrate','celebration','achievement','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
+        const NEG_WORDS=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','regretful','shame','ashamed','guilt','guilty','hate','hatred','bored','boredom','burned','burnout','chaos','chaotic','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','paralyzed','powerless','rejection','resentment','restless','shattered','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','mistakes','hard','bad','worse','worst','never','cannot','alone','miss','missing']);
 
+        function localAnalysis(text){
+            const words=text.trim().split(/\s+/).filter(w=>w.length>0);
+            const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>3);
+            const uniqueSet=new Set(words.map(w=>w.toLowerCase().replace(/[^a-z]/g,'')));
+            let posCount=0,negCount=0;
+            const emotionWords=[];
+            words.forEach(w=>{
+                const clean=w.toLowerCase().replace(/[^a-z]/g,'');
+                const forms=[clean,clean.replace(/ing$/,''),clean.replace(/ed$/,''),clean.replace(/ly$/,''),clean.replace(/ness$/,''),clean.replace(/s$/,'')];
+                if(forms.some(f=>POS_WORDS.has(f))){posCount++;emotionWords.push(clean);}
+                else if(forms.some(f=>NEG_WORDS.has(f))){negCount++;emotionWords.push(clean);}
+            });
+            let sentiment='Neutral';
+            if(posCount>negCount*1.4)sentiment='Positive';
+            else if(negCount>posCount*1.2)sentiment='Negative';
+            const syllables=words.reduce((acc,w)=>{const c=w.toLowerCase().replace(/[^a-z]/g,'');return acc+Math.max(1,c.replace(/[^aeiouy]/g,'').length||1);},0);
+            const sentLen=sentences.length>0?words.length/sentences.length:words.length;
+            const syllPerWord=words.length>0?syllables/words.length:1;
+            const readability=Math.max(0,Math.min(100,Math.round(206.835-1.015*sentLen-84.6*syllPerWord)));
+            const wordFreq={};
+            words.forEach(w=>{const c=w.toLowerCase().replace(/[^a-z]/g,'');if(c.length>3)wordFreq[c]=(wordFreq[c]||0)+1;});
+            const repeatedWords=Object.entries(wordFreq).filter(([,v])=>v>2).map(([k])=>k).slice(0,5);
+            const lexicalDiversity=words.length>0?parseFloat((uniqueSet.size/words.length).toFixed(2)):0;
+            return{sentiment,wordCount:words.length,sentenceCount:sentences.length,uniqueWords:uniqueSet.size,mistakeCount:0,readability,positiveWordCount:posCount,negativeWordCount:negCount,neutralWordCount:Math.max(0,words.length-posCount-negCount),lexicalDiversity,emotionWords:[...new Set(emotionWords)].slice(0,10),repeatedWords,writingStyle:lexicalDiversity>0.7?'Expressive':lexicalDiversity>0.5?'Conversational':'Simple',grammarTrend:'Stable',vocabularyTrend:lexicalDiversity>0.65?'Improving':'Developing',progressSummary:`You wrote ${words.length} words across ${sentences.length} sentences with ${uniqueSet.size} unique words.`,moodLifter:sentiment==='Negative'?'Even the heaviest days carry something worth holding onto.':sentiment==='Positive'?'Your words carry warmth — keep that energy close.':'Every honest reflection is a step toward knowing yourself better.',vocabularySuggestions:[]};
+        }
+
+        const templates=[
+            {id:'floral',name:'Floral Petals',icon:'🌸'},
+            {id:'ruled',name:'Classic Ruled',icon:'📜'},
+            {id:'midnight',name:'Midnight Blue',icon:'🌑'},
+            {id:'parchment',name:'Old Parchment',icon:'📜'},
+            {id:'lavender',name:'Lavender Mist',icon:'🌿'},
+            {id:'minimal',name:'Pure Minimalist',icon:'⚪'},
+            {id:'matcha',name:'Matcha Tea',icon:'🍵'},
+            {id:'sunset',name:'Warm Sunset',icon:'🌇'},
+            {id:'noir',name:'Noir Luxury',icon:'🎩'},
+            {id:'ocean',name:'Deep Ocean',icon:'🌊'}
+        ];
+
+        let selectedTemplate=null;
+        let quill=null;
+
+        function resetSaveBtn(){
+            const saveBtn=document.getElementById('save-btn');
+            saveBtn.innerText='Save & Analyze ✓';
+            saveBtn.disabled=false;
+            saveBtn.style.opacity='1';
+            saveBtn.style.cursor='pointer';
+        }
+
+        function initCanvas(){
+            const grid=document.getElementById('canvas-grid');
+            const startBtn=document.getElementById('start-writing');
+            if(!grid)return;
+
+            templates.forEach(t=>{
+                const div=document.createElement('div');
+                div.className='canvas-square';
+                div.innerHTML=`<div class="canvas-square-icon">${t.icon}</div><p>${t.name}</p>`;
+                div.onclick=()=>{
+                    document.querySelectorAll('.canvas-square').forEach(el=>el.classList.remove('active'));
+                    div.classList.add('active');
+                    selectedTemplate=t;
+                    startBtn.disabled=false;
+                    startBtn.classList.remove('disabled');
+                };
+                grid.appendChild(div);
+            });
+
+            const Font=Quill.import('formats/font');
+            Font.whitelist=['times','bookman','apple-chancery','big-caslon','bradley-hand','chalkduster','copperplate','impact','market-felt','luminari','noteworthy','palatino','rockhand','snell-roundhand','papyrus'];
+            Quill.register(Font,true);
+
+            const Size=Quill.import('formats/size');
+            Size.whitelist=['10px','11px','12px','13px','14px','15px','16px','17px','18px','19px','20px','21px','22px','23px','24px','25px','26px','27px','28px','29px','30px'];
+            Quill.register(Size,true);
+
+            quill=new Quill('#editor',{
+                theme:'snow',
+                modules:{
+                    toolbar:[
+                        [{'font':Font.whitelist}],
+                        [{'size':Size.whitelist}],
+                        ['bold','italic','underline','strike'],
+                        [{'color':[]},{'background':[]}],
+                        [{'align':[]}],
+                        ['clean']
+                    ]
+                }
+            });
+
+            const saveBtn=document.getElementById('save-btn');
+            saveBtn.disabled=true;
+            saveBtn.style.opacity='0.4';
+            saveBtn.style.cursor='not-allowed';
+
+            quill.on('text-change',()=>{
+                const text=quill.getText().trim();
+                if(text.length>10){
+                    saveBtn.disabled=false;
+                    saveBtn.style.opacity='1';
+                    saveBtn.style.cursor='pointer';
+                }else{
+                    saveBtn.disabled=true;
+                    saveBtn.style.opacity='0.4';
+                    saveBtn.style.cursor='not-allowed';
+                }
+            });
+
+            document.getElementById('start-writing').onclick=()=>{
+                document.getElementById('picker-view').style.display='none';
+                const editorView=document.getElementById('editor-view');
+                editorView.style.display='block';
+                editorView.className=`editor-view theme-${selectedTemplate.id}`;
+                document.getElementById('badge').innerText=`${selectedTemplate.icon} ${selectedTemplate.name}`;
+                localStorage.setItem('mindnook_canvas_name',selectedTemplate.name);
+                localStorage.setItem('mindnook_canvas_id',selectedTemplate.id);
+            };
+
+            document.getElementById('back-btn').onclick=()=>{
+                document.getElementById('editor-view').style.display='none';
+                document.getElementById('picker-view').style.display='flex';
+            };
+
+            saveBtn.onclick=async()=>{
+                const textContent=quill.getText().trim();
+                if(textContent.length<20){alert('Please write at least a few sentences before saving.');return;}
+                saveBtn.innerText='Analyzing…';
+                saveBtn.disabled=true;
+                saveBtn.style.opacity='0.6';
+                saveBtn.style.cursor='not-allowed';
+                const htmlContent=quill.root.innerHTML;
+                localStorage.setItem('latestJournalText',textContent);
+                let analysis=null;
+                try{
+                    const{data:{session}}=await supabaseClient.auth.getSession();
+                    if(!session){alert('Session expired. Please sign in again.');window.location.href='login.html';return;}
+                    const response=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({text:textContent})});
+                    if(!response.ok){const errBody=await response.text();console.warn('Edge function error '+response.status+':',errBody);throw new Error('edge_function_failed');}
+                    const raw=await response.json();
+                    analysis={sentiment:raw.sentiment||raw.overall_sentiment||'Neutral',wordCount:raw.wordCount||raw.word_count||textContent.split(/\s+/).length,sentenceCount:raw.sentenceCount||raw.sentence_count||textContent.split(/[.!?]+/).filter(s=>s.trim()).length,uniqueWords:raw.uniqueWords||raw.unique_words||0,mistakeCount:raw.mistakeCount||raw.mistake_count||0,readability:raw.readability||raw.readability_score||50,positiveWordCount:raw.positiveWordCount||raw.positive_word_count||0,negativeWordCount:raw.negativeWordCount||raw.negative_word_count||0,neutralWordCount:raw.neutralWordCount||raw.neutral_word_count||0,lexicalDiversity:raw.lexicalDiversity||raw.lexical_diversity||0,emotionWords:raw.emotionWords||raw.emotion_words||[],repeatedWords:raw.repeatedWords||raw.repeated_words||[],writingStyle:raw.writingStyle||raw.writing_style||'',grammarTrend:raw.grammarTrend||raw.grammar_trend||'',vocabularyTrend:raw.vocabularyTrend||raw.vocabulary_trend||'',progressSummary:raw.progressSummary||raw.progress_summary||'',moodLifter:raw.moodLifter||raw.mood_lifter||'',vocabularySuggestions:raw.vocabularySuggestions||raw.vocabulary_suggestions||[]};
+                }catch(err){console.warn('AI unavailable, using local analysis:',err.message);analysis=localAnalysis(textContent);}
+
+                if(window.MindNookBaseline){
+                    const pragmatic=window.MindNookBaseline.classifyPragmatic(textContent);
+                    analysis.pragmatic=pragmatic;
+                    analysis._rawText=textContent;
+                }
+
+                localStorage.setItem('latestAnalysis',JSON.stringify(analysis));
+                try{
+                    const{data:{session}}=await supabaseClient.auth.getSession();
+                    if(session){
+                        await supabaseClient.from('journal_entries').insert([{user_id:session.user.id,content:htmlContent,sentiment:analysis.sentiment,mood_lifter_content:analysis.moodLifter,word_count:analysis.wordCount,sentence_count:analysis.sentenceCount,mistake_count:analysis.mistakeCount,lexical_feedback:analysis.vocabularySuggestions,unique_words:analysis.uniqueWords,readability:analysis.readability,writing_style:analysis.writingStyle,grammar_trend:analysis.grammarTrend,vocabulary_trend:analysis.vocabularyTrend,progress_summary:analysis.progressSummary,emotion_words:analysis.emotionWords,repeated_words:analysis.repeatedWords,positive_word_count:analysis.positiveWordCount,negative_word_count:analysis.negativeWordCount,neutral_word_count:analysis.neutralWordCount,lexical_diversity:analysis.lexicalDiversity,created_at:new Date().toISOString()}]).select().then(({data,error})=>{if(error){console.warn('DB insert error (non-fatal):',error.message);}else if(data&&data[0]){localStorage.setItem('mindnook_last_entry_id',data[0].id);}});
+                    }
+                }catch(dbErr){console.warn('DB insert failed (non-fatal):',dbErr.message);}
+                localStorage.setItem('mindnook_last_entry_content',textContent);
+                localStorage.setItem('mindnook_last_entry_sentiment',analysis.sentiment);
+                window.location.href='sentiment.html';
+            };
+        }
+
+        async function checkAuthAndInit(){
+            const{data:{session}}=await supabaseClient.auth.getSession();
+            if(!session){window.location.href='login.html';return;}
+            window.__session=session;
+            initCanvas();
+        }
+
+        checkAuthAndInit();
+    </script>
 </body>
 </html>

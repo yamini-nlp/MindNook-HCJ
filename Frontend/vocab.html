@@ -5,162 +5,199 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MindNook | Vocabulary Analysis</title>
     <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #1b2e2b; --bg2: #132220;
-            --gold: #d9c5b2; --gsoft: rgba(217,197,178,0.15); --gline: rgba(217,197,178,0.11);
-            --text: #ede8df; --dim: rgba(237,232,223,0.48);
-            --pos: #7ecb84; --neg: #d97878; --neu: #b8a98a;
+        :root{
+            --bg:#1b2e2b;
+            --bg2:#152422;
+            --bg3:#0d1a18;
+            --card:#1f3430;
+            --card2:#243b37;
+            --border:rgba(217,197,178,0.12);
+            --border2:rgba(217,197,178,0.22);
+            --gold:#d9c5b2;
+            --gold2:#c9a882;
+            --gold3:#e8d8c8;
+            --text:#f0ece2;
+            --text2:rgba(240,236,226,0.65);
+            --text3:rgba(240,236,226,0.38);
+            --sage:#7aad8f;
+            --sage2:#4e8a68;
+            --teal:#5bc4a8;
+            --teal2:#2e8c70;
+            --rose:#c47a8a;
+            --rose2:#9e4e60;
+            --amber:#c4963a;
+            --amber2:#a87828;
+            --neutral:#9b8ea0;
         }
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Jost', sans-serif; min-height: 100vh; overflow-x: hidden; }
-        body::after {
-            content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.032'/%3E%3C/svg%3E");
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6;}
+        body::after{
+            content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
         }
-        .bg-glow {
-            position: fixed; width: 700px; height: 700px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(42,74,62,0.2) 0%, transparent 70%);
-            top: -200px; right: -200px; pointer-events: none; z-index: 0;
+        .bg-mesh{
+            position:fixed;inset:0;pointer-events:none;z-index:0;
+            background:
+                radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),
+                radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),
+                radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);
         }
 
-        nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 22px 52px; border-bottom: 1px solid var(--gline);
-            position: relative; z-index: 10;
+        nav{
+            position:sticky;top:0;z-index:100;
+            display:flex;justify-content:space-between;align-items:center;
+            padding:18px 52px;
+            background:rgba(21,36,34,0.85);
+            backdrop-filter:blur(24px);
+            border-bottom:1px solid var(--border);
         }
-        .logo { font-family: 'Cormorant Garamond', serif; font-size: 1rem; letter-spacing: 4px; color: var(--gold); }
-        .nav-links { display: flex; gap: 10px; }
-        .pill {
-            padding: 7px 20px; border-radius: 50px; font-size: 0.75rem; letter-spacing: 0.8px;
-            cursor: pointer; transition: all 0.28s ease; text-decoration: none; display: inline-block;
+        .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;color:var(--gold);}
+        .nav-links{display:flex;gap:8px;align-items:center;}
+        .pill{
+            padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;
+            cursor:pointer;transition:all 0.26s;text-decoration:none;
+            font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;
         }
-        .pill.ghost { border: 1px solid var(--gline); color: var(--gold); background: transparent; }
-        .pill.ghost:hover { border-color: var(--gold); background: var(--gsoft); }
-        .pill.filled { background: var(--gold); color: var(--bg); font-weight: 500; }
-        .pill.filled:hover { background: #c8b49e; }
+        .pill.ghost{border:1px solid var(--border);color:var(--text2);background:transparent;}
+        .pill.ghost:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
+        .pill.filled{background:var(--gold);color:var(--bg3);font-weight:500;}
+        .pill.filled:hover{background:var(--gold3);transform:translateY(-1px);}
 
-        .page-header { text-align: center; padding: 52px 52px 36px; position: relative; z-index: 2; }
-        .eyebrow { font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); opacity: 0.6; margin-bottom: 12px; }
-        .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.4rem, 4.5vw, 3.6rem); font-weight: 300; }
-        .page-header h1 em { font-style: italic; color: var(--gold); }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-            padding: 0 52px 60px;
-            max-width: 1000px;
-            margin: 0 auto;
-            position: relative; z-index: 2;
+        .page-header{text-align:center;padding:56px 52px 40px;position:relative;z-index:2;}
+        .eyebrow{font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--teal);opacity:0.8;margin-bottom:14px;font-weight:500;}
+        .page-header h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,4.5vw,3.6rem);font-weight:400;line-height:1.1;}
+        .page-header h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
+        .page-title-rule{width:40px;height:2px;background:var(--gold2);border-radius:2px;margin:14px auto 0;}
+
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr 1fr;
+            gap:16px;
+            padding:0 52px 60px;
+            max-width:1060px;
+            margin:0 auto;
+            position:relative;z-index:2;
         }
-        .card {
-            background: var(--bg2); border: 1px solid var(--gline);
-            border-radius: 18px; padding: 26px 28px; transition: all 0.3s;
+        .card{
+            background:var(--card);border:1px solid var(--border);
+            border-radius:20px;padding:26px 28px;transition:all 0.28s;
         }
-        .card:hover { border-color: rgba(217,197,178,0.22); background: rgba(217,197,178,0.03); }
-        .card.span2 { grid-column: span 2; }
-        .card.full  { grid-column: 1 / -1; }
-        .ctag { font-size: 0.63rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); opacity: 0.7; margin-bottom: 10px; }
-        .card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.12rem; font-weight: 400; margin-bottom: 12px; }
-        .card p { font-size: 0.84rem; line-height: 1.75; color: var(--dim); }
+        .card:hover{border-color:var(--border2);}
+        .card.span2{grid-column:span 2;}
+        .card.full{grid-column:1 / -1;}
+        .ctag{font-size:0.63rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px;}
+        .card h3{font-family:'Playfair Display',serif;font-size:1.12rem;font-weight:400;margin-bottom:14px;color:var(--text);}
+        .card p{font-size:0.84rem;line-height:1.75;color:var(--text2);}
 
-        .metric-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .metric-box {
-            flex: 1; min-width: 70px;
-            background: rgba(217,197,178,0.04); border: 1px solid rgba(217,197,178,0.1);
-            border-radius: 12px; padding: 14px 10px; text-align: center;
+        .metric-row{display:flex;gap:10px;flex-wrap:wrap;}
+        .metric-box{
+            flex:1;min-width:70px;
+            background:var(--card2);border:1px solid var(--border);
+            border-radius:12px;padding:14px 10px;text-align:center;
+            transition:border-color 0.25s;
         }
-        .metric-box .num { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--gold); line-height: 1; }
-        .metric-box .lbl { font-size: 0.62rem; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+        .metric-box:hover{border-color:var(--border2);}
+        .metric-box .num{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);line-height:1;}
+        .metric-box .lbl{font-size:0.62rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
 
-        .lex-score { font-family: 'Cormorant Garamond', serif; font-size: 3rem; color: var(--gold); line-height: 1; }
-        .lex-label { font-size: 0.66rem; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-top: 5px; }
-        .lex-bar-track { height: 5px; background: rgba(255,255,255,0.05); border-radius: 50px; margin: 12px 0 7px; overflow: hidden; }
-        .lex-bar-fill { height: 100%; border-radius: 50px; background: linear-gradient(90deg, #2a4a42, var(--gold)); transition: width 1.2s ease; }
-        .lex-feedback { font-size: 0.82rem; color: var(--dim); line-height: 1.6; }
+        .lex-score{font-family:'Playfair Display',serif;font-size:3rem;color:var(--gold);line-height:1;}
+        .lex-label{font-size:0.66rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:5px;}
+        .lex-bar-track{height:5px;background:rgba(255,255,255,0.05);border-radius:50px;margin:12px 0 7px;overflow:hidden;}
+        .lex-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--teal2),var(--teal));transition:width 1.2s cubic-bezier(0.16,1,0.3,1);}
+        .lex-feedback{font-size:0.82rem;color:var(--text2);line-height:1.6;}
 
-        .chip-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
-        .chip { padding: 4px 12px; border-radius: 50px; font-size: 0.78rem; background: rgba(217,197,178,0.06); border: 1px solid rgba(217,197,178,0.13); color: var(--dim); }
-        .chip.warn { border-color: rgba(217,120,120,0.35); background: rgba(217,120,120,0.07); color: var(--neg); }
-        .chip.suggest { border-color: rgba(126,203,132,0.35); background: rgba(126,203,132,0.07); color: var(--pos); }
+        .chip-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+        .chip{padding:4px 14px;border-radius:50px;font-size:0.76rem;background:rgba(240,236,226,0.04);border:1px solid var(--border);color:var(--text2);}
+        .chip.warn{border-color:rgba(196,118,138,0.3);background:rgba(196,118,138,0.08);color:var(--rose);}
+        .chip.suggest{border-color:rgba(91,196,168,0.3);background:rgba(91,196,168,0.08);color:var(--teal);}
 
-        .replace-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        .replace-table th { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); opacity: 0.7; text-align: left; padding: 8px 0; border-bottom: 1px solid rgba(217,197,178,0.1); }
-        .replace-table td { padding: 10px 0; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--dim); vertical-align: middle; }
-        .replace-table td:first-child { color: var(--neg); width: 36%; }
-        .replace-table td:last-child { color: var(--pos); }
-        .arrow { color: rgba(217,197,178,0.3); margin: 0 8px; }
+        .replace-table{width:100%;border-collapse:collapse;margin-top:8px;}
+        .replace-table th{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-weight:500;text-align:left;padding:8px 0;border-bottom:1px solid var(--border);}
+        .replace-table td{padding:10px 0;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text2);vertical-align:middle;}
+        .replace-table td:first-child{color:var(--rose);width:36%;}
+        .replace-table td:last-child{color:var(--teal);}
+        .arrow{color:var(--text3);margin:0 8px;}
 
-        .mistake-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
-        .mistake-item {
-            display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-            font-size: 0.83rem; padding: 9px 12px;
-            background: rgba(217,120,120,0.05); border: 1px solid rgba(217,120,120,0.14); border-radius: 10px;
+        .mistake-list{margin-top:10px;display:flex;flex-direction:column;gap:7px;}
+        .mistake-item{
+            display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+            font-size:0.83rem;padding:9px 12px;
+            background:rgba(196,118,138,0.06);border:1px solid rgba(196,118,138,0.18);border-radius:10px;
         }
-        .mistake-item .wrong { color: var(--neg); }
-        .mistake-item .arr { color: rgba(217,197,178,0.3); }
-        .mistake-item .right { color: var(--pos); }
-        .mistake-item .mtype { color: var(--dim); font-size: 0.72rem; font-style: italic; margin-left: auto; }
-        .no-mistakes { font-size: 0.86rem; color: var(--pos); }
+        .mistake-item .wrong{color:var(--rose);}
+        .mistake-item .arr{color:var(--text3);}
+        .mistake-item .right{color:var(--teal);}
+        .mistake-item .mtype{color:var(--text3);font-size:0.72rem;font-style:italic;margin-left:auto;}
+        .no-mistakes{font-size:0.86rem;color:var(--teal);}
 
-        .vocab-row {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-            font-size: 0.84rem;
+        .vocab-row{
+            display:flex;align-items:center;gap:10px;
+            padding:8px 0;border-bottom:1px solid var(--border);
+            font-size:0.84rem;
         }
-        .vocab-row:last-child { border-bottom: none; }
-        .vocab-row .used { color: var(--neg); min-width: 110px; }
-        .vocab-row .varr { color: rgba(217,197,178,0.3); }
-        .vocab-row .better { color: var(--pos); }
+        .vocab-row:last-child{border-bottom:none;}
+        .vocab-row .used{color:var(--rose);min-width:110px;}
+        .vocab-row .varr{color:var(--text3);}
+        .vocab-row .better{color:var(--teal);}
 
-        .inline-loading { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 0.81rem; }
-        .dots span { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); opacity: 0.4; animation: dotpulse 1.4s infinite; }
-        .dots span:nth-child(2) { animation-delay: 0.2s; }
-        .dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dotpulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)} }
+        .inline-loading{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:0.81rem;}
+        .dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--teal);opacity:0.4;animation:dotpulse 1.4s infinite;}
+        .dots span:nth-child(2){animation-delay:0.2s;}
+        .dots span:nth-child(3){animation-delay:0.4s;}
+        @keyframes dotpulse{0%,80%,100%{opacity:0.2;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
 
-        .action { text-align: center; padding: 12px 52px 68px; position: relative; z-index: 2; }
-        .big-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 52px; border-radius: 50px; background: var(--gold); color: var(--bg); font-family: 'Jost', sans-serif; font-size: 0.92rem; font-weight: 500; text-decoration: none; border: none; cursor: pointer; transition: all 0.3s; }
-        .big-btn:hover { background: #c8b49e; transform: translateY(-3px); box-shadow: 0 12px 30px rgba(217,197,178,0.16); }
+        .action{text-align:center;padding:12px 52px 68px;position:relative;z-index:2;}
+        .big-btn{
+            display:inline-flex;align-items:center;gap:10px;
+            padding:10px 32px;border-radius:50px;
+            background:var(--gold);color:var(--bg3);
+            font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;
+            text-decoration:none;border:none;cursor:pointer;transition:all 0.3s;letter-spacing:0.5px;
+        }
+        .big-btn:hover{background:var(--gold3);transform:translateY(-2px);box-shadow:0 12px 30px rgba(217,197,178,0.15);}
 
-        .fade-in { animation: fadeUp 0.6s ease forwards; opacity: 0; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)} }
-        .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}.d4{animation-delay:.35s}.d5{animation-delay:.45s}
+        .fade-in{animation:fadeUp 0.6s ease forwards;opacity:0;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+        .d1{animation-delay:.05s;}.d2{animation-delay:.15s;}.d3{animation-delay:.25s;}.d4{animation-delay:.35s;}.d5{animation-delay:.45s;}
 
         @media(max-width:800px){
-       nav{ padding:18px 22px; flex-wrap: wrap; gap: 10px;}
-       .nav-links{ gap: 5px; flex-wrap: wrap;}
-       .pill{ padding: 5px 11px; font-size: 0.7rem;}
-       .page-header{ padding:36px 22px 24px;}
-       .page-header h1{ font-size: clamp(2rem, 7vw, 3.6rem);}
-       .grid{ grid-template-columns:1fr; padding:0 22px 40px;}
-       .card.span2,.card.full{ grid-column:1;}
-       .metric-row{ flex-wrap: wrap;}
-       .metric-box{ min-width: 80px;}
-       .lex-score{ font-size: 2.2rem;}
-       .replace-table th, .replace-table td{ font-size: 0.78rem; padding: 8px 0;}
-       .action{ padding:12px 22px 48px;}
-       .big-btn{ padding: 14px 30px; font-size: 0.85rem;}
-       }
+            nav{padding:16px 20px;flex-wrap:wrap;gap:10px;}
+            .nav-links{gap:5px;flex-wrap:wrap;}
+            .pill{padding:5px 11px;font-size:0.7rem;}
+            .page-header{padding:36px 20px 24px;}
+            .page-header h1{font-size:clamp(2rem,7vw,3.6rem);}
+            .grid{grid-template-columns:1fr;padding:0 20px 40px;}
+            .card.span2,.card.full{grid-column:1;}
+            .metric-row{flex-wrap:wrap;}
+            .metric-box{min-width:80px;}
+            .lex-score{font-size:2.2rem;}
+            .replace-table th,.replace-table td{font-size:0.78rem;padding:8px 0;}
+            .action{padding:12px 20px 48px;}
+            .big-btn{padding:12px 28px;font-size:0.85rem;}
+        }
     </style>
 </head>
 <body>
-<div class="bg-glow"></div>
+<div class="bg-mesh"></div>
 
 <nav>
-    <div class="logo">MINDNOOK</div>
+    <div class="nav-logo">MINDNOOK</div>
     <div class="nav-links">
         <a href="sentiment.html" class="pill ghost">← Sentiment</a>
-        <a href="history.html"   class="pill ghost">History</a>
-        <a href="index.html"     class="pill ghost">Home</a>
-        <a href="canvas.html"    class="pill filled">✏️ Write Again</a>
+        <a href="history.html" class="pill ghost">History</a>
+        <a href="dashboard.html" class="pill ghost">Dashboard</a>
+        <a href="nook-ai.html" class="pill ghost">Nook AI</a>
+        <button onclick="signOut()" class="pill ghost">Sign Out</button>
+        <a href="canvas.html" class="pill filled">✏️ Write Again</a>
     </div>
 </nav>
 
 <div class="page-header fade-in">
     <div class="eyebrow">Vocabulary Analysis</div>
     <h1>Words, <em>dissected.</em></h1>
+    <div class="page-title-rule"></div>
 </div>
 
 <div class="grid">
@@ -201,19 +238,19 @@
                 <canvas id="tone-chart" width="110" height="110"></canvas>
             </div>
             <div style="flex:1;min-width:140px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:0.82rem;">
-                    <span style="width:9px;height:9px;border-radius:50%;background:var(--pos);display:inline-block;flex-shrink:0;"></span>
-                    <span style="color:var(--dim);">Positive</span>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;">
+                    <span style="width:9px;height:9px;border-radius:50%;background:var(--teal);display:inline-block;flex-shrink:0;"></span>
+                    <span style="color:var(--text2);">Positive</span>
                     <span style="margin-left:auto;color:var(--text);" id="tone-pos-n">0</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:0.82rem;">
-                    <span style="width:9px;height:9px;border-radius:50%;background:var(--neg);display:inline-block;flex-shrink:0;"></span>
-                    <span style="color:var(--dim);">Negative</span>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;">
+                    <span style="width:9px;height:9px;border-radius:50%;background:var(--rose);display:inline-block;flex-shrink:0;"></span>
+                    <span style="color:var(--text2);">Negative</span>
                     <span style="margin-left:auto;color:var(--text);" id="tone-neg-n">0</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;">
-                    <span style="width:9px;height:9px;border-radius:50%;background:var(--neu);display:inline-block;flex-shrink:0;"></span>
-                    <span style="color:var(--dim);">Neutral</span>
+                    <span style="width:9px;height:9px;border-radius:50%;background:var(--neutral);display:inline-block;flex-shrink:0;"></span>
+                    <span style="color:var(--text2);">Neutral</span>
                     <span style="margin-left:auto;color:var(--text);" id="tone-neu-n">0</span>
                 </div>
             </div>
@@ -266,192 +303,168 @@
 </div>
 
 <div class="action fade-in d5">
-    <a href="canvas.html" class="big-btn">✏️ Write Again</a>
+    <a href="history.html" class="big-btn">View History →</a>
+<br><br>
+<a href="canvas.html" class="big-btn" style="background:transparent;border:1px solid rgba(217,197,178,0.22);color:var(--text2);">✏️ Write Again</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="auth.js"></script>
 <script>
-const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
+const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
 
-const POS = new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','vibrant','alive','appreciative','brave','caring','creative','eager','free','generous','gentle','glowing','healing','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','enjoy','enjoyed','celebrate','celebration','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
-const NEG = new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','shame','ashamed','guilt','guilty','hate','bored','burned','chaos','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','powerless','rejection','resentment','restless','shattered','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','hard','bad','worse','worst','never','alone','miss','missing']);
+const POS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','vibrant','alive','appreciative','brave','caring','creative','eager','free','generous','gentle','glowing','healing','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','enjoy','enjoyed','celebrate','celebration','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
+const NEG=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','shame','ashamed','guilt','guilty','hate','bored','burned','chaos','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','powerless','rejection','resentment','restless','shattered','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','hard','bad','worse','worst','never','alone','miss','missing']);
 
-function tokenise(text) {
-    return text.toLowerCase().replace(/['']/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w => w.length > 2);
-}
+function tokenise(text){return text.toLowerCase().replace(/['']/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>2);}
 
-function countTone(text) {
-    const words = tokenise(text);
-    let pos = 0, neg = 0;
-    words.forEach(w => {
-        const stems = [w, w.replace(/ing$/,''), w.replace(/ed$/,''), w.replace(/ly$/,''), w.replace(/ness$/,''), w.replace(/ful$/,''), w.replace(/less$/,''), w.replace(/s$/,'')];
-        if (stems.some(s => POS.has(s))) pos++;
-        else if (stems.some(s => NEG.has(s))) neg++;
+function countTone(text){
+    const words=tokenise(text);let pos=0,neg=0;
+    words.forEach(w=>{
+        const stems=[w,w.replace(/ing$/,''),w.replace(/ed$/,''),w.replace(/ly$/,''),w.replace(/ness$/,''),w.replace(/ful$/,''),w.replace(/less$/,''),w.replace(/s$/,'')];
+        if(stems.some(s=>POS.has(s)))pos++;
+        else if(stems.some(s=>NEG.has(s)))neg++;
     });
-    return { pos, neg, neu: Math.max(0, words.length - pos - neg) };
+    return{pos,neg,neu:Math.max(0,words.length-pos-neg)};
 }
 
-function countUnique(text) {
-    return new Set(tokenise(text)).size;
-}
+function countUnique(text){return new Set(tokenise(text)).size;}
 
-function drawDonut(pos, neg, neu) {
-    const ctx = document.getElementById('tone-chart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [pos || 0.001, neg || 0.001, neu || 0.001],
-                backgroundColor: ['rgba(126,203,132,0.82)','rgba(217,120,120,0.82)','rgba(184,169,138,0.55)'],
-                borderColor: ['#132220','#132220','#132220'],
-                borderWidth: 3
+function drawDonut(pos,neg,neu){
+    const ctx=document.getElementById('tone-chart').getContext('2d');
+    new Chart(ctx,{
+        type:'doughnut',
+        data:{
+            datasets:[{
+                data:[pos||0.001,neg||0.001,neu||0.001],
+                backgroundColor:['rgba(91,196,168,0.82)','rgba(196,118,138,0.82)','rgba(155,142,160,0.55)'],
+                borderColor:['#152422','#152422','#152422'],
+                borderWidth:3
             }]
         },
-        options: { cutout: '72%', plugins: { legend:{display:false}, tooltip:{enabled:false} }, animation:{duration:1000} }
+        options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:1000}}
     });
-    document.getElementById('tone-pos-n').innerText = pos;
-    document.getElementById('tone-neg-n').innerText = neg;
-    document.getElementById('tone-neu-n').innerText = neu;
+    document.getElementById('tone-pos-n').innerText=pos;
+    document.getElementById('tone-neg-n').innerText=neg;
+    document.getElementById('tone-neu-n').innerText=neu;
 }
 
-async function callAI(promptText) {
-    const r = await fetch('https://dowtaqgkcbppyjxknaqx.supabase.co/functions/v1/analyze-journal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ANON },
-        body: JSON.stringify({ text: promptText })
+async function callAI(promptText){
+    const r=await fetch('https://dowtaqgkcbppyjxknaqx.supabase.co/functions/v1/analyze-journal',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},
+        body:JSON.stringify({text:promptText})
     });
     return await r.json();
 }
 
-async function fetchGrammarMistakes(jtext, mistakeCount) {
-    try {
-        const d = await callAI(`You are a precise grammar checker. Read this journal entry and identify the ACTUAL mistakes present in it.
-
-Entry: "${jtext.substring(0, 800)}"
-
-List up to ${Math.min(mistakeCount || 5, 8)} specific mistakes. Each must be text that ACTUALLY APPEARS in the entry.
-Return ONLY valid JSON: {"mistakes": [{"wrong": "wrong text from entry", "correct": "corrected version", "type": "spelling|grammar|punctuation"}]}
-If genuinely no mistakes: {"mistakes": []}`);
-        return d.mistakes || [];
-    } catch { return []; }
+async function fetchGrammarMistakes(jtext,mistakeCount){
+    try{
+        const d=await callAI(`You are a precise grammar checker. Read this journal entry and identify the ACTUAL mistakes present in it.\n\nEntry: "${jtext.substring(0,800)}"\n\nList up to ${Math.min(mistakeCount||5,8)} specific mistakes. Each must be text that ACTUALLY APPEARS in the entry.\nReturn ONLY valid JSON: {"mistakes": [{"wrong": "wrong text from entry", "correct": "corrected version", "type": "spelling|grammar|punctuation"}]}\nIf genuinely no mistakes: {"mistakes": []}`);
+        return d.mistakes||[];
+    }catch{return[];}
 }
 
-async function fetchVocabEnrichment(jtext) {
-    try {
-        const d = await callAI(`You are a vocabulary coach. Read this journal entry carefully and pick 5-7 ordinary or weak words that the writer ACTUALLY USED. Suggest a stronger, more precise replacement for each.
-
-Entry: "${jtext.substring(0, 600)}"
-
-Return ONLY valid JSON: {"pairs": [{"used": "word from entry", "better": "stronger replacement"}]}`);
-        return d.pairs || [];
-    } catch { return []; }
+async function fetchVocabEnrichment(jtext){
+    try{
+        const d=await callAI(`You are a vocabulary coach. Read this journal entry carefully and pick 5-7 ordinary or weak words that the writer ACTUALLY USED. Suggest a stronger, more precise replacement for each.\n\nEntry: "${jtext.substring(0,600)}"\n\nReturn ONLY valid JSON: {"pairs": [{"used": "word from entry", "better": "stronger replacement"}]}`);
+        return d.pairs||[];
+    }catch{return[];}
 }
 
-async function fetchExpressionEnrichment(jtext) {
-    try {
-        const d = await callAI(`You are a writing coach. Carefully read this journal entry and identify 6-8 phrases or expressions the writer ACTUALLY WROTE that could be made more vivid and powerful.
-
-Entry: "${jtext.substring(0, 700)}"
-
-For each phrase they actually used, provide a stronger version that fits the same meaning and context.
-Return ONLY valid JSON: {"expressions": [{"weak": "phrase from entry", "strong": "stronger version"}]}`);
-        return d.expressions || [];
-    } catch { return []; }
+async function fetchExpressionEnrichment(jtext){
+    try{
+        const d=await callAI(`You are a writing coach. Carefully read this journal entry and identify 6-8 phrases or expressions the writer ACTUALLY WROTE that could be made more vivid and powerful.\n\nEntry: "${jtext.substring(0,700)}"\n\nFor each phrase they actually used, provide a stronger version that fits the same meaning and context.\nReturn ONLY valid JSON: {"expressions": [{"weak": "phrase from entry", "strong": "stronger version"}]}`);
+        return d.expressions||[];
+    }catch{return[];}
 }
 
-async function init() {
-    const raw   = localStorage.getItem('latestAnalysis');
-    const jtext = localStorage.getItem('latestJournalText') || '';
-    if (!raw) { window.location.href = 'canvas.html'; return; }
-    const a = JSON.parse(raw);
-    const totalWords  = a.wordCount || tokenise(jtext).length;
-    const uniqueWords = (a.uniqueWords && a.uniqueWords > 0) ? a.uniqueWords : countUnique(jtext);
+async function init(){
+    const raw=localStorage.getItem('latestAnalysis');
+    const jtext=localStorage.getItem('latestJournalText')||'';
+    if(!raw){window.location.href='canvas.html';return;}
+    const a=JSON.parse(raw);
+    const totalWords=a.wordCount||tokenise(jtext).length;
+    const uniqueWords=(a.uniqueWords&&a.uniqueWords>0)?a.uniqueWords:countUnique(jtext);
 
-    document.getElementById('m-total').innerText    = totalWords;
-    document.getElementById('m-unique').innerText   = uniqueWords;
-    document.getElementById('m-sentences').innerText = a.sentenceCount || 0;
+    document.getElementById('m-total').innerText=totalWords;
+    document.getElementById('m-unique').innerText=uniqueWords;
+    document.getElementById('m-sentences').innerText=a.sentenceCount||0;
 
-    const avgLen = totalWords && a.sentenceCount ? Math.round(totalWords / a.sentenceCount) : '—';
-    document.getElementById('m-avg').innerText = avgLen;
+    const avgLen=totalWords&&a.sentenceCount?Math.round(totalWords/a.sentenceCount):'—';
+    document.getElementById('m-avg').innerText=avgLen;
 
-    const avgNum = typeof avgLen === 'number' ? avgLen : 0;
-    document.getElementById('sentence-feedback').innerText =
-        avgNum > 25 ? 'Long sentences detected. Consider breaking some up for clarity.' :
-        avgNum > 15 ? 'Good sentence variety — clear and readable.' :
-        avgNum > 0  ? 'Short, punchy sentences. Consider adding some longer ones for flow.' : '—';
+    const avgNum=typeof avgLen==='number'?avgLen:0;
+    document.getElementById('sentence-feedback').innerText=
+        avgNum>25?'Long sentences detected. Consider breaking some up for clarity.':
+        avgNum>15?'Good sentence variety — clear and readable.':
+        avgNum>0?'Short, punchy sentences. Consider adding some longer ones for flow.':'—';
 
-    // Lexical diversity
-    const ld = (a.lexicalDiversity != null && a.lexicalDiversity > 0)
-        ? a.lexicalDiversity
-        : (uniqueWords && totalWords ? +(uniqueWords / totalWords).toFixed(2) : null);
-    if (ld != null) {
-        document.getElementById('lex-score').innerText = ld.toFixed(2);
-        setTimeout(() => { document.getElementById('lex-bar').style.width = Math.min(ld * 100, 100) + '%'; }, 300);
-        document.getElementById('lex-feedback').innerText =
-            ld > 0.7 ? 'Excellent vocabulary variety! Your writing is rich and diverse.' :
-            ld > 0.5 ? 'Good variety. A few more unique words would enrich your writing further.' :
+    const ld=(a.lexicalDiversity!=null&&a.lexicalDiversity>0)
+        ?a.lexicalDiversity
+        :(uniqueWords&&totalWords?+(uniqueWords/totalWords).toFixed(2):null);
+    if(ld!=null){
+        document.getElementById('lex-score').innerText=ld.toFixed(2);
+        setTimeout(()=>{document.getElementById('lex-bar').style.width=Math.min(ld*100,100)+'%';},300);
+        document.getElementById('lex-feedback').innerText=
+            ld>0.7?'Excellent vocabulary variety! Your writing is rich and diverse.':
+            ld>0.5?'Good variety. A few more unique words would enrich your writing further.':
             'Consider varying your word choices — repeating words reduces impact.';
     }
 
-    let pos = a.positiveWordCount || 0;
-    let neg = a.negativeWordCount || 0;
-    let neu = a.neutralWordCount  || 0;
-    if (pos === 0 && neg === 0 && neu === 0) {
-        const c = countTone(jtext); pos = c.pos; neg = c.neg; neu = c.neu;
-    }
-    drawDonut(pos, neg, neu);
+    let pos=a.positiveWordCount||0;
+    let neg=a.negativeWordCount||0;
+    let neu=a.neutralWordCount||0;
+    if(pos===0&&neg===0&&neu===0){const c=countTone(jtext);pos=c.pos;neg=c.neg;neu=c.neu;}
+    drawDonut(pos,neg,neu);
 
-    document.getElementById('g-mistakes').innerText    = a.mistakeCount ?? '—';
-    document.getElementById('g-readability').innerText = a.readability || '—';
+    document.getElementById('g-mistakes').innerText=a.mistakeCount??'—';
+    document.getElementById('g-readability').innerText=a.readability||'—';
 
-    const repEl = document.getElementById('repeated-chips');
-    (a.repeatedWords || []).forEach(w => {
-        const c = document.createElement('span'); c.className = 'chip warn'; c.innerText = w; repEl.appendChild(c);
-    });
-    if (!a.repeatedWords || a.repeatedWords.length === 0)
-        repEl.innerHTML = '<span class="chip">No overused words detected 🎉</span>';
+    const repEl=document.getElementById('repeated-chips');
+    (a.repeatedWords||[]).forEach(w=>{const c=document.createElement('span');c.className='chip warn';c.innerText=w;repEl.appendChild(c);});
+    if(!a.repeatedWords||a.repeatedWords.length===0)
+        repEl.innerHTML='<span class="chip">No overused words detected 🎉</span>';
 
-    fetchGrammarMistakes(jtext, a.mistakeCount).then(mistakes => {
-        document.getElementById('grammar-loading').style.display = 'none';
-        const listEl = document.getElementById('mistake-list');
-        listEl.style.display = 'flex';
-        if (mistakes.length === 0) {
-            listEl.innerHTML = '<span class="no-mistakes">✓ No significant mistakes found</span>';
-        } else {
-            mistakes.forEach(m => {
-                const div = document.createElement('div'); div.className = 'mistake-item';
-                div.innerHTML = `<span class="wrong">${m.wrong}</span><span class="arr">→</span><span class="right">${m.correct}</span><span class="mtype">${m.type || ''}</span>`;
+    fetchGrammarMistakes(jtext,a.mistakeCount).then(mistakes=>{
+        document.getElementById('grammar-loading').style.display='none';
+        const listEl=document.getElementById('mistake-list');
+        listEl.style.display='flex';
+        if(mistakes.length===0){
+            listEl.innerHTML='<span class="no-mistakes">✓ No significant mistakes found</span>';
+        }else{
+            mistakes.forEach(m=>{
+                const div=document.createElement('div');div.className='mistake-item';
+                div.innerHTML=`<span class="wrong">${m.wrong}</span><span class="arr">→</span><span class="right">${m.correct}</span><span class="mtype">${m.type||''}</span>`;
                 listEl.appendChild(div);
             });
         }
     });
 
-    fetchVocabEnrichment(jtext).then(pairs => {
-        document.getElementById('vocab-loading').style.display = 'none';
-        const container = document.getElementById('vocab-rows');
-        container.style.display = 'block';
-        if (!pairs || pairs.length === 0) {
-            container.innerHTML = '<span class="chip">No common words detected</span>'; return;
-        }
-        pairs.forEach(p => {
-            const div = document.createElement('div'); div.className = 'vocab-row';
-            div.innerHTML = `<span class="used">${p.used}</span><span class="varr">→</span><span class="better">${p.better}</span>`;
+    fetchVocabEnrichment(jtext).then(pairs=>{
+        document.getElementById('vocab-loading').style.display='none';
+        const container=document.getElementById('vocab-rows');
+        container.style.display='block';
+        if(!pairs||pairs.length===0){container.innerHTML='<span class="chip">No common words detected</span>';return;}
+        pairs.forEach(p=>{
+            const div=document.createElement('div');div.className='vocab-row';
+            div.innerHTML=`<span class="used">${p.used}</span><span class="varr">→</span><span class="better">${p.better}</span>`;
             container.appendChild(div);
         });
     });
 
-    fetchExpressionEnrichment(jtext).then(exprs => {
-        document.getElementById('expr-loading').style.display = 'none';
-        const tbl = document.getElementById('expr-table');
-        tbl.style.display = 'table';
-        const tbody = document.getElementById('replace-tbody');
-        if (!exprs || exprs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="color:var(--dim);padding:12px 0;">No weak expressions detected — your writing is already expressive!</td></tr>';
+    fetchExpressionEnrichment(jtext).then(exprs=>{
+        document.getElementById('expr-loading').style.display='none';
+        const tbl=document.getElementById('expr-table');
+        tbl.style.display='table';
+        const tbody=document.getElementById('replace-tbody');
+        if(!exprs||exprs.length===0){
+            tbody.innerHTML='<tr><td colspan="3" style="color:var(--text2);padding:12px 0;">No weak expressions detected — your writing is already expressive!</td></tr>';
             return;
         }
-        exprs.forEach(e => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${e.weak}</td><td class="arrow">→</td><td>${e.strong}</td>`;
+        exprs.forEach(e=>{
+            const tr=document.createElement('tr');
+            tr.innerHTML=`<td>${e.weak}</td><td class="arrow">→</td><td>${e.strong}</td>`;
             tbody.appendChild(tr);
         });
     });

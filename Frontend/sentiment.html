@@ -1,426 +1,575 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindNook | Sentiment Analysis</title>
-    <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg:#1b2e2b; --bg2:#132220;
-            --gold:#d9c5b2; --gsoft:rgba(217,197,178,0.15); --gline:rgba(217,197,178,0.11);
-            --text:#ede8df; --dim:rgba(237,232,223,0.48);
-            --pos:#7ecb84; --neg:#d97878; --neu:#b8a98a;
-        }
-        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-        body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh;overflow-x:hidden;}
-        body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
-            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.032'/%3E%3C/svg%3E");}
-        .bg-glow{position:fixed;width:700px;height:700px;border-radius:50%;
-            background:radial-gradient(circle,rgba(42,74,62,0.2) 0%,transparent 70%);
-            top:-200px;right:-200px;pointer-events:none;z-index:0;}
-
-        nav{display:flex;justify-content:space-between;align-items:center;padding:22px 52px;
-            border-bottom:1px solid var(--gline);position:relative;z-index:10;}
-        .logo{font-family:'Cormorant Garamond',serif;font-size:1rem;letter-spacing:4px;color:var(--gold);}
-        .nav-links{display:flex;gap:10px;}
-        .pill{padding:7px 20px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;
-            cursor:pointer;transition:all 0.28s ease;text-decoration:none;display:inline-block;}
-        .pill.ghost{border:1px solid var(--gline);color:var(--gold);background:transparent;}
-        .pill.ghost:hover{border-color:var(--gold);background:var(--gsoft);}
-        .pill.filled{background:var(--gold);color:var(--bg);font-weight:500;}
-        .pill.filled:hover{background:#c8b49e;}
-
-        .hero{text-align:center;padding:72px 52px 28px;position:relative;z-index:2;}
-        .eyebrow{font-size:0.68rem;letter-spacing:4px;text-transform:uppercase;color:var(--gold);opacity:0.6;margin-bottom:16px;}
-        .hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,5vw,4rem);
-            font-weight:300;line-height:1.1;margin-bottom:30px;}
-        .hero-title em{font-style:italic;color:var(--gold);}
-        .orb{display:inline-flex;align-items:center;gap:12px;padding:16px 36px;
-            border-radius:60px;border:1px solid;transition:all 0.4s;}
-        .orb.Positive{border-color:rgba(126,203,132,0.35);background:rgba(126,203,132,0.07);}
-        .orb.Negative{border-color:rgba(217,120,120,0.35);background:rgba(217,120,120,0.07);}
-        .orb.Neutral {border-color:rgba(217,197,178,0.22);background:rgba(217,197,178,0.04);}
-        .orb-icon{font-size:1.4rem;}
-        .orb-word{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:400;letter-spacing:1px;}
-        .orb.Positive .orb-word{color:var(--pos);}
-        .orb.Negative .orb-word{color:var(--neg);}
-        .orb.Neutral  .orb-word{color:var(--neu);}
-
-        .stats{display:flex;justify-content:center;flex-wrap:wrap;gap:1px;
-            padding:44px 52px 0;position:relative;z-index:2;}
-        .sc{flex:1;min-width:90px;max-width:150px;padding:20px 14px;text-align:center;
-            border:1px solid var(--gline);background:var(--bg2);transition:background 0.3s;}
-        .sc:first-child{border-radius:14px 0 0 14px;}
-        .sc:last-child{border-radius:0 14px 14px 0;}
-        .sc:hover{background:rgba(217,197,178,0.05);}
-        .sc-n{font-family:'Cormorant Garamond',serif;font-size:2.2rem;color:var(--gold);line-height:1;}
-        .sc-l{font-size:0.63rem;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:5px;}
-        .story-wrap{max-width:800px;margin:48px auto 0;padding:0 52px;position:relative;z-index:2;}
-        .story-frame{position:relative;
-            background:linear-gradient(145deg,rgba(42,62,52,0.3) 0%,rgba(11,22,20,0.5) 100%);
-            border:1px solid rgba(217,197,178,0.16);border-radius:22px;padding:48px 52px;overflow:hidden;
-            min-height:200px;}
-        .story-frame::before{content:'\201C';position:absolute;top:-24px;left:40px;
-            font-family:'Cormorant Garamond',serif;font-size:11rem;
-            color:rgba(217,197,178,0.05);line-height:1;pointer-events:none;}
-        .story-frame::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-            background:linear-gradient(90deg,transparent,rgba(217,197,178,0.38),transparent);}
-        .story-tag{display:inline-block;margin-bottom:20px;padding:4px 14px;border-radius:50px;
-            font-size:0.66rem;letter-spacing:2.5px;text-transform:uppercase;
-            border:1px solid rgba(217,197,178,0.2);color:var(--gold);background:rgba(217,197,178,0.05);}
-        .story-body{font-family:'Cormorant Garamond',serif;font-size:1.22rem;font-weight:300;
-            line-height:2;color:var(--text);font-style:italic;}
-        .quote-body{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:300;
-            line-height:1.75;color:var(--text);font-style:italic;text-align:center;}
-        .quote-author{font-family:'Jost',sans-serif;font-size:0.78rem;letter-spacing:2px;
-            text-transform:uppercase;color:var(--gold);opacity:0.7;margin-top:18px;text-align:center;}
-
-        .cursor{display:inline-block;width:2px;height:1.1em;background:var(--gold);
-            vertical-align:middle;margin-left:3px;animation:blink 1s step-end infinite;}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-        .story-loading{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:0.88rem;}
-        .dots span{display:inline-block;width:6px;height:6px;border-radius:50%;
-            background:var(--gold);opacity:0.4;animation:dotpulse 1.4s infinite;}
-        .dots span:nth-child(2){animation-delay:0.2s;}
-        .dots span:nth-child(3){animation-delay:0.4s;}
-        @keyframes dotpulse{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
-        .tone-wrap{max-width:800px;margin:20px auto 0;padding:0 52px;position:relative;z-index:2;}
-        .card{background:var(--bg2);border:1px solid var(--gline);border-radius:16px;
-            padding:26px 28px;transition:all 0.3s;}
-        .card:hover{border-color:rgba(217,197,178,0.22);background:rgba(217,197,178,0.03);}
-        .ctag{font-size:0.63rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:0.7;margin-bottom:10px;}
-        .card h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:9px;}
-
-        .tr{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
-        .tl{font-size:0.76rem;color:var(--dim);width:68px;flex-shrink:0;}
-        .tt{flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:10px;overflow:hidden;}
-        .tf{height:100%;border-radius:10px;width:0;transition:width 1.3s cubic-bezier(.4,0,.2,1);}
-        .tv{font-size:0.76rem;color:var(--dim);width:36px;text-align:right;}
-        .tone-pct{font-size:0.68rem;color:var(--dim);opacity:0.6;margin-left:4px;}
-
-        .action{text-align:center;padding:44px 52px 68px;position:relative;z-index:2;}
-        .big-btn{display:inline-flex;align-items:center;gap:10px;padding:16px 52px;
-            border-radius:50px;background:var(--gold);color:var(--bg);font-family:'Jost',sans-serif;
-            font-size:0.92rem;font-weight:500;text-decoration:none;border:none;cursor:pointer;
-            transition:all 0.3s;}
-        .big-btn:hover{background:#c8b49e;transform:translateY(-3px);box-shadow:0 12px 30px rgba(217,197,178,0.16);}
-
-        #loading{position:fixed;inset:0;background:var(--bg);z-index:200;
-            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-        .ring{width:40px;height:40px;border:1.5px solid rgba(217,197,178,0.13);
-            border-top-color:var(--gold);border-radius:50%;animation:spin 0.85s linear infinite;}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        #loading .lt{font-family:'Cormorant Garamond',serif;font-size:1.9rem;color:var(--gold);font-style:italic;}
-        #loading p{font-size:0.83rem;color:var(--dim);}
-
-        .rise{opacity:0;transform:translateY(18px);animation:rise 0.65s ease forwards;}
-        @keyframes rise{to{opacity:1;transform:translateY(0)}}
-        .d0{animation-delay:.05s}.d1{animation-delay:.15s}.d2{animation-delay:.25s}
-        .d3{animation-delay:.35s}.d4{animation-delay:.45s}
-        .hidden{display:none!important;}
-
-        @media(max-width:680px){
-        nav{padding:18px 22px;}
-       .hero{padding:44px 22px 22px;}
-       .stats{padding:28px 22px 0; gap: 0;}
-       .sc{ min-width: 60px; padding: 14px 8px;}
-       .sc-n{ font-size: 1.6rem;}
-       .sc-l{ font-size: 0.55rem;}
-       .story-wrap,.tone-wrap,.action{padding-left:22px;padding-right:22px;}
-       .story-frame{padding:32px 26px;}
-       .hero-title{ font-size: clamp(2rem, 7vw, 4rem);}
-       .orb{ padding: 12px 22px; gap: 8px;}
-       .orb-word{ font-size: 1.2rem;}
-       .nav-links{ gap: 6px;}
-       .pill{ padding: 6px 12px; font-size: 0.7rem;}
-       }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindNook | Sentiment Analysis</title>
+<link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="personal_baseline.js"></script>
+<style>
+:root{
+  --bg:#1b2e2b;
+  --bg2:#152422;
+  --bg3:#0d1a18;
+  --card:#1f3430;
+  --card2:#243b37;
+  --border:rgba(217,197,178,0.12);
+  --border2:rgba(217,197,178,0.22);
+  --gold:#d9c5b2;
+  --gold2:#c9a882;
+  --gold3:#e8d8c8;
+  --text:#f0ece2;
+  --text2:rgba(240,236,226,0.65);
+  --text3:rgba(240,236,226,0.38);
+  --sage:#7aad8f;
+  --sage2:#4e8a68;
+  --teal:#5bc4a8;
+  --teal2:#2e8c70;
+  --rose:#c47a8a;
+  --rose2:#9e4e60;
+  --amber:#c4963a;
+  --amber2:#a87828;
+  --neutral:#9b8ea0;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6;}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+}
+.bg-mesh{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);
+}
+#loading{
+  position:fixed;inset:0;background:var(--bg);z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.ring{width:44px;height:44px;border:2px solid rgba(91,196,168,0.15);border-top-color:var(--teal);border-radius:50%;animation:spin 0.9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-title{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold2);font-style:italic;}
+.load-sub{font-size:0.84rem;color:var(--text2);letter-spacing:0.5px;}
+.hidden{display:none!important;}
+nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 52px;
+  background:rgba(21,36,34,0.85);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;color:var(--gold);}
+.nav-links{display:flex;gap:8px;align-items:center;}
+.pill{padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;cursor:pointer;transition:all 0.26s;text-decoration:none;font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;}
+.pill.ghost{border:1px solid var(--border);color:var(--text2);background:transparent;}
+.pill.ghost:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
+.pill.filled{background:var(--gold);color:var(--bg3);font-weight:600;}
+.pill.filled:hover{background:var(--gold3);transform:translateY(-1px);}
+.page{position:relative;z-index:1;}
+.hero{text-align:center;padding:72px 52px 20px;}
+.eyebrow{font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--teal);opacity:0.8;margin-bottom:14px;font-weight:500;}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2.6rem,5vw,4rem);font-weight:400;line-height:1.1;margin-bottom:32px;color:var(--text);}
+.hero-title em{font-style:italic;color:var(--gold2);font-weight:400;}
+.orb{display:inline-flex;align-items:center;gap:14px;padding:16px 40px;border-radius:60px;border:1px solid;transition:all 0.4s;}
+.orb.Positive{border-color:rgba(91,196,168,0.35);background:rgba(91,196,168,0.07);}
+.orb.Negative{border-color:rgba(196,118,138,0.35);background:rgba(196,118,138,0.07);}
+.orb.Neutral{border-color:rgba(155,142,160,0.3);background:rgba(155,142,160,0.05);}
+.orb-icon{font-size:1.5rem;}
+.orb-word{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:400;letter-spacing:1px;}
+.orb.Positive .orb-word{color:var(--teal);}
+.orb.Negative .orb-word{color:var(--rose);}
+.orb.Neutral .orb-word{color:var(--neutral);}
+.stats{display:flex;justify-content:center;flex-wrap:wrap;gap:1px;padding:48px 52px 0;max-width:780px;margin:0 auto;}
+.sc{flex:1;min-width:100px;max-width:160px;padding:22px 16px;text-align:center;background:var(--card);border:1px solid var(--border);transition:all 0.28s;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0.8;}
+.sc:first-child{border-radius:14px 0 0 14px;}
+.sc:first-child::before{border-radius:14px 0 0 0;}
+.sc:last-child{border-radius:0 14px 14px 0;}
+.sc:last-child::before{border-radius:0 14px 0 0;}
+.sc:nth-child(1)::before{background:var(--teal);}
+.sc:nth-child(2)::before{background:var(--sage);}
+.sc:nth-child(3)::before{background:var(--amber);}
+.sc:nth-child(4)::before{background:var(--rose);}
+.sc:nth-child(5)::before{background:var(--neutral);}
+.sc:hover{background:var(--card2);border-color:var(--border2);}
+.sc-n{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:400;color:var(--gold);line-height:1;margin-bottom:6px;}
+.sc-l{font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);font-weight:500;}
+.section{max-width:800px;margin:0 auto;padding:0 52px;}
+.story-wrap{padding-top:48px;}
+.story-frame{
+  position:relative;
+  background:linear-gradient(145deg,rgba(31,52,48,0.7) 0%,rgba(21,36,34,0.85) 100%);
+  border:1px solid var(--border2);
+  border-radius:20px;padding:40px 44px;overflow:hidden;min-height:180px;
+}
+.story-frame::before{content:'\201C';position:absolute;top:-20px;left:36px;font-family:'Playfair Display',serif;font-size:12rem;color:rgba(91,196,168,0.04);line-height:1;pointer-events:none;}
+.story-frame::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(91,196,168,0.35),transparent);}
+.story-tag{display:inline-flex;align-items:center;gap:7px;margin-bottom:22px;padding:5px 16px;border-radius:50px;font-size:0.65rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;border:1px solid rgba(91,196,168,0.2);color:var(--teal);background:rgba(91,196,168,0.06);}
+.story-body{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:400;line-height:2;color:var(--text);font-style:italic;}
+.quote-body{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:400;line-height:1.8;color:var(--text);font-style:italic;text-align:center;}
+.quote-author{font-family:'DM Sans',sans-serif;font-size:0.75rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold2);margin-top:18px;text-align:center;font-weight:500;}
+.story-loading{display:flex;align-items:center;gap:12px;color:var(--text2);font-size:0.88rem;font-weight:400;}
+.dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--teal);opacity:0.4;animation:dotpulse 1.4s infinite;}
+.dots span:nth-child(2){animation-delay:0.2s;}
+.dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dotpulse{0%,80%,100%{opacity:0.2;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+.cursor{display:inline-block;width:2px;height:1.1em;background:var(--teal);vertical-align:middle;margin-left:3px;animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.tone-wrap{padding-top:22px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 30px;transition:all 0.28s;}
+.card:hover{border-color:var(--border2);}
+.ctag{font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px;}
+.card-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:400;margin-bottom:20px;color:var(--text);}
+.tr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.tl{font-size:0.8rem;font-weight:400;color:var(--text2);width:72px;flex-shrink:0;}
+.tt{flex:1;height:6px;background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;}
+.tf{height:100%;border-radius:10px;width:0;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.tv{font-size:0.8rem;font-weight:500;color:var(--text);width:32px;text-align:right;}
+.tone-pct{font-size:0.72rem;color:var(--text3);width:40px;text-align:right;}
+.insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:22px;}
+.insight-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 22px;transition:all 0.28s;position:relative;overflow:hidden;}
+.insight-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.insight-card.teal::before{background:var(--teal);}
+.insight-card.rose::before{background:var(--rose);}
+.insight-card.amber::before{background:var(--amber);}
+.insight-card.sage::before{background:var(--sage);}
+.insight-card.gold::before{background:var(--gold2);}
+.insight-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.ic-tag{font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
+.insight-card.teal .ic-tag{color:var(--teal);}
+.insight-card.rose .ic-tag{color:var(--rose);}
+.insight-card.amber .ic-tag{color:var(--amber);}
+.insight-card.sage .ic-tag{color:var(--sage);}
+.insight-card.gold .ic-tag{color:var(--gold2);}
+.ic-val{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:var(--gold);line-height:1;margin-bottom:4px;}
+.ic-label{font-size:0.8rem;font-weight:400;color:var(--text2);}
+.emotion-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.etag{padding:5px 14px;border-radius:50px;font-size:0.74rem;font-weight:400;letter-spacing:0.3px;}
+.etag.pos{background:rgba(91,196,168,0.1);border:1px solid rgba(91,196,168,0.25);color:var(--teal);}
+.etag.neg{background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);}
+.etag.neu{background:rgba(155,142,160,0.08);border:1px solid rgba(155,142,160,0.2);color:var(--neutral);}
+.goal-align-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:24px 26px;
+  transition:all 0.28s;position:relative;overflow:hidden;
+  grid-column:1 / -1;
+}
+.goal-align-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--gold2));}
+.goal-align-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.goal-align-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.goal-align-score{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:400;color:var(--gold);line-height:1;}
+.goal-align-score span{font-size:1rem;color:var(--text3);}
+.goal-align-label{font-size:0.9rem;font-weight:500;color:var(--text);margin-bottom:4px;}
+.goal-align-detail{font-size:0.8rem;color:var(--text2);line-height:1.6;}
+.goal-align-bar-track{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;margin-top:14px;overflow:hidden;}
+.goal-align-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--gold2));transition:width 1.2s cubic-bezier(0.16,1,0.3,1);}
+.goal-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.goal-tag{padding:3px 11px;border-radius:50px;font-size:0.7rem;background:rgba(196,150,58,0.08);border:1px solid rgba(196,150,58,0.2);color:var(--amber);}
+.pragmatic-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:22px 22px;
+  transition:all 0.28s;position:relative;overflow:hidden;
+  grid-column:1 / -1;
+}
+.pragmatic-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--teal);}
+.pragmatic-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.pragmatic-dist{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.pragmatic-item{flex:1;min-width:80px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;}
+.pragmatic-item-val{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);line-height:1;margin-bottom:3px;}
+.pragmatic-item-label{font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);}
+.action{text-align:center;padding:48px 52px 80px;}
+.btn-row{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.big-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 32px;border-radius:50px;background:var(--gold);color:var(--bg3);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;text-decoration:none;border:none;cursor:pointer;transition:all 0.3s;letter-spacing:0.5px;}
+.big-btn:hover{background:var(--gold3);transform:translateY(-2px);box-shadow:0 12px 32px rgba(217,197,178,0.15);}
+.ghost-btn{display:inline-flex;align-items:center;gap:10px;padding:9px 28px;border-radius:50px;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:0.84rem;font-weight:400;text-decoration:none;border:1px solid var(--border2);cursor:pointer;transition:all 0.3s;letter-spacing:0.3px;}
+.ghost-btn:hover{border-color:var(--gold2);color:var(--text);background:rgba(217,197,178,0.06);transform:translateY(-1px);}
+.rise{opacity:0;transform:translateY(20px);animation:rise 0.7s ease forwards;}
+@keyframes rise{to{opacity:1;transform:translateY(0);}}
+.d0{animation-delay:.06s;}.d1{animation-delay:.16s;}.d2{animation-delay:.28s;}
+.d3{animation-delay:.40s;}.d4{animation-delay:.52s;}.d5{animation-delay:.64s;}
+@media(max-width:700px){
+  nav{padding:16px 20px;}
+  .hero{padding:44px 20px 20px;}
+  .stats{padding:28px 20px 0;gap:0;}
+  .sc{min-width:64px;padding:16px 10px;}
+  .sc-n{font-size:1.7rem;}
+  .section{padding-left:20px;padding-right:20px;}
+  .story-frame{padding:28px 24px;}
+  .hero-title{font-size:clamp(2rem,7vw,3.2rem);}
+  .insights-grid{grid-template-columns:1fr;}
+  .nav-links{gap:4px;}
+  .pill{padding:6px 12px;font-size:0.7rem;}
+  .action{padding:36px 20px 60px;}
+}
+</style>
 </head>
 <body>
-<div class="bg-glow"></div>
+<div class="bg-mesh"></div>
 
 <div id="loading">
-    <div class="ring"></div>
-    <div class="lt">Reading your words…</div>
-    <p>Preparing your reflection</p>
+  <div class="ring"></div>
+  <div class="load-title">Reading your words…</div>
+  <div class="load-sub">Preparing your reflection</div>
 </div>
 
 <div id="page" class="hidden">
-    <nav>
-        <div class="logo">MINDNOOK</div>
-        <div class="nav-links">
-            <a href="canvas.html" class="pill ghost">← Write Again</a>
-            <a href="history.html" class="pill ghost">History</a>
-            <a href="index.html"   class="pill ghost">Home</a>
-        </div>
-    </nav>
+  <nav>
+    <div class="nav-logo">MINDNOOK</div>
+    <div class="nav-links">
+        <a href="canvas.html" class="pill ghost">← Write Again</a>
+        <a href="vocab.html" class="pill ghost">Vocabulary →</a>
+        <a href="history.html" class="pill ghost">History</a>
+        <a href="dashboard.html" class="pill ghost">Dashboard</a>
+        <button onclick="signOut()" class="pill ghost">Sign Out</button>
+    </div>
+  </nav>
 
+  <div class="page">
     <div class="hero rise d0">
-        <div class="eyebrow" id="entry-date">—</div>
-        <h1 class="hero-title">Your <em>reflection,</em><br>understood.</h1>
-        <div class="orb" id="sent-orb">
-            <span class="orb-icon" id="orb-icon"></span>
-            <span class="orb-word" id="orb-word"></span>
-        </div>
+      <div class="eyebrow" id="entry-date">—</div>
+      <h1 class="hero-title">Your <em>reflection,</em><br>understood.</h1>
+      <div class="orb" id="sent-orb">
+        <span class="orb-icon" id="orb-icon"></span>
+        <span class="orb-word" id="orb-word"></span>
+      </div>
     </div>
 
     <div class="stats rise d1">
-        <div class="sc"><div class="sc-n" id="sw">—</div><div class="sc-l">Words</div></div>
-        <div class="sc"><div class="sc-n" id="ss">—</div><div class="sc-l">Sentences</div></div>
-        <div class="sc"><div class="sc-n" id="su">—</div><div class="sc-l">Unique</div></div>
-        <div class="sc"><div class="sc-n" id="sm">—</div><div class="sc-l">Mistakes</div></div>
-        <div class="sc"><div class="sc-n" id="sr">—</div><div class="sc-l">Readability</div></div>
+      <div class="sc"><div class="sc-n" id="sw">—</div><div class="sc-l">Words</div></div>
+      <div class="sc"><div class="sc-n" id="ss">—</div><div class="sc-l">Sentences</div></div>
+      <div class="sc"><div class="sc-n" id="su">—</div><div class="sc-l">Unique</div></div>
+      <div class="sc"><div class="sc-n" id="sm">—</div><div class="sc-l">Mistakes</div></div>
+      <div class="sc"><div class="sc-n" id="sr">—</div><div class="sc-l">Readability</div></div>
     </div>
 
-    <div class="story-wrap rise d2">
-        <div class="story-frame">
-            <div class="story-tag" id="story-tag">✦ For You</div>
-            <div id="story-loading" class="story-loading">
-                <div class="dots"><span></span><span></span><span></span></div>
-                <span>Writing just for you…</span>
-            </div>
-            <div id="story-body" style="display:none;"></div>
+    <div class="section story-wrap rise d2">
+      <div class="story-frame">
+        <div class="story-tag" id="story-tag">✦ For You</div>
+        <div id="story-loading" class="story-loading">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span>Writing just for you…</span>
         </div>
+        <div id="story-body" style="display:none;"></div>
+      </div>
     </div>
 
-    <div class="tone-wrap rise d3">
-        <div class="card">
-            <div class="ctag">Emotional Word Ratio</div>
-            <h3>Tone of your writing</h3>
-            <div style="margin-top:14px;">
-                <div class="tr">
-                    <span class="tl">Positive</span>
-                    <div class="tt"><div class="tf" id="tfp" style="background:linear-gradient(90deg,#2a6644,var(--pos))"></div></div>
-                    <span class="tv" id="tvp">0</span>
-                    <span class="tone-pct" id="pcp"></span>
-                </div>
-                <div class="tr">
-                    <span class="tl">Negative</span>
-                    <div class="tt"><div class="tf" id="tfn" style="background:linear-gradient(90deg,#662a2a,var(--neg))"></div></div>
-                    <span class="tv" id="tvn">0</span>
-                    <span class="tone-pct" id="pcn"></span>
-                </div>
-                <div class="tr">
-                    <span class="tl">Neutral</span>
-                    <div class="tt"><div class="tf" id="tfu" style="background:linear-gradient(90deg,var(--bg2),var(--gold))"></div></div>
-                    <span class="tv" id="tvu">0</span>
-                    <span class="tone-pct" id="pcu"></span>
-                </div>
-            </div>
+    <div class="section tone-wrap rise d3">
+      <div class="card">
+        <div class="ctag">Emotional Word Ratio</div>
+        <div class="card-title">Tone of your writing</div>
+        <div class="tr">
+          <span class="tl">Positive</span>
+          <div class="tt"><div class="tf" id="tfp" style="background:linear-gradient(90deg,rgba(91,196,168,0.3),var(--teal))"></div></div>
+          <span class="tv" id="tvp">0</span>
+          <span class="tone-pct" id="pcp"></span>
         </div>
+        <div class="tr">
+          <span class="tl">Negative</span>
+          <div class="tt"><div class="tf" id="tfn" style="background:linear-gradient(90deg,rgba(196,118,138,0.3),var(--rose))"></div></div>
+          <span class="tv" id="tvn">0</span>
+          <span class="tone-pct" id="pcn"></span>
+        </div>
+        <div class="tr">
+          <span class="tl">Neutral</span>
+          <div class="tt"><div class="tf" id="tfu" style="background:linear-gradient(90deg,rgba(155,142,160,0.25),var(--neutral))"></div></div>
+          <span class="tv" id="tvu">0</span>
+          <span class="tone-pct" id="pcu"></span>
+        </div>
+        <div class="emotion-tags" id="emotionTags"></div>
+      </div>
     </div>
 
-    <div class="action rise d4">
-        <a href="vocab.html" class="big-btn">📊 Deep Vocabulary Analysis</a>
+    <div class="section insights-grid rise d4">
+      <div class="insight-card teal">
+        <div class="ic-tag">Vocabulary</div>
+        <div class="ic-val" id="ic-vocab">—</div>
+        <div class="ic-label">Unique word ratio</div>
+      </div>
+      <div class="insight-card rose">
+        <div class="ic-tag">Complexity</div>
+        <div class="ic-val" id="ic-complex">—</div>
+        <div class="ic-label">Avg words per sentence</div>
+      </div>
+      <div class="insight-card amber">
+        <div class="ic-tag">Readability</div>
+        <div class="ic-val" id="ic-read">—</div>
+        <div class="ic-label">Flesch reading ease</div>
+      </div>
+      <div class="insight-card sage">
+        <div class="ic-tag">Emotional Density</div>
+        <div class="ic-val" id="ic-density">—</div>
+        <div class="ic-label">Emotional words per 100</div>
+      </div>
+
+      <div class="pragmatic-card" id="pragmatic-card" style="display:none">
+        <div class="ic-tag" style="color:var(--teal);font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;margin-bottom:6px">Pragmatic Mode · Layer 2</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);margin-bottom:6px" id="pragmatic-dominant">—</div>
+        <div style="font-size:0.8rem;color:var(--text2)">Dominant communication mode in this entry</div>
+        <div class="pragmatic-dist" id="pragmatic-dist"></div>
+      </div>
+
+      <div class="goal-align-card" id="goal-align-card" style="display:none">
+        <div class="goal-align-header">
+          <div>
+            <div style="font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--amber);margin-bottom:6px">Goal Alignment · Layer 4</div>
+            <div class="goal-align-label" id="goal-align-label">—</div>
+            <div class="goal-align-detail" id="goal-align-detail">—</div>
+          </div>
+          <div class="goal-align-score" id="goal-align-score">—<span>/100</span></div>
+        </div>
+        <div class="goal-align-bar-track">
+          <div class="goal-align-bar-fill" id="goal-align-bar" style="width:0%"></div>
+        </div>
+        <div class="goal-tags" id="goal-tags"></div>
+      </div>
     </div>
+
+    <div class="action rise d5">
+      <div class="btn-row">
+        <a href="vocab.html" class="big-btn">View Vocabulary Analysis →</a>
+        <a href="canvas.html" class="ghost-btn">✦ Write Another Entry</a>
+        <a href="dashboard.html" class="ghost-btn">← Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <script>
-const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
-const POS = new Set([
-    'happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved',
-    'loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride',
-    'excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful',
-    'fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted',
-    'energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed',
-    'satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled',
-    'lively','playful','serene','sunny','thrilled','victorious','vibrant','alive','appreciative',
-    'brave','caring','charmed','creative','eager','free','generous','gentle','glowing','graceful',
-    'healing','honest','imaginative','kind','light','mindful','nurturing','open','patient',
-    'receptive','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh',
-    'smile','smiling','enjoy','enjoyed','enjoying','celebrate','celebration','achievement',
-    'accomplish','accomplished','success','successful','progress','grow','growth','adventure'
-]);
+const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
+const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
 
-const NEG = new Set([
-    'sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried',
-    'fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult',
-    'struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed',
-    'exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful',
-    'horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak',
-    'broken','cry','crying','tears','grief','grieving','regret','regretful','shame','ashamed',
-    'guilt','guilty','hate','hatred','angry','bored','boredom','burned','burnout','chaos',
-    'chaotic','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure',
-    'gloomy','heavy','helpless','hollow','hurt','ignored','insecure','irritated','jealous',
-    'meaningless','numb','panicked','paralysed','paralyzed','powerless','rejection','resentment',
-    'restless','shame','shattered','silent','sorrow','stuck','suffering','tense','tension',
-    'tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved',
-    'unworthy','upset','useless','vulnerable','worthless','wrong','mistake','mistakes','hard',
-    'bad','worse','worst','never','cannot','alone','miss','missing','lost','confused'
-]);
+const POS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','victorious','vibrant','alive','appreciative','brave','caring','charmed','creative','eager','free','generous','gentle','glowing','graceful','healing','honest','imaginative','kind','light','mindful','nurturing','open','patient','receptive','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','smiling','enjoy','enjoyed','enjoying','celebrate','celebration','achievement','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
+const NEG=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','regretful','shame','ashamed','guilt','guilty','hate','hatred','bored','boredom','burned','burnout','chaos','chaotic','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','paralyzed','powerless','rejection','resentment','restless','shattered','silent','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','mistakes','hard','bad','worse','worst','never','cannot','alone','miss','missing','confused']);
 
-function tokenise(text) {
-    return text.toLowerCase()
-        .replace(/['']/g, '')           
-        .replace(/[^a-z\s]/g, ' ')     
-        .split(/\s+/)
-        .filter(w => w.length > 2);     
+function tokenise(t){return t.toLowerCase().replace(/['']/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>2);}
+
+function countTone(text){
+  const words=tokenise(text);let pos=0,neg=0;
+  const posFound=[],negFound=[];
+  words.forEach(w=>{
+    const forms=[w,w.replace(/ing$/,''),w.replace(/ed$/,''),w.replace(/ly$/,''),w.replace(/ness$/,''),w.replace(/ful$/,''),w.replace(/less$/,''),w.replace(/s$/,'')];
+    if(forms.some(x=>POS.has(x))){pos++;posFound.push(w);}
+    else if(forms.some(x=>NEG.has(x))){neg++;negFound.push(w);}
+  });
+  return{pos,neg,neu:Math.max(0,words.length-pos-neg),total:words.length,posFound:[...new Set(posFound)].slice(0,6),negFound:[...new Set(negFound)].slice(0,6)};
 }
 
-function countTone(text) {
-    const words = tokenise(text);
-    let pos = 0, neg = 0;
+function setBar(fid,vid,pcid,count,total){
+  document.getElementById(vid).innerText=count;
+  const pct=total>0?Math.round(count/total*100):0;
+  document.getElementById(pcid).innerText=pct+'%';
+  setTimeout(()=>{document.getElementById(fid).style.width=pct+'%';},500);
+}
 
-    words.forEach(w => {
-        const stems = [w,
-            w.replace(/ing$/, ''),
-            w.replace(/ed$/, ''),
-            w.replace(/ly$/, ''),
-            w.replace(/ness$/, ''),
-            w.replace(/ful$/, ''),
-            w.replace(/less$/, ''),
-            w.replace(/s$/, ''),
-        ];
-        if (stems.some(s => POS.has(s))) pos++;
-        else if (stems.some(s => NEG.has(s))) neg++;
+function typewrite(el,text,speed=16){
+  el.innerHTML='';let i=0;
+  const cur=document.createElement('span');cur.className='cursor';el.appendChild(cur);
+  const iv=setInterval(()=>{
+    if(i<text.length){el.insertBefore(document.createTextNode(text[i++]),cur);}
+    else{clearInterval(iv);cur.remove();}
+  },speed);
+}
+
+function getNextType(){
+  const last=localStorage.getItem('lastContentType')||'quote';
+  const next=last==='quote'?'story':'quote';
+  localStorage.setItem('lastContentType',next);
+  return next;
+}
+
+async function fetchContent(a,jtext){
+  const type=getNextType();const isStory=type==='story';
+  const bodyEl=document.getElementById('story-body');
+  const loadEl=document.getElementById('story-loading');
+  document.getElementById('story-tag').innerText=isStory?'✦ A Story For You':'✦ A Quote For You';
+  const snippet=jtext.substring(0,500);
+  const sentiment=a.sentiment||'Neutral';
+  const prompt=isStory
+    ?`You are a compassionate creative writer. A person just wrote this journal entry (sentiment: ${sentiment}):\n\n"${snippet}"\n\nWrite a complete, original short story (minimum 6-8 sentences, 120-180 words) mirroring the emotional themes with a clear arc ending on a hopeful note. Return ONLY valid JSON: {"story": "<full story>"}`
+    :`You are a literary curator. A person just wrote this journal entry (sentiment: ${sentiment}):\n\n"${snippet}"\n\nFind ONE deeply resonant, non-cliché quote with attribution. Return ONLY valid JSON: {"quote": "<quote text>", "author": "<Author Name>"}`;
+  try{
+    const r=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},
+      body:JSON.stringify({text:prompt})
     });
-
-    const neu = Math.max(0, words.length - pos - neg);
-    return { pos, neg, neu, total: words.length };
-}
-
-function setBar(fid, vid, pcid, count, total) {
-    document.getElementById(vid).innerText = count;
-    const pct = total > 0 ? Math.round(count / total * 100) : 0;
-    document.getElementById(pcid).innerText = pct + '%';
-    setTimeout(() => {
-        document.getElementById(fid).style.width = pct + '%';
-    }, 400);
-}
-
-function typewrite(el, text, speed = 18) {
-    el.innerHTML = ''; let i = 0;
-    const cur = document.createElement('span'); cur.className = 'cursor'; el.appendChild(cur);
-    const iv = setInterval(() => {
-        if (i < text.length) { el.insertBefore(document.createTextNode(text[i++]), cur); }
-        else { clearInterval(iv); cur.remove(); }
-    }, speed);
-}
-
-function getNextType() {
-    const last = localStorage.getItem('lastContentType') || 'quote';
-    const next = last === 'quote' ? 'story' : 'quote';
-    localStorage.setItem('lastContentType', next);
-    return next;
-}
-
-async function fetchContent(a, jtext) {
-    const type = getNextType();
-    const isStory = type === 'story';
-    const bodyEl = document.getElementById('story-body');
-    const loadEl = document.getElementById('story-loading');
-
-    document.getElementById('story-tag').innerText = isStory ? '✦ A Story For You' : '✦ A Quote For You';
-
-    const entrySnippet = jtext.substring(0, 500);
-    const sentiment = a.sentiment || 'Neutral';
-
-    const storyPrompt = `You are a compassionate creative writer. A person just wrote this journal entry (sentiment: ${sentiment}):
-
-"${entrySnippet}"
-
-Write a complete, original short story (minimum 6-8 sentences, 120-180 words) that:
-- Mirrors the emotional themes and specific details from their entry
-- Features a relatable protagonist going through a similar emotional journey
-- Has a clear narrative arc: situation → struggle → turning point → uplift
-- Ends on a genuinely hopeful, warm note
-- Feels personal and tailored — NOT generic
-
-Return ONLY valid JSON with this exact key: {"story": "<your full story here>"}`;
-
-    const quotePrompt = `You are a literary curator with deep knowledge of philosophy, literature and poetry. A person just wrote this journal entry (sentiment: ${sentiment}):
-
-"${entrySnippet}"
-
-Find or compose ONE deeply resonant quote that:
-- Speaks directly to the specific emotions and themes in their entry
-- Feels like it was written exactly for this moment
-- Is NOT a cliché (avoid: "be yourself", "every day is a gift", etc.)
-- Includes author attribution (real person, writer, philosopher, poet, or "Unknown")
-
-Return ONLY valid JSON with these exact keys: {"quote": "<the quote text>", "author": "<Author Name>"}`;
-
-    try {
-        const r = await fetch('https://dowtaqgkcbppyjxknaqx.supabase.co/functions/v1/analyze-journal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ANON },
-            body: JSON.stringify({ text: isStory ? storyPrompt : quotePrompt })
-        });
-        const d = await r.json();
-
-        loadEl.style.display = 'none';
-        bodyEl.style.display = 'block';
-
-        if (isStory) {
-            const storyText = d.story || d.moodLifter
-                || Object.values(d).find(v => typeof v === 'string' && v.length > 40)
-                || 'Every step you take, no matter how small, is a step toward the light.';
-            bodyEl.className = 'story-body';
-            typewrite(bodyEl, storyText, 16);
-        } else {
-            const quoteText = d.quote || d.moodLifter
-                || Object.values(d).find(v => typeof v === 'string' && v.length > 20)
-                || 'The only way out is through.';
-            const authorText = d.author || '';
-            bodyEl.className = 'quote-body';
-            typewrite(bodyEl, quoteText, 20);
-            if (authorText) {
-                setTimeout(() => {
-                    const authorEl = document.createElement('div');
-                    authorEl.className = 'quote-author';
-                    authorEl.innerText = '— ' + authorText;
-                    bodyEl.parentNode.appendChild(authorEl);
-                }, quoteText.length * 20 + 400);
-            }
-        }
-    } catch {
-        loadEl.style.display = 'none';
-        bodyEl.style.display = 'block';
-        bodyEl.className = 'story-body';
-        bodyEl.innerText = a.moodLifter || 'Every word you write is a step forward.';
+    const d=await r.json();
+    loadEl.style.display='none';bodyEl.style.display='block';
+    if(isStory){
+      const storyText=d.story||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>40)||'Every step forward is a step toward the light.';
+      bodyEl.className='story-body';typewrite(bodyEl,storyText,15);
+    }else{
+      const quoteText=d.quote||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>20)||'The only way out is through.';
+      const authorText=d.author||'';
+      bodyEl.className='quote-body';typewrite(bodyEl,quoteText,18);
+      if(authorText){
+        setTimeout(()=>{
+          const ae=document.createElement('div');ae.className='quote-author';
+          ae.innerText='— '+authorText;bodyEl.parentNode.appendChild(ae);
+        },quoteText.length*18+500);
+      }
     }
+  }catch(err){
+    console.error('Content fetch error:',err);
+    loadEl.style.display='none';bodyEl.style.display='block';
+    bodyEl.className='story-body';
+    bodyEl.innerText=a.moodLifter||'Every word you write is a step forward.';
+  }
 }
 
-function init() {
-    const raw   = localStorage.getItem('latestAnalysis');
-    const jtext = localStorage.getItem('latestJournalText') || '';
-    if (!raw) { window.location.href = 'canvas.html'; return; }
-    const a = JSON.parse(raw);
-    document.getElementById('entry-date').innerText = new Date().toLocaleDateString('en-GB', {
-        weekday:'long', day:'numeric', month:'long', year:'numeric'
-    });
-    const icons = { Positive:'☀️', Negative:'🌧️', Neutral:'🌤️' };
-    const orb = document.getElementById('sent-orb');
-    orb.className = 'orb ' + (a.sentiment || 'Neutral');
-    document.getElementById('orb-icon').innerText = icons[a.sentiment] || '🌤️';
-    document.getElementById('orb-word').innerText = a.sentiment || 'Neutral';
-    document.getElementById('sw').innerText = a.wordCount     || 0;
-    document.getElementById('ss').innerText = a.sentenceCount || 0;
-    document.getElementById('su').innerText = a.uniqueWords   || '—';
-    document.getElementById('sm').innerText = a.mistakeCount  || 0;
-    document.getElementById('sr').innerText = a.readability   || '—';
-    const counts = countTone(jtext);
-    let pos = counts.pos;
-    let neg = counts.neg;
-    let neu = counts.neu;
-    if ((a.positiveWordCount || 0) + (a.negativeWordCount || 0) > 0) {
-        pos = Math.round((pos + (a.positiveWordCount || 0)) / 2);
-        neg = Math.round((neg + (a.negativeWordCount || 0)) / 2);
-        neu = Math.round((neu + (a.neutralWordCount  || 0)) / 2);
+function calcReadability(text){
+  const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+  const words=text.trim().split(/\s+/).filter(w=>w.length>0);
+  const syllables=words.reduce((acc,w)=>{
+    const clean=w.toLowerCase().replace(/[^a-z]/g,'');
+    const count=clean.replace(/[^aeiouy]/g,'').length||1;
+    return acc+Math.max(1,count);
+  },0);
+  if(!sentences.length||!words.length)return{score:0,label:'N/A',avgSentLen:0};
+  const score=206.835-1.015*(words.length/sentences.length)-84.6*(syllables/words.length);
+  const clamped=Math.max(0,Math.min(100,Math.round(score)));
+  let label='Advanced';
+  if(clamped>90)label='Very Easy';
+  else if(clamped>70)label='Easy';
+  else if(clamped>50)label='Standard';
+  else if(clamped>30)label='Difficult';
+  return{score:clamped,label,avgSentLen:Math.round(words.length/sentences.length)};
+}
+
+function renderPragmatic(pragmatic){
+  if(!pragmatic)return;
+  const card=document.getElementById('pragmatic-card');
+  card.style.display='block';
+  const labelMap={assertion:'Assertion',expression:'Expression','help-seeking':'Help-Seeking',question:'Question'};
+  document.getElementById('pragmatic-dominant').innerText=labelMap[pragmatic.dominant]||pragmatic.dominant;
+  const distEl=document.getElementById('pragmatic-dist');
+  const dist=pragmatic.distribution||{};
+  const items=[
+    {key:'assertion',label:'Assert'},
+    {key:'expression',label:'Express'},
+    {key:'helpSeeking',label:'Help'},
+    {key:'question',label:'Question'},
+  ];
+  distEl.innerHTML=items.map(it=>`
+    <div class="pragmatic-item">
+      <div class="pragmatic-item-val">${dist[it.key]||0}%</div>
+      <div class="pragmatic-item-label">${it.label}</div>
+    </div>
+  `).join('');
+}
+
+async function renderGoalAlignment(a,jtext){
+  if(!window.MindNookBaseline)return;
+  const card=document.getElementById('goal-align-card');
+  const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
+  if(!storedGoals.length){card.style.display='none';return;}
+
+  let entries=[];
+  try{
+    const{createClient}=supabase;
+    const sb=createClient(SUPABASE_URL,ANON);
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){
+      const{data}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(10);
+      entries=data||[];
     }
-    const total = (pos + neg + neu) || 1;
-    setBar('tfp', 'tvp', 'pcp', pos, total);
-    setBar('tfn', 'tvn', 'pcn', neg, total);
-    setBar('tfu', 'tvu', 'pcu', neu, total);
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('page').classList.remove('hidden');
-    fetchContent(a, jtext);
+  }catch(e){console.warn('Could not fetch entries for goal alignment',e);}
+
+  const goalAlign=window.MindNookBaseline.computeGoalAlignment(a,entries);
+  if(goalAlign.score===null){card.style.display='none';return;}
+
+  card.style.display='block';
+  document.getElementById('goal-align-score').innerHTML=`${goalAlign.score}<span>/100</span>`;
+  document.getElementById('goal-align-label').innerText=goalAlign.label;
+  document.getElementById('goal-align-detail').innerText=goalAlign.detail;
+  setTimeout(()=>{document.getElementById('goal-align-bar').style.width=goalAlign.score+'%';},400);
+
+  const tagsEl=document.getElementById('goal-tags');
+  (goalAlign.goals||[]).forEach(g=>{
+    const span=document.createElement('span');
+    span.className='goal-tag';
+    span.innerText=g;
+    tagsEl.appendChild(span);
+  });
 }
 
-init();
+async function init(){
+  const raw=localStorage.getItem('latestAnalysis');
+  const jtext=localStorage.getItem('latestJournalText')||'';
+  if(!raw){window.location.href='canvas.html';return;}
+  const a=JSON.parse(raw);
+
+  document.getElementById('entry-date').innerText=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const icons={Positive:'☀️',Negative:'🌧️',Neutral:'🌤️'};
+  const orb=document.getElementById('sent-orb');
+  orb.className='orb '+(a.sentiment||'Neutral');
+  document.getElementById('orb-icon').innerText=icons[a.sentiment]||'🌤️';
+  document.getElementById('orb-word').innerText=a.sentiment||'Neutral';
+
+  document.getElementById('sw').innerText=a.wordCount||0;
+  document.getElementById('ss').innerText=a.sentenceCount||0;
+  document.getElementById('su').innerText=a.uniqueWords||'—';
+  document.getElementById('sm').innerText=a.mistakeCount||0;
+  document.getElementById('sr').innerText=a.readability||'—';
+
+  const counts=countTone(jtext);
+  let pos=counts.pos,neg=counts.neg,neu=counts.neu;
+  if((a.positiveWordCount||0)+(a.negativeWordCount||0)>0){
+    pos=Math.round((pos+(a.positiveWordCount||0))/2);
+    neg=Math.round((neg+(a.negativeWordCount||0))/2);
+    neu=Math.round((neu+(a.neutralWordCount||0))/2);
+  }
+  const total=(pos+neg+neu)||1;
+  setBar('tfp','tvp','pcp',pos,total);
+  setBar('tfn','tvn','pcn',neg,total);
+  setBar('tfu','tvu','pcu',neu,total);
+
+  const tagsEl=document.getElementById('emotionTags');
+  counts.posFound.forEach(w=>{const t=document.createElement('span');t.className='etag pos';t.textContent=w;tagsEl.appendChild(t);});
+  counts.negFound.forEach(w=>{const t=document.createElement('span');t.className='etag neg';t.textContent=w;tagsEl.appendChild(t);});
+
+  const words=jtext.trim().split(/\s+/).filter(w=>w.length>0);
+  const uniqueRatio=words.length>0?((a.uniqueWords||0)/words.length*100).toFixed(0)+'%':'—';
+  document.getElementById('ic-vocab').innerText=uniqueRatio;
+
+  const rd=calcReadability(jtext);
+  document.getElementById('ic-complex').innerText=rd.avgSentLen||'—';
+  document.getElementById('ic-read').innerText=rd.score?rd.score+' · '+rd.label:'—';
+
+  const emotionalWords=pos+neg;
+  const density=words.length>0?((emotionalWords/words.length)*100).toFixed(1):'—';
+  document.getElementById('ic-density').innerText=density+'%';
+
+  if(a.pragmatic){
+    renderPragmatic(a.pragmatic);
+  }else if(window.MindNookBaseline&&jtext){
+    const pragmatic=window.MindNookBaseline.classifyPragmatic(jtext);
+    renderPragmatic(pragmatic);
+  }
+
+  await renderGoalAlignment(a,jtext);
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('page').classList.remove('hidden');
+  fetchContent(a,jtext);
+}
+
+window.addEventListener('auth-ready',()=>{init();});
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(document.getElementById('loading')&&!document.getElementById('loading').classList.contains('hidden')){
+      init();
+    }
+  },2000);
+});
 </script>
 </body>
 </html>

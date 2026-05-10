@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="personal_baseline.js"></script>
+<title>MindNook | Analytics</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#1b2e2b;
+--bg2:#152422;
+--bg3:#0d1a18;
+--card:#1f3430;
+--card2:#243b37;
+--border:rgba(217,197,178,0.12);
+--border2:rgba(217,197,178,0.22);
+--gold:#d9c5b2;
+--gold2:#c9a882;
+--gold3:#e8d8c8;
+--text:#f0ece2;
+--text2:rgba(240,236,226,0.65);
+--text3:rgba(240,236,226,0.38);
+--sage:#7aad8f;
+--sage2:#4e8a68;
+--teal:#5bc4a8;
+--teal2:#2e8c70;
+--rose:#c47a8a;
+--rose2:#9e4e60;
+--amber:#c4963a;
+--amber2:#a87828;
+--positive:#5bc4a8;
+--negative:#c47a8a;
+--neutral:#9b8ea0;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+.page-header{padding:48px 60px 0;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.header-left h1{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:400;letter-spacing:1px;line-height:1.1}
+.header-left h1 em{font-style:italic;color:var(--gold2)}
+.header-left p{color:var(--text2);font-size:0.9rem;margin-top:8px;letter-spacing:0.3px}
+.header-right{display:flex;gap:10px;align-items:center}
+.period-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:8px 18px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.25s;letter-spacing:0.5px}
+.period-btn:hover,.period-btn.active{background:var(--gold);color:var(--bg3);border-color:var(--gold);font-weight:500}
+.stats-strip{display:flex;gap:1px;padding:40px 60px 0;flex-wrap:wrap}
+.stat-pill{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 28px;flex:1;min-width:140px;position:relative;overflow:hidden;transition:border-color 0.3s}
+.stat-pill::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0}
+.stat-pill.s-teal::before{background:var(--teal)}
+.stat-pill.s-gold::before{background:var(--gold2)}
+.stat-pill.s-rose::before{background:var(--rose)}
+.stat-pill.s-sage::before{background:var(--sage)}
+.stat-pill:hover{border-color:var(--border2)}
+.stat-label{font-size:0.75rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.stat-value{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;line-height:1}
+.stat-sub{font-size:0.75rem;color:var(--text2);margin-top:6px}
+.stat-delta{font-size:0.75rem;margin-top:4px}
+.stat-delta.up{color:var(--positive)}
+.stat-delta.down{color:var(--negative)}
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:24px 60px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.panel-header{padding:24px 28px 20px;border-bottom:1px solid var(--border)}
+.panel-header h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:400;letter-spacing:0.5px}
+.panel-header p{font-size:0.8rem;color:var(--text3);margin-top:4px;letter-spacing:0.3px}
+.panel-tabs{display:flex;gap:4px;margin-top:16px}
+.ptab{background:transparent;border:1px solid var(--border);color:var(--text3);padding:6px 14px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.2s}
+.ptab.active,.ptab:hover{background:var(--card2);color:var(--text);border-color:var(--border2)}
+.ptab.active{border-color:var(--gold2);color:var(--gold)}
+.panel-body{padding:24px 28px}
+.chart-wrap{position:relative;width:100%;height:220px}
+.heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.hm-label-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.hm-day-label{font-size:0.68rem;color:var(--text3);text-align:center;letter-spacing:0.5px}
+.hm-cell{aspect-ratio:1;border-radius:5px;cursor:pointer;transition:transform 0.15s;position:relative}
+.hm-cell:hover{transform:scale(1.15);z-index:2}
+.hm-cell[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--text);font-size:0.7rem;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:10;border:1px solid var(--border2)}
+.emotion-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.etag{padding:5px 14px;border-radius:50px;font-size:0.78rem;border:1px solid;letter-spacing:0.3px}
+.etag.joy{background:rgba(91,196,168,0.1);border-color:rgba(91,196,168,0.3);color:var(--teal)}
+.etag.calm{background:rgba(122,173,143,0.1);border-color:rgba(122,173,143,0.3);color:var(--sage)}
+.etag.melancholy{background:rgba(155,142,160,0.1);border-color:rgba(155,142,160,0.3);color:var(--neutral)}
+.etag.anxiety{background:rgba(196,118,138,0.1);border-color:rgba(196,118,138,0.3);color:var(--rose)}
+.etag.hope{background:rgba(196,150,58,0.1);border-color:rgba(196,150,58,0.3);color:var(--amber)}
+.section-label{font-size:0.7rem;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+.intensity-bar-wrap{margin-top:20px}
+.ibar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ibar-name{font-size:0.8rem;color:var(--text2);width:72px;flex-shrink:0}
+.ibar-track{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.ibar-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.16,1,0.3,1)}
+.ibar-val{font-size:0.75rem;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
+.growth-metrics{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.gmetric{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px}
+.gmetric-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.gmetric-icon.teal{background:rgba(91,196,168,0.12);color:var(--teal)}
+.gmetric-icon.gold{background:rgba(217,197,178,0.12);color:var(--gold)}
+.gmetric-icon.rose{background:rgba(196,118,138,0.12);color:var(--rose)}
+.gmetric-icon.amber{background:rgba(196,150,58,0.12);color:var(--amber)}
+.gmetric-info{flex:1}
+.gmetric-title{font-size:0.82rem;color:var(--text2);margin-bottom:3px}
+.gmetric-val{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:400}
+.gmetric-bar-wrap{width:100px;flex-shrink:0}
+.gmetric-compare{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-bottom:6px}
+.gmetric-compare span{font-size:0.7rem}
+.compare-dot{width:8px;height:8px;border-radius:50%}
+.gmetric-double-bar{height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;position:relative}
+.gdb-prev{position:absolute;top:0;left:0;height:100%;border-radius:3px;opacity:0.4}
+.gdb-curr{position:absolute;top:0;left:0;height:100%;border-radius:3px}
+.progress-ring-wrap{display:flex;align-items:center;justify-content:center;gap:24px;padding:20px 0 8px}
+.ring-item{text-align:center}
+.ring-label{font-size:0.72rem;color:var(--text3);letter-spacing:0.5px;margin-top:8px;text-transform:uppercase}
+.writing-style-section{margin-top:20px}
+.style-bar-row{margin-bottom:12px}
+.style-bar-label{display:flex;justify-content:space-between;margin-bottom:5px}
+.style-bar-name{font-size:0.8rem;color:var(--text2)}
+.style-bar-pct{font-size:0.78rem;color:var(--text3)}
+.style-bar-track{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.style-bar-fill{height:100%;border-radius:4px}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.full-row{grid-column:1/-1}
+.timeline-panel{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.timeline-body{padding:24px 28px}
+.month-timeline{display:flex;gap:0;overflow-x:auto;padding-bottom:8px}
+.month-col{min-width:64px;text-align:center;flex-shrink:0}
+.month-name{font-size:0.7rem;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px}
+.month-dots{display:flex;flex-direction:column;gap:5px;align-items:center}
+.mdot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text2);cursor:pointer;transition:all 0.2s;border:1px solid transparent;position:relative}
+.mdot:hover{border-color:var(--border2);color:var(--text)}
+.mdot.selected{border-color:var(--gold2);color:var(--gold)}
+.nav-row{display:flex;justify-content:space-between;align-items:center;padding:20px 60px 0}
+.nav-back{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:9px 22px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-block}
+.nav-back:hover{background:rgba(217,197,178,0.08);color:var(--text)}
+.page-title-rule{width:40px;height:2px;background:var(--gold2);border-radius:2px;margin-top:10px}
+.legend-row{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.tooltip-custom{display:none}
+@media(max-width:900px){
+.main-grid{grid-template-columns:1fr;padding:20px 20px}
+.page-header{padding:32px 20px 0}
+.stats-strip{padding:24px 20px 0;gap:10px}
+.stat-pill{min-width:120px;padding:14px 18px}
+.stat-value{font-size:1.6rem}
+.nav-row{padding:16px 20px 0}
+.timeline-body{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="nav-row">
+    <a href="index.html" class="nav-back">← Home</a>
+    <div style="display:flex;gap:10px">
+        <a href="canvas.html" class="nav-back">New Entry</a>
+    </div>
+</div>
+
+<div class="page-header">
+    <div class="header-left">
+        <h1>Mood &amp; <em>Growth</em> Analytics</h1>
+        <p>Your emotional journey and writing evolution, visualised</p>
+        <div class="page-title-rule"></div>
+    </div>
+    <div class="header-right">
+        <button class="period-btn active" onclick="setPeriod(this,'7d')">7 days</button>
+        <button class="period-btn" onclick="setPeriod(this,'30d')">30 days</button>
+        <button class="period-btn" onclick="setPeriod(this,'90d')">3 months</button>
+    </div>
+</div>
+
+<div class="stats-strip">
+    <div class="stat-pill s-teal">
+        <div class="stat-label">Avg Sentiment</div>
+        <div class="stat-value" id="avg-sentiment-val">74</div>
+        <div class="stat-sub">positivity score</div>
+        <div class="stat-delta up" id="avg-sentiment-delta">↑ 8 pts this week</div>
+    </div>
+    <div class="stat-pill s-gold">
+        <div class="stat-label">Entries Written</div>
+        <div class="stat-value" id="entries-val">12</div>
+        <div class="stat-sub">this period</div>
+        <div class="stat-delta up" id="entries-delta">↑ 3 more than last</div>
+    </div>
+    <div class="stat-pill s-rose">
+        <div class="stat-label">Lexical Diversity</div>
+        <div class="stat-value" id="lexical-val">68<span style="font-size:1.2rem;color:var(--text3)">%</span></div>
+        <div class="stat-sub">unique word ratio</div>
+        <div class="stat-delta up" id="lexical-delta">↑ 5% growth</div>
+    </div>
+    <div class="stat-pill s-sage">
+        <div class="stat-label">Words Written</div>
+        <div class="stat-value" id="words-val">4.2<span style="font-size:1.2rem;color:var(--text3)">k</span></div>
+        <div class="stat-sub">total this period</div>
+        <div class="stat-delta up" id="words-delta">↑ 1.1k more words</div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="panel">
+        <div class="panel-header">
+            <h2>Mood Timeline</h2>
+            <p>Emotional shifts across your recent entries</p>
+            <div class="panel-tabs">
+                <button class="ptab active" onclick="switchMoodChart(this,'line')">Line</button>
+                <button class="ptab" onclick="switchMoodChart(this,'bar')">Weekly</button>
+                <button class="ptab" onclick="switchMoodChart(this,'heatmap')">Heatmap</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="mood-line-wrap" class="chart-wrap">
+                <canvas id="moodLineChart" role="img" aria-label="Line chart showing daily mood sentiment scores over the past two weeks, ranging from 40 to 90">Daily mood scores ranging from 40 to 90 over two weeks.</canvas>
+            </div>
+            <div id="mood-bar-wrap" class="chart-wrap" style="display:none">
+                <canvas id="moodBarChart" role="img" aria-label="Bar chart showing average weekly sentiment grouped by emotion type">Weekly sentiment grouped by emotion type.</canvas>
+            </div>
+            <div id="mood-heatmap-wrap" style="display:none;margin-top:8px">
+                <div class="hm-label-row">
+                    <div class="hm-day-label">Mon</div>
+                    <div class="hm-day-label">Tue</div>
+                    <div class="hm-day-label">Wed</div>
+                    <div class="hm-day-label">Thu</div>
+                    <div class="hm-day-label">Fri</div>
+                    <div class="hm-day-label">Sat</div>
+                    <div class="hm-day-label">Sun</div>
+                </div>
+                <div class="heatmap-grid" id="heatmap-grid"></div>
+                <div class="legend-row" style="margin-top:14px;justify-content:center">
+                    <div class="legend-item"><div class="legend-dot" style="background:rgba(91,196,168,0.15)"></div>Low</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:rgba(91,196,168,0.45)"></div>Medium</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:rgba(91,196,168,0.8)"></div>High</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--rose);opacity:0.7"></div>Low mood</div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section-label">Dominant Emotions</div>
+            <div class="emotion-tags">
+                <span class="etag joy">Joy</span>
+                <span class="etag calm">Calm</span>
+                <span class="etag hope">Hopeful</span>
+                <span class="etag melancholy">Reflective</span>
+                <span class="etag anxiety">Uncertain</span>
+            </div>
+            <div class="intensity-bar-wrap">
+                <div class="section-label" style="margin-top:20px;margin-bottom:14px">Emotional Intensity</div>
+                <div class="ibar-row"><span class="ibar-name">Joy</span><div class="ibar-track"><div class="ibar-fill" style="width:78%;background:var(--teal)"></div></div><span class="ibar-val">78</span></div>
+                <div class="ibar-row"><span class="ibar-name">Calm</span><div class="ibar-track"><div class="ibar-fill" style="width:65%;background:var(--sage)"></div></div><span class="ibar-val">65</span></div>
+                <div class="ibar-row"><span class="ibar-name">Hope</span><div class="ibar-track"><div class="ibar-fill" style="width:58%;background:var(--amber)"></div></div><span class="ibar-val">58</span></div>
+                <div class="ibar-row"><span class="ibar-name">Uncertain</span><div class="ibar-track"><div class="ibar-fill" style="width:34%;background:var(--neutral)"></div></div><span class="ibar-val">34</span></div>
+                <div class="ibar-row"><span class="ibar-name">Melancholy</span><div class="ibar-track"><div class="ibar-fill" style="width:22%;background:var(--rose)"></div></div><span class="ibar-val">22</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2>Growth Analysis</h2>
+            <p>Comparing your writing evolution over time</p>
+            <div class="panel-tabs">
+                <button class="ptab active" onclick="switchGrowthView(this,'metrics')">Metrics</button>
+                <button class="ptab" onclick="switchGrowthView(this,'style')">Style</button>
+                <button class="ptab" onclick="switchGrowthView(this,'radar')">Overview</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="growth-metrics-wrap">
+                <div class="legend-row">
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--text3)"></div>Previous</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Current</div>
+                </div>
+                <div class="growth-metrics">
+                    <div class="gmetric">
+                        <div class="gmetric-icon teal">✦</div>
+                        <div class="gmetric-info">
+                            <div class="gmetric-title">Vocabulary Range</div>
+                            <div class="gmetric-val">843 <span style="font-size:0.8rem;color:var(--teal)">↑ 124</span></div>
+                        </div>
+                        <div class="gmetric-bar-wrap">
+                            <div class="gmetric-compare">
+                                <span style="color:var(--text3)">prev</span>
+                                <div class="compare-dot" style="background:var(--text3);opacity:0.4"></div>
+                                <div class="compare-dot" style="background:var(--teal)"></div>
+                                <span style="color:var(--teal)">now</span>
+                            </div>
+                            <div class="gmetric-double-bar">
+                                <div class="gdb-prev" style="width:70%;background:var(--text3)"></div>
+                                <div class="gdb-curr" style="width:85%;background:var(--teal)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gmetric">
+                        <div class="gmetric-icon gold">◈</div>
+                        <div class="gmetric-info">
+                            <div class="gmetric-title">Avg Sentence Length</div>
+                            <div class="gmetric-val">18.4 <span style="font-size:0.8rem;color:var(--gold2)">↑ 3.1 wds</span></div>
+                        </div>
+                        <div class="gmetric-bar-wrap">
+                            <div class="gmetric-compare">
+                                <span style="color:var(--text3)">prev</span>
+                                <div class="compare-dot" style="background:var(--text3);opacity:0.4"></div>
+                                <div class="compare-dot" style="background:var(--gold2)"></div>
+                                <span style="color:var(--gold2)">now</span>
+                            </div>
+                            <div class="gmetric-double-bar">
+                                <div class="gdb-prev" style="width:55%;background:var(--text3)"></div>
+                                <div class="gdb-curr" style="width:72%;background:var(--gold2)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gmetric">
+                        <div class="gmetric-icon rose">◉</div>
+                        <div class="gmetric-info">
+                            <div class="gmetric-title">Grammar Accuracy</div>
+                            <div class="gmetric-val">91% <span style="font-size:0.8rem;color:var(--rose)">↑ 7%</span></div>
+                        </div>
+                        <div class="gmetric-bar-wrap">
+                            <div class="gmetric-compare">
+                                <span style="color:var(--text3)">prev</span>
+                                <div class="compare-dot" style="background:var(--text3);opacity:0.4"></div>
+                                <div class="compare-dot" style="background:var(--rose)"></div>
+                                <span style="color:var(--rose)">now</span>
+                            </div>
+                            <div class="gmetric-double-bar">
+                                <div class="gdb-prev" style="width:63%;background:var(--text3)"></div>
+                                <div class="gdb-curr" style="width:91%;background:var(--rose)"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gmetric">
+                        <div class="gmetric-icon amber">◇</div>
+                        <div class="gmetric-info">
+                            <div class="gmetric-title">Readability Score</div>
+                            <div class="gmetric-val">76 <span style="font-size:0.8rem;color:var(--amber)">↑ 11 pts</span></div>
+                        </div>
+                        <div class="gmetric-bar-wrap">
+                            <div class="gmetric-compare">
+                                <span style="color:var(--text3)">prev</span>
+                                <div class="compare-dot" style="background:var(--text3);opacity:0.4"></div>
+                                <div class="compare-dot" style="background:var(--amber)"></div>
+                                <span style="color:var(--amber)">now</span>
+                            </div>
+                            <div class="gmetric-double-bar">
+                                <div class="gdb-prev" style="width:58%;background:var(--text3)"></div>
+                                <div class="gdb-curr" style="width:76%;background:var(--amber)"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="growth-style-wrap" style="display:none">
+                <div class="writing-style-section">
+                    <div class="section-label">Writing Style Breakdown</div>
+                    <div class="style-bar-row"><div class="style-bar-label"><span class="style-bar-name">Descriptive</span><span class="style-bar-pct">42%</span></div><div class="style-bar-track"><div class="style-bar-fill" style="width:42%;background:var(--teal)"></div></div></div>
+                    <div class="style-bar-row"><div class="style-bar-label"><span class="style-bar-name">Reflective</span><span class="style-bar-pct">31%</span></div><div class="style-bar-track"><div class="style-bar-fill" style="width:31%;background:var(--sage)"></div></div></div>
+                    <div class="style-bar-row"><div class="style-bar-label"><span class="style-bar-name">Narrative</span><span class="style-bar-pct">17%</span></div><div class="style-bar-track"><div class="style-bar-fill" style="width:17%;background:var(--amber)"></div></div></div>
+                    <div class="style-bar-row"><div class="style-bar-label"><span class="style-bar-name">Analytical</span><span class="style-bar-pct">10%</span></div><div class="style-bar-track"><div class="style-bar-fill" style="width:10%;background:var(--rose)"></div></div></div>
+                </div>
+                <div class="divider"></div>
+                <div class="section-label">Tone Shift — Previous vs Current</div>
+                <div class="chart-wrap" style="height:180px">
+                    <canvas id="toneChart" role="img" aria-label="Bar chart comparing tone categories between previous and current writing periods">Tone comparison showing more positive and reflective tones in current period.</canvas>
+                </div>
+                <div class="divider"></div>
+                <div class="section-label" style="margin-bottom:10px">Repeated Words (flagged)</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <span style="background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);padding:4px 12px;border-radius:50px;font-size:0.75px">feel (12×)</span>
+                    <span style="background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);padding:4px 12px;border-radius:50px;font-size:0.75rem">really (9×)</span>
+                    <span style="background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);padding:4px 12px;border-radius:50px;font-size:0.75rem">just (8×)</span>
+                    <span style="background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);padding:4px 12px;border-radius:50px;font-size:0.75rem">think (7×)</span>
+                    <span style="background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);padding:4px 12px;border-radius:50px;font-size:0.75rem">things (6×)</span>
+                </div>
+            </div>
+            <div id="growth-radar-wrap" style="display:none">
+                <div class="progress-ring-wrap">
+                    <div class="ring-item">
+                        <svg width="88" height="88" viewBox="0 0 88 88">
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="var(--teal)" stroke-width="8" stroke-dasharray="226.2" stroke-dashoffset="49.8" stroke-linecap="round" transform="rotate(-90 44 44)"/>
+                            <text x="44" y="48" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="var(--text)">78%</text>
+                        </svg>
+                        <div class="ring-label">Vocabulary</div>
+                    </div>
+                    <div class="ring-item">
+                        <svg width="88" height="88" viewBox="0 0 88 88">
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="var(--gold2)" stroke-width="8" stroke-dasharray="226.2" stroke-dashoffset="67.9" stroke-linecap="round" transform="rotate(-90 44 44)"/>
+                            <text x="44" y="48" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="var(--text)">70%</text>
+                        </svg>
+                        <div class="ring-label">Clarity</div>
+                    </div>
+                    <div class="ring-item">
+                        <svg width="88" height="88" viewBox="0 0 88 88">
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="var(--sage)" stroke-width="8" stroke-dasharray="226.2" stroke-dashoffset="29.4" stroke-linecap="round" transform="rotate(-90 44 44)"/>
+                            <text x="44" y="48" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="var(--text)">87%</text>
+                        </svg>
+                        <div class="ring-label">Depth</div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="chart-wrap" style="height:220px">
+                    <canvas id="radarChart" role="img" aria-label="Radar chart comparing six writing dimensions between previous and current writing periods">Radar chart showing improvements in vocabulary, clarity, grammar, depth, emotion, and style.</canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel full-row timeline-panel">
+        <div class="panel-header">
+            <h2>Monthly Emotional Timeline</h2>
+            <p>Navigate entries by month — colour reflects overall sentiment</p>
+        </div>
+        <div class="timeline-body">
+            <div class="month-timeline" id="month-timeline"></div>
+            <div class="divider" style="margin-top:20px"></div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px">
+                <div>
+                    <div class="section-label" style="margin-bottom:10px">Sentiment Distribution</div>
+                    <div style="display:flex;gap:12px;align-items:center">
+                        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--teal)">58%</div><div style="font-size:0.72rem;color:var(--text3)">Positive</div></div>
+                        <div style="width:1px;height:36px;background:var(--border)"></div>
+                        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--neutral)">27%</div><div style="font-size:0.72rem;color:var(--text3)">Neutral</div></div>
+                        <div style="width:1px;height:36px;background:var(--border)"></div>
+                        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--rose)">15%</div><div style="font-size:0.72rem;color:var(--text3)">Negative</div></div>
+                    </div>
+                </div>
+                <div style="flex:1;min-width:260px">
+                    <div class="section-label" style="margin-bottom:10px">Trend Line — Positive vs Negative Words</div>
+                    <div style="position:relative;height:80px">
+                        <canvas id="trendMini" role="img" aria-label="Small trend line comparing positive and negative word counts over months">Positive words trending upward, negative trending downward.</canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="height:60px"></div>
+
+<script>
+const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
+const {createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const MOCK_ENTRIES=[
+    {sentiment:'Positive',positive_word_count:18,negative_word_count:3,neutral_word_count:12,word_count:180,unique_words:110,readability:72,lexical_diversity:0.61,mistake_count:2,created_at:'2026-04-28'},
+    {sentiment:'Positive',positive_word_count:22,negative_word_count:5,neutral_word_count:14,word_count:210,unique_words:134,readability:74,lexical_diversity:0.64,mistake_count:3,created_at:'2026-04-30'},
+    {sentiment:'Neutral',positive_word_count:10,negative_word_count:9,neutral_word_count:18,word_count:195,unique_words:120,readability:68,lexical_diversity:0.62,mistake_count:4,created_at:'2026-05-01'},
+    {sentiment:'Negative',positive_word_count:6,negative_word_count:14,neutral_word_count:10,word_count:165,unique_words:98,readability:60,lexical_diversity:0.59,mistake_count:6,created_at:'2026-05-02'},
+    {sentiment:'Positive',positive_word_count:24,negative_word_count:4,neutral_word_count:12,word_count:220,unique_words:148,readability:78,lexical_diversity:0.67,mistake_count:1,created_at:'2026-05-03'},
+    {sentiment:'Positive',positive_word_count:20,negative_word_count:6,neutral_word_count:15,word_count:240,unique_words:155,readability:80,lexical_diversity:0.65,mistake_count:2,created_at:'2026-05-04'},
+    {sentiment:'Neutral',positive_word_count:12,negative_word_count:8,neutral_word_count:20,word_count:200,unique_words:122,readability:70,lexical_diversity:0.61,mistake_count:3,created_at:'2026-05-05'},
+    {sentiment:'Positive',positive_word_count:26,negative_word_count:3,neutral_word_count:11,word_count:250,unique_words:162,readability:82,lexical_diversity:0.65,mistake_count:1,created_at:'2026-05-06'},
+    {sentiment:'Positive',positive_word_count:28,negative_word_count:4,neutral_word_count:10,word_count:268,unique_words:174,readability:85,lexical_diversity:0.65,mistake_count:2,created_at:'2026-05-07'},
+    {sentiment:'Neutral',positive_word_count:14,negative_word_count:7,neutral_word_count:16,word_count:210,unique_words:130,readability:72,lexical_diversity:0.62,mistake_count:3,created_at:'2026-05-08'},
+    {sentiment:'Positive',positive_word_count:30,negative_word_count:2,neutral_word_count:12,word_count:280,unique_words:182,readability:88,lexical_diversity:0.65,mistake_count:1,created_at:'2026-05-09'},
+    {sentiment:'Positive',positive_word_count:25,negative_word_count:5,neutral_word_count:14,word_count:260,unique_words:168,readability:84,lexical_diversity:0.65,mistake_count:2,created_at:'2026-05-10'},
+];
+
+let moodLineChartInst=null,moodBarChartInst=null,toneChartInst=null,radarChartInst=null,trendMiniInst=null;
+let entries=[];
+
+function sentimentScore(e){return e.sentiment==='Positive'?75+Math.round(e.positive_word_count/2):e.sentiment==='Negative'?25+Math.round(e.negative_word_count):50+Math.round(e.neutral_word_count/3)}
+
+function buildMoodLineChart(data){
+    const ctx=document.getElementById('moodLineChart').getContext('2d');
+    if(moodLineChartInst)moodLineChartInst.destroy();
+    const labels=data.map(e=>e.created_at.slice(5));
+    const scores=data.map(e=>sentimentScore(e));
+    moodLineChartInst=new Chart(ctx,{
+        type:'line',
+        data:{
+            labels,
+            datasets:[{
+                label:'Mood Score',
+                data:scores,
+                borderColor:'#5bc4a8',
+                backgroundColor:'rgba(91,196,168,0.08)',
+                borderWidth:2,
+                pointBackgroundColor:'#5bc4a8',
+                pointRadius:4,
+                pointHoverRadius:6,
+                tension:0.4,
+                fill:true,
+                borderDash:[],
+            },{
+                label:'Moving Avg',
+                data:scores.map((_,i,a)=>Math.round(a.slice(Math.max(0,i-2),i+1).reduce((s,v)=>s+v,0)/Math.min(i+1,3))),
+                borderColor:'rgba(217,197,178,0.5)',
+                borderWidth:1.5,
+                pointRadius:0,
+                tension:0.4,
+                fill:false,
+                borderDash:[4,4],
+            }]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            interaction:{mode:'index',intersect:false},
+            plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1,padding:10}},
+            scales:{
+                x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}},
+                y:{min:20,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}}
+            }
+        }
+    });
+}
+
+function buildMoodBarChart(data){
+    const ctx=document.getElementById('moodBarChart').getContext('2d');
+    if(moodBarChartInst)moodBarChartInst.destroy();
+    const weeks=['Wk1','Wk2','Wk3','Wk4'];
+    moodBarChartInst=new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels:weeks,
+            datasets:[
+                {label:'Positive',data:[58,62,70,74],backgroundColor:'rgba(91,196,168,0.75)',borderRadius:6},
+                {label:'Neutral',data:[28,24,20,18],backgroundColor:'rgba(155,142,160,0.5)',borderRadius:6},
+                {label:'Negative',data:[14,14,10,8],backgroundColor:'rgba(196,118,138,0.6)',borderRadius:6},
+            ]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},
+            scales:{
+                x:{stacked:true,grid:{display:false},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}},
+                y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}}
+            }
+        }
+    });
+}
+
+function buildHeatmap(data){
+    const grid=document.getElementById('heatmap-grid');
+    grid.innerHTML='';
+    const days=28;
+    for(let i=0;i<days;i++){
+        const entry=data[i%data.length];
+        const score=sentimentScore(entry);
+        const cell=document.createElement('div');
+        cell.className='hm-cell';
+        const date=new Date(2026,3,13+i);
+        const ds=date.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+        let bg,opacity;
+        if(entry.sentiment==='Negative'){bg='196,118,138';opacity=0.3+score/300}
+        else if(entry.sentiment==='Neutral'){bg='155,142,160';opacity=0.2+score/300}
+        else{bg='91,196,168';opacity=0.15+score/150}
+        cell.style.background=`rgba(${bg},${Math.min(opacity,0.9).toFixed(2)})`;
+        cell.setAttribute('title',`${ds} · Score ${score}`);
+        grid.appendChild(cell);
+    }
+}
+
+function buildToneChart(){
+    const ctx=document.getElementById('toneChart').getContext('2d');
+    if(toneChartInst)toneChartInst.destroy();
+    toneChartInst=new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels:['Warm','Reflective','Direct','Formal','Lyrical'],
+            datasets:[
+                {label:'Previous',data:[40,50,35,20,30],backgroundColor:'rgba(240,236,226,0.12)',borderRadius:4},
+                {label:'Current',data:[62,68,48,25,44],backgroundColor:'rgba(91,196,168,0.65)',borderRadius:4},
+            ]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},
+            scales:{
+                x:{grid:{display:false},ticks:{color:'rgba(240,236,226,0.4)',font:{size:10}}},
+                y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:10}}}
+            }
+        }
+    });
+}
+
+function buildRadarChart(){
+    const ctx=document.getElementById('radarChart').getContext('2d');
+    if(radarChartInst)radarChartInst.destroy();
+    radarChartInst=new Chart(ctx,{
+        type:'radar',
+        data:{
+            labels:['Vocabulary','Clarity','Grammar','Depth','Emotion','Style'],
+            datasets:[
+                {label:'Previous',data:[62,58,66,55,70,60],borderColor:'rgba(240,236,226,0.3)',backgroundColor:'rgba(240,236,226,0.04)',borderWidth:1.5,pointRadius:3,pointBackgroundColor:'rgba(240,236,226,0.4)',borderDash:[4,4]},
+                {label:'Current',data:[78,70,87,82,76,74],borderColor:'#5bc4a8',backgroundColor:'rgba(91,196,168,0.1)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#5bc4a8'},
+            ]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},
+            scales:{r:{grid:{color:'rgba(255,255,255,0.08)'},angleLines:{color:'rgba(255,255,255,0.08)'},pointLabels:{color:'rgba(240,236,226,0.5)',font:{size:11}},ticks:{display:false},min:0,max:100}}
+        }
+    });
+}
+
+function buildTrendMini(data){
+    const ctx=document.getElementById('trendMini').getContext('2d');
+    if(trendMiniInst)trendMiniInst.destroy();
+    const months=['Nov','Dec','Jan','Feb','Mar','Apr','May'];
+    trendMiniInst=new Chart(ctx,{
+        type:'line',
+        data:{
+            labels:months,
+            datasets:[
+                {label:'Positive',data:[42,48,54,58,62,65,70],borderColor:'#5bc4a8',borderWidth:2,pointRadius:2,tension:0.4,fill:false,borderDash:[]},
+                {label:'Negative',data:[28,24,22,20,16,14,12],borderColor:'#c47a8a',borderWidth:2,pointRadius:2,tension:0.4,fill:false,borderDash:[3,3]},
+            ]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},
+            scales:{
+                x:{grid:{display:false},ticks:{color:'rgba(240,236,226,0.35)',font:{size:10}}},
+                y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.35)',font:{size:10}}}
+            }
+        }
+    });
+}
+
+function buildMonthTimeline(data){
+    const container=document.getElementById('month-timeline');
+    container.innerHTML='';
+    const months=[
+        {name:'Nov',entries:data.filter((_,i)=>i<2)},
+        {name:'Dec',entries:data.filter((_,i)=>i>=2&&i<4)},
+        {name:'Jan',entries:data.filter((_,i)=>i>=4&&i<6)},
+        {name:'Feb',entries:data.filter((_,i)=>i>=6&&i<8)},
+        {name:'Mar',entries:data.filter((_,i)=>i>=8&&i<10)},
+        {name:'Apr',entries:data.filter((_,i)=>i>=10&&i<12)},
+        {name:'May',entries:data.filter((_,i)=>i>=12)},
+    ];
+    months.forEach(m=>{
+        const col=document.createElement('div');
+        col.className='month-col';
+        col.innerHTML=`<div class="month-name">${m.name}</div><div class="month-dots"></div>`;
+        const dotsWrap=col.querySelector('.month-dots');
+        if(m.entries.length===0){
+            const e=data[Math.floor(Math.random()*data.length)];
+            m.entries=[e,data[Math.floor(Math.random()*data.length)]];
+        }
+        m.entries.forEach((e,idx)=>{
+            const dot=document.createElement('div');
+            dot.className='mdot';
+            const score=sentimentScore(e);
+            let bg;
+            if(e.sentiment==='Positive')bg=`rgba(91,196,168,${0.15+score/150})`;
+            else if(e.sentiment==='Negative')bg=`rgba(196,118,138,${0.2+score/300})`;
+            else bg=`rgba(155,142,160,0.25)`;
+            dot.style.background=bg;
+            dot.title=`Entry ${idx+1} · ${score}`;
+            dot.innerHTML=`<span style="font-size:0.65rem;color:rgba(240,236,226,0.5)">${score}</span>`;
+            dotsWrap.appendChild(dot);
+        });
+        container.appendChild(col);
+    });
+}
+
+function switchMoodChart(btn,type){
+    document.querySelectorAll('.panel-tabs .ptab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('mood-line-wrap').style.display='none';
+    document.getElementById('mood-bar-wrap').style.display='none';
+    document.getElementById('mood-heatmap-wrap').style.display='none';
+    if(type==='line'){document.getElementById('mood-line-wrap').style.display='block';if(moodLineChartInst)moodLineChartInst.update();}
+    else if(type==='bar'){document.getElementById('mood-bar-wrap').style.display='block';buildMoodBarChart(entries.length?entries:MOCK_ENTRIES);}
+    else{document.getElementById('mood-heatmap-wrap').style.display='block';buildHeatmap(entries.length?entries:MOCK_ENTRIES);}
+}
+
+function switchGrowthView(btn,view){
+    btn.closest('.panel-tabs').querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('growth-metrics-wrap').style.display='none';
+    document.getElementById('growth-style-wrap').style.display='none';
+    document.getElementById('growth-radar-wrap').style.display='none';
+    if(view==='metrics')document.getElementById('growth-metrics-wrap').style.display='block';
+    else if(view==='style'){document.getElementById('growth-style-wrap').style.display='block';setTimeout(()=>buildToneChart(),50);}
+    else{document.getElementById('growth-radar-wrap').style.display='block';setTimeout(()=>buildRadarChart(),50);}
+}
+
+function setPeriod(btn,period){
+    document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function injectTrendCard(trend){
+    const mainGrid=document.querySelector('.main-grid');
+    if(!mainGrid)return;
+    const colorMap={up:'var(--teal)',down:'var(--rose)',mixed:'var(--amber)',neutral:'var(--neutral)'};
+    const iconMap={up:'↗',down:'↘',mixed:'↔',neutral:'→'};
+    const card=document.createElement('div');
+    card.className='panel';
+    card.style.cssText='grid-column:1/-1;padding:24px 28px;';
+    card.innerHTML=`
+        <div class="panel-header" style="border-bottom:none;padding-bottom:0">
+            <div>
+                <h2 style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400">
+                    Temporal Pattern · <span style="color:${colorMap[trend.direction]};font-style:italic">${trend.label}</span>
+                </h2>
+                <p style="font-size:0.78rem;color:var(--text3);margin-top:4px">Layer 3 — Longitudinal trend classification</p>
+            </div>
+            <div style="font-size:2.5rem;color:${colorMap[trend.direction]}">${iconMap[trend.direction]}</div>
+        </div>
+        <div style="display:flex;gap:24px;margin-top:18px;flex-wrap:wrap">
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:120px">
+                <div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Trend</div>
+                <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:${colorMap[trend.direction]}">${trend.label}</div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:120px">
+                <div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Slope</div>
+                <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold)">${trend.slope>0?'+':''}${trend.slope}</div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:120px">
+                <div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Variance</div>
+                <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold)">${trend.variance}</div>
+            </div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:2;min-width:200px">
+                <div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Score Trajectory</div>
+                <div style="display:flex;gap:4px;align-items:flex-end;height:32px">
+                    ${(trend.scores||[]).map(s=>`<div style="flex:1;background:${colorMap[trend.direction]};opacity:0.7;border-radius:2px 2px 0 0;height:${Math.round((s/100)*32)}px"></div>`).join('')}
+                </div>
+            </div>
+        </div>`;
+    mainGrid.insertBefore(card,mainGrid.firstChild);
+}
+
+async function init(){
+    let data=MOCK_ENTRIES;
+    try{
+        const {data:{session}}=await sb.auth.getSession();
+        if(session){
+            const {data:rows,error}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:true});
+            if(!error&&rows&&rows.length>0)data=rows;
+        }
+    }catch(e){}
+    entries=data;
+    buildMoodLineChart(data);
+    buildHeatmap(data);
+    buildMonthTimeline(data);
+    buildTrendMini(data);
+
+    if(window.MindNookBaseline&&data.length>=3){
+        const trend=window.MindNookBaseline.classifyTemporalTrend(data);
+        injectTrendCard(trend);
+    }
+}
+
+init();
+</script>
+</body>
+</html>
