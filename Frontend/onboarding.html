@@ -6,139 +6,47 @@
 <title>MindNook — Setup Your Space</title>
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
---bg:#1b2e2b;
---bg2:#152422;
---bg3:#0d1a18;
---card:#1f3430;
---card2:#243b37;
---border:rgba(217,197,178,0.12);
---border2:rgba(217,197,178,0.22);
---gold:#d9c5b2;
---gold2:#c9a882;
---gold3:#e8d8c8;
---text:#f0ece2;
---text2:rgba(240,236,226,0.65);
---text3:rgba(240,236,226,0.38);
---teal:#5bc4a8;
---teal2:#2e8c70;
---rose:#c47a8a;
---sage:#7aad8f;
---amber:#c4963a;
+--bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+--border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+--gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+--text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+--teal:#5bc4a8;--teal2:#2e8c70;--rose:#c47a8a;--sage:#7aad8f;--amber:#c4963a;
 }
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;}
-
 canvas#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35;}
-
-.ob-wrap{
-  position:relative;z-index:1;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  min-height:100vh;padding:24px 16px;
-}
-
-.card{
-  width:100%;max-width:640px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:24px;
-  padding:52px 48px;
-  box-shadow:0 24px 80px rgba(0,0,0,0.4),0 0 0 1px rgba(217,197,178,0.04);
-  position:relative;overflow:hidden;
-}
-.card::before{
-  content:'';position:absolute;top:-60px;right:-60px;
-  width:200px;height:200px;
-  background:radial-gradient(circle,rgba(217,197,178,0.04) 0%,transparent 70%);
-  pointer-events:none;
-}
-
-.card-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:32px;
-}
-.progress-bar-wrap{
-  flex:1;height:2px;
-  background:rgba(217,197,178,0.08);
-  border-radius:2px;margin-right:14px;
-}
-.progress-bar-fill{
-  height:100%;border-radius:2px;
-  background:linear-gradient(90deg,rgba(217,197,178,0.3),rgba(217,197,178,0.7));
-  transition:width 0.7s cubic-bezier(.4,0,.2,1);
-}
-.step-label{
-  font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:400;
-  letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);
-  white-space:nowrap;flex-shrink:0;
-}
-
+.ob-wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;}
+.card{width:100%;max-width:640px;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:52px 48px;box-shadow:0 24px 80px rgba(0,0,0,0.4),0 0 0 1px rgba(217,197,178,0.04);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(217,197,178,0.04) 0%,transparent 70%);pointer-events:none;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;}
+.progress-bar-wrap{flex:1;height:2px;background:rgba(217,197,178,0.08);border-radius:2px;margin-right:14px;}
+.progress-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(217,197,178,0.3),rgba(217,197,178,0.7));transition:width 0.7s cubic-bezier(.4,0,.2,1);}
+.step-label{font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);white-space:nowrap;flex-shrink:0;}
 .step{display:none;opacity:0;transform:translateY(18px);transition:opacity 0.5s ease,transform 0.5s ease;}
 .step.active{display:block;}
 .step.visible{opacity:1;transform:translateY(0);}
-
-.eyebrow{
-  display:flex;align-items:center;gap:10px;
-  font-family:'DM Sans',sans-serif;font-size:0.62rem;font-weight:500;
-  letter-spacing:4px;text-transform:uppercase;color:var(--gold2);opacity:0.8;
-  margin-bottom:18px;
-}
+.eyebrow{display:flex;align-items:center;gap:10px;font-family:'DM Sans',sans-serif;font-size:0.62rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gold2);opacity:0.8;margin-bottom:18px;}
 .eyebrow-line{width:20px;height:1px;background:var(--gold2);opacity:0.5;flex-shrink:0;}
-
-h1{
-  font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4vw,2.6rem);
-  font-weight:400;line-height:1.12;color:var(--text);margin-bottom:14px;
-}
+h1{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4vw,2.6rem);font-weight:400;line-height:1.12;color:var(--text);margin-bottom:14px;}
 h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
-
-.sub{
-  font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:300;
-  color:var(--text2);line-height:1.85;margin-bottom:36px;
-}
-
-.begin-btn{
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--gold);color:var(--bg3);
-  padding:14px 36px;border-radius:50px;border:none;
-  font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;
-  cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);margin-top:8px;position:relative;overflow:hidden;
-}
+.sub{font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:300;color:var(--text2);line-height:1.85;margin-bottom:36px;}
+.begin-btn{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:var(--bg3);padding:14px 36px;border-radius:50px;border:none;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);margin-top:8px;position:relative;overflow:hidden;}
 .begin-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background 0.25s;}
 .begin-btn:hover::before{background:rgba(255,255,255,0.1);}
 .begin-btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(217,197,178,0.28);}
 .begin-btn svg{transition:transform 0.3s;flex-shrink:0;}
 .begin-btn:hover svg{transform:translateX(4px);}
-
-.journal-visual{
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:40px;height:90px;
-}
+.journal-visual{display:flex;align-items:center;justify-content:center;margin-bottom:40px;height:90px;}
 .journal-lines{display:flex;flex-direction:column;gap:10px;width:180px;}
-.jl{
-  height:1.5px;background:linear-gradient(90deg,rgba(217,197,178,0.5),rgba(217,197,178,0.05));
-  border-radius:2px;animation:breathe 3s ease-in-out infinite;
-}
-.jl:nth-child(1){width:100%;animation-delay:0s;}
-.jl:nth-child(2){width:75%;animation-delay:0.3s;}
-.jl:nth-child(3){width:88%;animation-delay:0.6s;}
-.jl:nth-child(4){width:55%;animation-delay:0.9s;}
-.jl:nth-child(5){width:70%;animation-delay:1.2s;}
+.jl{height:1.5px;background:linear-gradient(90deg,rgba(217,197,178,0.5),rgba(217,197,178,0.05));border-radius:2px;animation:breathe 3s ease-in-out infinite;}
+.jl:nth-child(1){width:100%;animation-delay:0s;}.jl:nth-child(2){width:75%;animation-delay:0.3s;}.jl:nth-child(3){width:88%;animation-delay:0.6s;}.jl:nth-child(4){width:55%;animation-delay:0.9s;}.jl:nth-child(5){width:70%;animation-delay:1.2s;}
 @keyframes breathe{0%,100%{opacity:0.4;}50%{opacity:1;}}
-
 .goals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
-.goal-card{
-  border:1px solid var(--border);border-radius:14px;
-  padding:18px 20px;cursor:pointer;
-  background:var(--card2);
-  transition:all 0.3s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;
-}
-.goal-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(217,197,178,0.15),transparent);
-  opacity:0;transition:opacity 0.3s;
-}
+.goal-card{border:1px solid var(--border);border-radius:14px;padding:18px 20px;cursor:pointer;background:var(--card2);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;}
+.goal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(217,197,178,0.15),transparent);opacity:0;transition:opacity 0.3s;}
 .goal-card:hover::before{opacity:1;}
 .goal-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.2);}
 .goal-card.selected{border-color:rgba(217,197,178,0.35);background:rgba(217,197,178,0.07);}
@@ -146,171 +54,67 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
 .goal-card.selected .gc-icon{color:var(--gold2);}
 .gc-title{font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;letter-spacing:0.2px;color:var(--text);margin-bottom:5px;}
 .gc-desc{font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:300;color:var(--text3);line-height:1.55;}
-
 .emotion-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
-.chip{
-  padding:7px 18px;border-radius:50px;
-  border:1px solid var(--border);
-  font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:300;
-  letter-spacing:0.3px;color:var(--text2);
-  cursor:pointer;transition:all 0.25s ease;background:transparent;
-}
+.chip{padding:7px 18px;border-radius:50px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:300;letter-spacing:0.3px;color:var(--text2);cursor:pointer;transition:all 0.25s ease;background:transparent;}
 .chip:hover{border-color:var(--border2);color:var(--text);}
 .chip.selected{border-color:rgba(217,197,178,0.35);background:rgba(217,197,178,0.07);color:var(--text);}
-
 .slider-section{margin-bottom:8px;}
 .slider-label{font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:400;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:16px;}
-.stress-slider{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:2px;
-  background:rgba(217,197,178,0.15);
-  border-radius:2px;outline:none;cursor:pointer;
-}
-.stress-slider::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:18px;height:18px;border-radius:50%;
-  background:var(--gold);border:2px solid var(--bg3);
-  box-shadow:0 0 12px rgba(217,197,178,0.3);
-  cursor:pointer;transition:transform 0.2s;
-}
+.stress-slider{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:rgba(217,197,178,0.15);border-radius:2px;outline:none;cursor:pointer;}
+.stress-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid var(--bg3);box-shadow:0 0 12px rgba(217,197,178,0.3);cursor:pointer;transition:transform 0.2s;}
 .stress-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
 .slider-value{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:var(--gold2);margin-top:16px;text-align:center;}
 .privacy-note{font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:300;color:var(--text3);margin-top:20px;letter-spacing:0.3px;line-height:1.7;}
-
 .freq-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
-.pill{
-  padding:9px 22px;border-radius:50px;
-  border:1px solid var(--border);
-  font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:300;
-  letter-spacing:0.3px;color:var(--text2);cursor:pointer;
-  transition:all 0.25s ease;background:transparent;
-}
+.pill{padding:9px 22px;border-radius:50px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:300;letter-spacing:0.3px;color:var(--text2);cursor:pointer;transition:all 0.25s ease;background:transparent;}
 .pill:hover{border-color:var(--border2);color:var(--text);}
 .pill.selected{border-color:rgba(217,197,178,0.35);background:rgba(217,197,178,0.07);color:var(--text);}
-
-.section-sub{
-  font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:400;
-  letter-spacing:2px;text-transform:uppercase;color:var(--text3);
-  margin:22px 0 14px;
-}
-
+.section-sub{font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin:22px 0 14px;}
 .toggle-list{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;}
-.toggle-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 18px;border-radius:14px;
-  border:1px solid var(--border);background:var(--card2);
-  transition:border-color 0.25s;
-}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:14px;border:1px solid var(--border);background:var(--card2);transition:border-color 0.25s;}
 .toggle-row:hover{border-color:var(--border2);}
 .toggle-label{font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:300;color:var(--text2);}
-.toggle-switch{
-  width:44px;height:24px;border-radius:50px;background:rgba(217,197,178,0.08);
-  position:relative;cursor:pointer;border:1px solid var(--border);
-  transition:background 0.3s,border-color 0.3s;flex-shrink:0;
-}
+.toggle-switch{width:44px;height:24px;border-radius:50px;background:rgba(217,197,178,0.08);position:relative;cursor:pointer;border:1px solid var(--border);transition:background 0.3s,border-color 0.3s;flex-shrink:0;}
 .toggle-switch.on{background:rgba(91,196,168,0.2);border-color:rgba(91,196,168,0.35);}
-.toggle-knob{
-  position:absolute;top:3px;left:3px;width:16px;height:16px;
-  border-radius:50%;background:rgba(240,236,226,0.35);
-  transition:transform 0.3s,background 0.3s;
-}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:rgba(240,236,226,0.35);transition:transform 0.3s,background 0.3s;}
 .toggle-switch.on .toggle-knob{transform:translateX(20px);background:var(--teal);}
-
-.summary-card{
-  border:1px solid var(--border);border-radius:16px;
-  padding:24px 26px;background:var(--card2);margin-bottom:20px;
-  position:relative;overflow:hidden;
-}
-.summary-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(217,197,178,0.15),transparent);
-}
+.summary-card{border:1px solid var(--border);border-radius:16px;padding:24px 26px;background:var(--card2);margin-bottom:20px;position:relative;overflow:hidden;}
+.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(217,197,178,0.15),transparent);}
 .summary-list{list-style:none;}
-.summary-list li{
-  font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:300;color:var(--text2);
-  padding:8px 0;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:10px;
-}
+.summary-list li{font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:300;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .summary-list li:last-child{border-bottom:none;}
 .summary-list li::before{content:'·';color:var(--gold2);font-size:18px;opacity:0.7;}
-
-.ai-message{
-  border:1px solid rgba(91,196,168,0.18);border-radius:14px;
-  padding:20px 22px;background:rgba(91,196,168,0.04);
-  margin-bottom:32px;position:relative;
-}
-.ai-tag{
-  font-family:'DM Sans',sans-serif;font-size:0.62rem;font-weight:500;
-  letter-spacing:3px;text-transform:uppercase;
-  color:var(--teal);opacity:0.7;margin-bottom:10px;
-}
+.ai-message{border:1px solid rgba(91,196,168,0.18);border-radius:14px;padding:20px 22px;background:rgba(91,196,168,0.04);margin-bottom:32px;position:relative;}
+.ai-tag{font-family:'DM Sans',sans-serif;font-size:0.62rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--teal);opacity:0.7;margin-bottom:10px;}
 .ai-text{font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:300;color:var(--text2);line-height:1.85;}
-
-.enter-btn{
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  width:100%;padding:16px;border-radius:50px;
-  background:var(--gold);color:var(--bg3);
-  border:none;
-  font-family:'DM Sans',sans-serif;
-  font-size:0.78rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;
-  cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
-  position:relative;overflow:hidden;
-}
+.enter-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:16px;border-radius:50px;background:var(--gold);color:var(--bg3);border:none;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;}
 .enter-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background 0.25s;}
 .enter-btn:hover::before{background:rgba(255,255,255,0.1);}
 .enter-btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(217,197,178,0.28);}
-
-.nav-row{
-  display:flex;align-items:center;justify-content:space-between;
-  width:100%;max-width:640px;margin-top:16px;padding:0 4px;
-}
-.nav-btn{
-  font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:400;
-  letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
-  background:none;border:none;cursor:pointer;padding:8px 16px;
-  border-radius:50px;transition:all 0.25s;
-}
+.enter-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.nav-row{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:640px;margin-top:16px;padding:0 4px;}
+.nav-btn{font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:400;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);background:none;border:none;cursor:pointer;padding:8px 16px;border-radius:50px;transition:all 0.25s;}
 .nav-btn:hover{color:var(--text2);}
-.nav-btn.primary{
-  color:var(--gold2);border:1px solid var(--border2);
-  background:transparent;padding:10px 28px;
-  font-size:0.72rem;
-}
+.nav-btn.primary{color:var(--gold2);border:1px solid var(--border2);background:transparent;padding:10px 28px;font-size:0.72rem;}
 .nav-btn.primary:hover{background:rgba(217,197,178,0.06);border-color:var(--gold);}
 .nav-btn:disabled{opacity:0.2;cursor:default;}
 .nav-btn:disabled:hover{color:var(--text3);}
 .skip-btn{font-size:0.68rem;}
-
-.pulse-ring{
-  width:60px;height:60px;border-radius:50%;
-  border:1px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;
-  margin:0 auto 32px;position:relative;
-  background:var(--card2);
-}
-.pulse-ring::before{
-  content:'';position:absolute;inset:-8px;border-radius:50%;
-  border:1px solid rgba(217,197,178,0.1);
-  animation:pulseRing 2.5s ease-out infinite;
-}
+.pulse-ring{width:60px;height:60px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 32px;position:relative;background:var(--card2);}
+.pulse-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(217,197,178,0.1);animation:pulseRing 2.5s ease-out infinite;}
 @keyframes pulseRing{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(1.4);}}
 .pulse-inner{font-size:20px;color:var(--gold2);}
-
 .divider{height:1px;background:var(--border);margin:20px 0;}
 </style>
 </head>
 <body>
-
 <canvas id="particles"></canvas>
-
 <div class="ob-wrap">
   <div class="card">
-
     <div class="card-header" id="cardHeader" style="display:none;">
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
       <div class="step-label" id="stepLabel">Step 1 of 6</div>
     </div>
-
     <div class="step active" id="step1">
       <div class="journal-visual">
         <div class="journal-lines">
@@ -325,45 +129,19 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
-
     <div class="step" id="step2">
       <div class="eyebrow"><div class="eyebrow-line"></div>Journaling Goals</div>
       <h1>What brings you to <em>reflective writing?</em></h1>
       <p class="sub">Select the goals that matter most to you.</p>
       <div class="goals-grid">
-        <div class="goal-card" onclick="toggleGoal(this)">
-          <div class="gc-icon">◎</div>
-          <div class="gc-title">Understand my emotions</div>
-          <div class="gc-desc">Develop deeper self-awareness through writing</div>
-        </div>
-        <div class="goal-card" onclick="toggleGoal(this)">
-          <div class="gc-icon">⌇</div>
-          <div class="gc-title">Track stress patterns</div>
-          <div class="gc-desc">Identify burnout and tension signals early</div>
-        </div>
-        <div class="goal-card" onclick="toggleGoal(this)">
-          <div class="gc-icon">◈</div>
-          <div class="gc-title">Improve writing clarity</div>
-          <div class="gc-desc">Grow vocabulary and expressive range</div>
-        </div>
-        <div class="goal-card" onclick="toggleGoal(this)">
-          <div class="gc-icon">⊡</div>
-          <div class="gc-title">Build a daily habit</div>
-          <div class="gc-desc">Cultivate consistent journaling practice</div>
-        </div>
-        <div class="goal-card" onclick="toggleGoal(this)">
-          <div class="gc-icon">⊕</div>
-          <div class="gc-title">Organise my thoughts</div>
-          <div class="gc-desc">Transform mental clutter into clarity</div>
-        </div>
-        <div class="goal-card" onclick="toggleGoal(this)">
-          <div class="gc-icon">◐</div>
-          <div class="gc-title">Measure growth</div>
-          <div class="gc-desc">Track personal evolution over time</div>
-        </div>
+        <div class="goal-card" onclick="toggleGoal(this)"><div class="gc-icon">◎</div><div class="gc-title">Understand my emotions</div><div class="gc-desc">Develop deeper self-awareness through writing</div></div>
+        <div class="goal-card" onclick="toggleGoal(this)"><div class="gc-icon">⌇</div><div class="gc-title">Track stress patterns</div><div class="gc-desc">Identify burnout and tension signals early</div></div>
+        <div class="goal-card" onclick="toggleGoal(this)"><div class="gc-icon">◈</div><div class="gc-title">Improve writing clarity</div><div class="gc-desc">Grow vocabulary and expressive range</div></div>
+        <div class="goal-card" onclick="toggleGoal(this)"><div class="gc-icon">⊡</div><div class="gc-title">Build a daily habit</div><div class="gc-desc">Cultivate consistent journaling practice</div></div>
+        <div class="goal-card" onclick="toggleGoal(this)"><div class="gc-icon">⊕</div><div class="gc-title">Organise my thoughts</div><div class="gc-desc">Transform mental clutter into clarity</div></div>
+        <div class="goal-card" onclick="toggleGoal(this)"><div class="gc-icon">◐</div><div class="gc-title">Measure growth</div><div class="gc-desc">Track personal evolution over time</div></div>
       </div>
     </div>
-
     <div class="step" id="step3">
       <div class="eyebrow"><div class="eyebrow-line"></div>Emotional Check-in</div>
       <h1>How have you been <em>feeling recently?</em></h1>
@@ -385,7 +163,6 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
       </div>
       <div class="privacy-note">This information is used only to personalise your reflective insights and is never shared.</div>
     </div>
-
     <div class="step" id="step4">
       <div class="eyebrow"><div class="eyebrow-line"></div>Writing Habits</div>
       <h1>How often would you like <em>to reflect?</em></h1>
@@ -404,35 +181,18 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
         <div class="pill" onclick="togglePill(this,'time')">Late Night</div>
       </div>
     </div>
-
     <div class="step" id="step5">
       <div class="eyebrow"><div class="eyebrow-line"></div>Preferences</div>
       <h1>Customise your <em>experience.</em></h1>
       <p class="sub">Shape how MindNook works for you.</p>
       <div class="toggle-list">
-        <div class="toggle-row">
-          <span class="toggle-label">Journaling reminders</span>
-          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Weekly emotional summaries</span>
-          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Longitudinal mood tracking</span>
-          <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Vocabulary &amp; writing growth</span>
-          <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Reflect AI recommendations</span>
-          <div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
-        </div>
+        <div class="toggle-row"><span class="toggle-label">Journaling reminders</span><div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Weekly emotional summaries</span><div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Longitudinal mood tracking</span><div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Vocabulary &amp; writing growth</span><div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Reflect AI recommendations</span><div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
       </div>
     </div>
-
     <div class="step" id="step6">
       <div class="pulse-ring"><div class="pulse-inner">✦</div></div>
       <div class="eyebrow" style="justify-content:center;"><div class="eyebrow-line"></div>Your Space is Ready</div>
@@ -451,22 +211,23 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
         <div class="ai-tag">Reflect AI · Personalisation</div>
         <div class="ai-text">You appear focused on emotional clarity and personal growth. Your dashboard will prioritise mood tracking and longitudinal insights tailored to your writing rhythm.</div>
       </div>
-      <button class="enter-btn" onclick="enterMindNook()">
+      <button class="enter-btn" id="enterBtn" onclick="enterMindNook()">
         Enter MindNook
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
-
   </div>
-
   <div class="nav-row" id="navRow">
     <button class="nav-btn" id="backBtn" onclick="goBack()" disabled>← Back</button>
     <button class="nav-btn skip-btn" id="skipBtn" onclick="goNext()">Skip</button>
     <button class="nav-btn primary" id="nextBtn" onclick="goNext()">Continue →</button>
   </div>
 </div>
-
 <script>
+const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
 let current=1;
 const total=6;
 
@@ -499,31 +260,46 @@ function goBack(){if(current>1)goTo(current-1);}
 function toggleGoal(el){el.classList.toggle('selected');}
 function toggleChip(el){el.classList.toggle('selected');}
 function togglePill(el,group){
-  document.querySelectorAll('[onclick*="togglePill"][onclick*="\''+group+'\'"]').forEach(p=>p.classList.remove('selected'));
+  document.querySelectorAll(`[onclick*="togglePill"][onclick*="'${group}'"]`).forEach(p=>p.classList.remove('selected'));
   el.classList.add('selected');
 }
 function toggleSwitch(el){el.classList.toggle('on');}
 function updateStress(v){document.getElementById('stressVal').textContent=v;}
-async function enterMindNook() {
-  const { createClient } = supabase;
-  const sb = createClient(
-    'https://dowtaqgkcbppyjxknaqx.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk'
-  );
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = 'login.html'; return; }
 
-  const selectedGoals = [...document.querySelectorAll('.goal-card.selected')]
-    .map(el => el.querySelector('.gc-title').textContent.trim());
-  const selectedEmotions = [...document.querySelectorAll('.chip.selected')]
-    .map(el => el.textContent.trim());
-  const stressVal = document.getElementById('stressSlider')?.value || '5';
+async function enterMindNook(){
+  const btn=document.getElementById('enterBtn');
+  btn.disabled=true;
+  btn.textContent='Saving…';
 
-  localStorage.setItem('mindnook_goals', JSON.stringify(selectedGoals));
-  localStorage.setItem('mindnook_emotions', JSON.stringify(selectedEmotions));
-  localStorage.setItem('mindnook_stress', stressVal);
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='login.html';return;}
 
-  window.location.href = 'dashboard.html';
+  const selectedGoals=[...document.querySelectorAll('.goal-card.selected')].map(el=>el.querySelector('.gc-title').textContent.trim());
+  const selectedEmotions=[...document.querySelectorAll('.chip.selected')].map(el=>el.textContent.trim());
+  const stressVal=parseInt(document.getElementById('stressSlider')?.value||'5');
+  const freqEl=document.querySelector('[onclick*="\'freq\'"].selected');
+  const timeEl=document.querySelector('[onclick*="\'time\'"].selected');
+  const journalingFrequency=freqEl?freqEl.textContent.trim():'';
+  const preferredTime=timeEl?timeEl.textContent.trim():'';
+
+  localStorage.setItem('mindnook_goals',JSON.stringify(selectedGoals));
+  localStorage.setItem('mindnook_emotions',JSON.stringify(selectedEmotions));
+  localStorage.setItem('mindnook_stress',String(stressVal));
+
+  try{
+    await sb.from('user_preferences').upsert({
+      user_id:session.user.id,
+      goals:selectedGoals,
+      initial_emotions:selectedEmotions,
+      stress_level:stressVal,
+      journaling_frequency:journalingFrequency,
+      preferred_time:preferredTime
+    },{onConflict:'user_id'});
+  }catch(e){
+    console.warn('Could not save preferences to Supabase (non-fatal):',e);
+  }
+
+  window.location.href='dashboard.html';
 }
 
 window.addEventListener('load',()=>{
@@ -550,6 +326,5 @@ function frame(){
 }
 frame();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>

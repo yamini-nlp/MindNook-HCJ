@@ -12,27 +12,12 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
-            --bg:#1b2e2b;
-            --bg2:#152422;
-            --bg3:#0d1a18;
-            --card:#1f3430;
-            --card2:#243b37;
-            --border:rgba(217,197,178,0.12);
-            --border2:rgba(217,197,178,0.22);
-            --gold:#d9c5b2;
-            --gold2:#c9a882;
-            --gold3:#e8d8c8;
-            --text:#f0ece2;
-            --text2:rgba(240,236,226,0.65);
-            --text3:rgba(240,236,226,0.38);
-            --sage:#7aad8f;
-            --sage2:#4e8a68;
-            --teal:#5bc4a8;
-            --teal2:#2e8c70;
-            --rose:#c47a8a;
-            --rose2:#9e4e60;
-            --amber:#c4963a;
-            --amber2:#a87828;
+            --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+            --border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+            --gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+            --text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+            --sage:#7aad8f;--sage2:#4e8a68;--teal:#5bc4a8;--teal2:#2e8c70;
+            --rose:#c47a8a;--rose2:#9e4e60;--amber:#c4963a;--amber2:#a87828;
         }
         body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
         .canvas-picker-view{background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:80px 20px;color:var(--text)}
@@ -87,21 +72,6 @@
         .theme-sunset .ql-editor{background:linear-gradient(180deg,#ffef96 0%,#ffb458 50%,#f96161 100%)!important;color:#fffaf0!important}
         .theme-noir .ql-editor{background-color:#000000!important;color:#d4af37!important;font-family:'Snell Roundhand',cursive!important}
         .theme-ocean .ql-editor{background:linear-gradient(180deg,#001f3f 0%,#003366 50%,#005b96 100%)!important;color:#e0f7fa!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="times"]::before{content:"Times New Roman"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="apple-chancery"]::before{content:"Apple Chancery"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="bradley-hand"]::before{content:"Bradley Hand"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="chalkduster"]::before{content:"Chalkduster"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="papyrus"]::before{content:"Papyrus"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="noteworthy"]::before{content:"Noteworthy"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="bookman"]::before{content:"Bookman"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="big-caslon"]::before{content:"Big Caslon"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="copperplate"]::before{content:"Copperplate"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="impact"]::before{content:"Impact"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="market-felt"]::before{content:"Market Felt"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="luminari"]::before{content:"Luminari"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="palatino"]::before{content:"Palatino"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="rockhand"]::before{content:"Rockhand"!important}
-        .ql-picker.ql-font .ql-picker-item[data-value="snell-roundhand"]::before{content:"Snell Roundhand"!important}
         .ql-font-times{font-family:'Times',serif!important}
         .ql-font-bookman{font-family:'Bookman Old Style',serif!important}
         .ql-font-apple-chancery{font-family:'Apple Chancery',cursive!important}
@@ -117,7 +87,6 @@
         .ql-font-rockhand{font-family:'Rockwell',cursive!important}
         .ql-font-snell-roundhand{font-family:'Snell Roundhand',cursive!important}
         .ql-font-papyrus{font-family:'Papyrus',fantasy!important}
-        .ql-picker.ql-size .ql-picker-item::before{content:attr(data-value)!important}
         .ql-size-10px{font-size:10px!important}.ql-size-11px{font-size:11px!important}.ql-size-12px{font-size:12px!important}.ql-size-13px{font-size:13px!important}.ql-size-14px{font-size:14px!important}.ql-size-15px{font-size:15px!important}.ql-size-16px{font-size:16px!important}.ql-size-17px{font-size:17px!important}.ql-size-18px{font-size:18px!important}.ql-size-19px{font-size:19px!important}.ql-size-20px{font-size:20px!important}.ql-size-21px{font-size:21px!important}.ql-size-22px{font-size:22px!important}.ql-size-23px{font-size:23px!important}.ql-size-24px{font-size:24px!important}.ql-size-25px{font-size:25px!important}.ql-size-26px{font-size:26px!important}.ql-size-27px{font-size:27px!important}.ql-size-28px{font-size:28px!important}.ql-size-29px{font-size:29px!important}.ql-size-30px{font-size:30px!important}
         .ql-picker.ql-font .ql-picker-label::before{content:"Font"!important}
         .ql-picker.ql-font.ql-expanded .ql-picker-label::before,.ql-picker.ql-font .ql-picker-label[data-value]:not([data-value=""])::before{content:attr(data-value)!important;text-transform:capitalize}
@@ -144,7 +113,6 @@
     </style>
 </head>
 <body>
-
     <div id="picker-view" class="canvas-picker-view">
         <h1 class="picker-headline">Select Your <em>Canvas</em></h1>
         <p class="picker-sub">Choose a style that matches your mood today</p>
@@ -220,14 +188,6 @@
 
         let selectedTemplate=null;
         let quill=null;
-
-        function resetSaveBtn(){
-            const saveBtn=document.getElementById('save-btn');
-            saveBtn.innerText='Save & Analyze ✓';
-            saveBtn.disabled=false;
-            saveBtn.style.opacity='1';
-            saveBtn.style.cursor='pointer';
-        }
 
         function initCanvas(){
             const grid=document.getElementById('canvas-grid');
@@ -312,31 +272,152 @@
                 saveBtn.style.cursor='not-allowed';
                 const htmlContent=quill.root.innerHTML;
                 localStorage.setItem('latestJournalText',textContent);
+
                 let analysis=null;
                 try{
                     const{data:{session}}=await supabaseClient.auth.getSession();
                     if(!session){alert('Session expired. Please sign in again.');window.location.href='login.html';return;}
-                    const response=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({text:textContent})});
+                    const response=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+                        body:JSON.stringify({text:textContent})
+                    });
                     if(!response.ok){const errBody=await response.text();console.warn('Edge function error '+response.status+':',errBody);throw new Error('edge_function_failed');}
                     const raw=await response.json();
-                    analysis={sentiment:raw.sentiment||raw.overall_sentiment||'Neutral',wordCount:raw.wordCount||raw.word_count||textContent.split(/\s+/).length,sentenceCount:raw.sentenceCount||raw.sentence_count||textContent.split(/[.!?]+/).filter(s=>s.trim()).length,uniqueWords:raw.uniqueWords||raw.unique_words||0,mistakeCount:raw.mistakeCount||raw.mistake_count||0,readability:raw.readability||raw.readability_score||50,positiveWordCount:raw.positiveWordCount||raw.positive_word_count||0,negativeWordCount:raw.negativeWordCount||raw.negative_word_count||0,neutralWordCount:raw.neutralWordCount||raw.neutral_word_count||0,lexicalDiversity:raw.lexicalDiversity||raw.lexical_diversity||0,emotionWords:raw.emotionWords||raw.emotion_words||[],repeatedWords:raw.repeatedWords||raw.repeated_words||[],writingStyle:raw.writingStyle||raw.writing_style||'',grammarTrend:raw.grammarTrend||raw.grammar_trend||'',vocabularyTrend:raw.vocabularyTrend||raw.vocabulary_trend||'',progressSummary:raw.progressSummary||raw.progress_summary||'',moodLifter:raw.moodLifter||raw.mood_lifter||'',vocabularySuggestions:raw.vocabularySuggestions||raw.vocabulary_suggestions||[]};
-                }catch(err){console.warn('AI unavailable, using local analysis:',err.message);analysis=localAnalysis(textContent);}
+                    analysis={
+                        sentiment:raw.sentiment||'Neutral',
+                        wordCount:raw.wordCount||textContent.split(/\s+/).length,
+                        sentenceCount:raw.sentenceCount||textContent.split(/[.!?]+/).filter(s=>s.trim()).length,
+                        uniqueWords:raw.uniqueWords||0,
+                        mistakeCount:raw.mistakeCount||0,
+                        readability:raw.readability||50,
+                        positiveWordCount:raw.positiveWordCount||0,
+                        negativeWordCount:raw.negativeWordCount||0,
+                        neutralWordCount:raw.neutralWordCount||0,
+                        lexicalDiversity:raw.lexicalDiversity||0,
+                        emotionWords:raw.emotionWords||[],
+                        repeatedWords:raw.repeatedWords||[],
+                        writingStyle:raw.writingStyle||'',
+                        grammarTrend:raw.grammarTrend||'',
+                        vocabularyTrend:raw.vocabularyTrend||'',
+                        progressSummary:raw.progressSummary||'',
+                        moodLifter:raw.moodLifter||'',
+                        vocabularySuggestions:raw.vocabularySuggestions||[]
+                    };
+                }catch(err){
+                    console.warn('AI unavailable, using local analysis:',err.message);
+                    analysis=localAnalysis(textContent);
+                }
+
+                analysis._rawText=textContent;
+
+                let pragmatic=null;
+                let temporalTrend=null;
+                let goalAlignment=null;
+                let utilityScore=null;
 
                 if(window.MindNookBaseline){
-                    const pragmatic=window.MindNookBaseline.classifyPragmatic(textContent);
+                    pragmatic=window.MindNookBaseline.classifyPragmatic(textContent);
                     analysis.pragmatic=pragmatic;
-                    analysis._rawText=textContent;
+                }
+
+                try{
+                    const{data:{session}}=await supabaseClient.auth.getSession();
+                    if(session&&window.MindNookBaseline){
+                        const{data:recentEntries}=await supabaseClient
+                            .from('journal_entries')
+                            .select('*')
+                            .eq('user_id',session.user.id)
+                            .order('created_at',{ascending:false})
+                            .limit(20);
+
+                        const entries=recentEntries||[];
+                        temporalTrend=window.MindNookBaseline.classifyTemporalTrend(entries);
+                        goalAlignment=window.MindNookBaseline.computeGoalAlignment(analysis,entries);
+
+                        if(pragmatic&&temporalTrend&&goalAlignment){
+                            utilityScore=window.MindNookBaseline.buildUtilityScore(
+                                {sentiment:analysis.sentiment,positiveWordCount:analysis.positiveWordCount,negativeWordCount:analysis.negativeWordCount},
+                                pragmatic,
+                                temporalTrend,
+                                goalAlignment
+                            );
+                        }
+                    }
+                }catch(layerErr){
+                    console.warn('Layer computation failed (non-fatal):',layerErr.message);
                 }
 
                 localStorage.setItem('latestAnalysis',JSON.stringify(analysis));
+
                 try{
                     const{data:{session}}=await supabaseClient.auth.getSession();
                     if(session){
-                        await supabaseClient.from('journal_entries').insert([{user_id:session.user.id,content:htmlContent,sentiment:analysis.sentiment,mood_lifter_content:analysis.moodLifter,word_count:analysis.wordCount,sentence_count:analysis.sentenceCount,mistake_count:analysis.mistakeCount,lexical_feedback:analysis.vocabularySuggestions,unique_words:analysis.uniqueWords,readability:analysis.readability,writing_style:analysis.writingStyle,grammar_trend:analysis.grammarTrend,vocabulary_trend:analysis.vocabularyTrend,progress_summary:analysis.progressSummary,emotion_words:analysis.emotionWords,repeated_words:analysis.repeatedWords,positive_word_count:analysis.positiveWordCount,negative_word_count:analysis.negativeWordCount,neutral_word_count:analysis.neutralWordCount,lexical_diversity:analysis.lexicalDiversity,created_at:new Date().toISOString()}]).select().then(({data,error})=>{if(error){console.warn('DB insert error (non-fatal):',error.message);}else if(data&&data[0]){localStorage.setItem('mindnook_last_entry_id',data[0].id);}});
+                        const insertPayload={
+                            user_id:session.user.id,
+                            content:htmlContent,
+                            sentiment:analysis.sentiment,
+                            mood_lifter_content:analysis.moodLifter,
+                            word_count:analysis.wordCount,
+                            sentence_count:analysis.sentenceCount,
+                            mistake_count:analysis.mistakeCount,
+                            lexical_feedback:analysis.vocabularySuggestions,
+                            unique_words:analysis.uniqueWords,
+                            readability:analysis.readability,
+                            writing_style:analysis.writingStyle,
+                            grammar_trend:analysis.grammarTrend,
+                            vocabulary_trend:analysis.vocabularyTrend,
+                            progress_summary:analysis.progressSummary,
+                            emotion_words:analysis.emotionWords,
+                            repeated_words:analysis.repeatedWords,
+                            positive_word_count:analysis.positiveWordCount,
+                            negative_word_count:analysis.negativeWordCount,
+                            neutral_word_count:analysis.neutralWordCount,
+                            lexical_diversity:analysis.lexicalDiversity,
+                            layer2_pragmatic:pragmatic||null,
+                            layer3_temporal:temporalTrend||null,
+                            layer4_goal:goalAlignment||null,
+                            layer5_action:utilityScore||null,
+                            created_at:new Date().toISOString()
+                        };
+                        const{data,error}=await supabaseClient.from('journal_entries').insert([insertPayload]).select();
+                        if(error){console.warn('DB insert error (non-fatal):',error.message);}
+                        else if(data&&data[0]){localStorage.setItem('mindnook_last_entry_id',data[0].id);}
                     }
                 }catch(dbErr){console.warn('DB insert failed (non-fatal):',dbErr.message);}
+
                 localStorage.setItem('mindnook_last_entry_content',textContent);
                 localStorage.setItem('mindnook_last_entry_sentiment',analysis.sentiment);
+
+                const savedEntryId=localStorage.getItem('mindnook_last_entry_id');
+                if(savedEntryId){
+                    try{
+                        const{data:{session:s2}}=await supabaseClient.auth.getSession();
+                        if(s2){
+                            const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
+                            fetch(`${SUPABASE_URL}/functions/v1/pragmatic-analysis`,{
+                                method:'POST',
+                                headers:{'Content-Type':'application/json','Authorization':`Bearer ${s2.access_token}`},
+                                body:JSON.stringify({
+                                    type:'combined',
+                                    content:textContent,
+                                    sentiment:analysis.sentiment,
+                                    goals:storedGoals,
+                                    entry_id:savedEntryId
+                                })
+                            }).then(async r=>{
+                                if(r.ok){
+                                    const enriched=await r.json();
+                                    if(enriched.pragmatic){
+                                        analysis.pragmatic=enriched.pragmatic;
+                                        localStorage.setItem('latestAnalysis',JSON.stringify(analysis));
+                                    }
+                                }
+                            }).catch(e=>console.warn('Pragmatic enrichment failed (non-fatal):',e));
+                        }
+                    }catch(enrichErr){console.warn('Pragmatic enrichment setup failed (non-fatal):',enrichErr);}
+                }
+
                 window.location.href='sentiment.html';
             };
         }
