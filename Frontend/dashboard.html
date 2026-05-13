@@ -205,7 +205,7 @@ canvas.mini-chart{width:100%;height:100%;}
   </section>
   <div class="ai-banner">
     <div class="banner-dot"></div>
-    <span id="bannerText">Loading your personal stats from Supabase…</span>
+    <span id="bannerText">Loading your personal stats…</span>
   </div>
   <div class="stats-row">
     <div class="stat-card"><div class="sc-label">Total Entries</div><div class="sc-val" id="stat-entries">—</div><div class="sc-sub">All time</div><div class="sc-bar"><div class="sc-bar-fill" id="bar-entries"></div></div><div class="sc-trend" id="trend-entries">—</div></div>
@@ -475,6 +475,17 @@ function injectBaselineDelta(delta){
   summaryEl.insertAdjacentHTML('beforeend',baselineHtml);
 }
 
+function injectSentimentBaselineCard(sentimentBaseline,sentimentBaselineDelta){
+  if(!sentimentBaseline||!sentimentBaselineDelta)return;
+  const summaryEl=document.getElementById('weeklySummary');
+  if(!summaryEl)return;
+  const interp=sentimentBaselineDelta.interpretation||'within normal range';
+  const zScore=sentimentBaselineDelta.zScore||0;
+  const color=zScore>1?'var(--teal)':zScore<-1?'var(--rose)':'var(--text3)';
+  const html=`<div style="margin-top:10px;padding:12px 14px;background:rgba(217,197,178,0.05);border:1px solid var(--border);border-radius:10px"><div style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">mood vs your personal average</div><div style="font-size:0.78rem;color:${color}">${interp} (z=${zScore > 0 ? '+' : ''}${zScore})</div><div style="font-size:0.72rem;color:var(--text3);margin-top:4px">Your mood baseline: ${sentimentBaseline.muUser}/100 · σ ${sentimentBaseline.stdDev} · ${sentimentBaseline.sampleSize} entries</div></div>`;
+  summaryEl.insertAdjacentHTML('beforeend',html);
+}
+
 function getTimeOfDay(){const h=new Date().getHours();if(h<12)return'morning';if(h<17)return'afternoon';return'evening';}
 function capitalize(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
 async function signOut(){await sb.auth.signOut();window.location.href='login.html';}
@@ -487,7 +498,12 @@ async function initDashboard(){
   const name=user.user_metadata?.full_name||user.email?.split('@')[0]||'there';
   document.getElementById('navAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('heroGreeting').innerHTML=`Good ${getTimeOfDay()}, <em>${capitalize(name)}.</em>`;
-  const{data:entries,error}=await sb.from('journal_entries').select('*').order('created_at',{ascending:false});
+
+  if(window.MindNookBaseline){
+    await window.MindNookBaseline.syncGoalsFromSupabase(sb,user.id);
+  }
+
+  const{data:entries,error}=await sb.from('journal_entries').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
   if(error){console.error(error);document.getElementById('bannerText').textContent='Error: '+error.message;return;}
   allEntries=entries||[];
   const total=allEntries.length;
@@ -545,13 +561,19 @@ async function initDashboard(){
   renderEntries(allEntries);
   document.getElementById('weeklySummary').innerHTML=`You wrote <b>${thisWeek.length} entries</b> this week averaging <b>${weekWordAvg} words</b>. Streak: <b>${streak} days</b>. Most active day: <b>${bestDay}</b>.`;
   document.getElementById('bannerText').textContent=`${total} entries · streak ${streak} days · consistency ${consistency}% · updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+
   if(window.MindNookBaseline&&allEntries.length>=3){
+    const sentimentBaseline=window.MindNookBaseline.computeSentimentBaseline(allEntries);
     const lastRaw=localStorage.getItem('latestAnalysis');
     if(lastRaw){
       try{
         const lastAnalysis=JSON.parse(lastRaw);
         const delta=window.MindNookBaseline.computeBaselineDelta(lastAnalysis,allEntries);
         if(delta)injectBaselineDelta(delta);
+        if(sentimentBaseline&&lastAnalysis.sentimentScore!=null){
+          const sentDelta=window.MindNookBaseline.computePersonalBaselineDelta(lastAnalysis.sentimentScore,sentimentBaseline);
+          if(sentDelta)injectSentimentBaselineCard(sentimentBaseline,sentDelta);
+        }
       }catch(e){}
     }
   }

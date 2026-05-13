@@ -7,9 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const GROQ_KEY = Deno.env.get("GROQ_API_KEY");
@@ -40,17 +38,18 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, content, sentiment, user_goal, pragmatic_category, tone_type, goals } = body;
+    const { type, content, sentiment, user_goal, pragmatic_category, tone_type, goals, entry_id, sentiment_score } = body;
 
     let prompt = "";
 
     if (type === "combined") {
       const goalsText = Array.isArray(goals) && goals.length > 0 ? goals.join(", ") : "general self-reflection";
+      const sentScoreHint = sentiment_score != null ? ` Numeric sentiment score: ${sentiment_score}/100.` : "";
       prompt = `You are a pragmatic NLP and goal-alignment analyzer for a reflective journaling system.
 
 Journal Entry: "${content.replace(/"/g, "'").slice(0, 1000)}"
-Layer 1 Detected Sentiment: ${sentiment}
-User's Journaling Goals: ${goalsText}
+Detected Sentiment: ${sentiment}${sentScoreHint}
+User Journaling Goals: ${goalsText}
 
 Return ONLY valid JSON, no markdown, no extra text:
 {
@@ -88,7 +87,7 @@ distribution values must be integers that sum to 100`;
       prompt = `You are a pragmatic NLP analyzer for a reflective journaling system.
 
 Journal Entry: "${content.replace(/"/g, "'").slice(0, 1000)}"
-Layer 1 Detected Sentiment: ${sentiment}
+Detected Sentiment: ${sentiment}
 
 Return ONLY valid JSON, no markdown:
 {"category":"expression","confidence":0.85,"markers":["exclamatory tone","no question marks","conclusion-oriented"],"is_help_seeking":false,"tone_type":"cathartic","dominant":"expression","distribution":{"assertion":20,"expression":60,"helpSeeking":10,"question":10}}
@@ -107,7 +106,7 @@ distribution values must be integers summing to 100`;
 Journal Entry: "${content.replace(/"/g, "'").slice(0, 800)}"
 User's Stated Goal: "${user_goal}"
 Detected Sentiment: ${sentiment}
-Pragmatic Category: ${pragmatic_category}
+Communication Category: ${pragmatic_category}
 Tone Type: ${tone_type}
 
 Return ONLY valid JSON, no markdown:
@@ -126,23 +125,14 @@ goal_confidence: 0.0 to 1.0`;
 
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_KEY}`
-      },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         max_tokens: 600,
         temperature: 0.2,
         messages: [
-          {
-            role: "system",
-            content: "You are a precise NLP analyzer. You ONLY return valid JSON. No markdown, no backticks, no explanations — raw JSON only."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
+          { role: "system", content: "You are a precise NLP analyzer. You ONLY return valid JSON. No markdown, no backticks, no explanations." },
+          { role: "user", content: prompt }
         ]
       })
     });
@@ -156,32 +146,63 @@ goal_confidence: 0.0 to 1.0`;
 
     const raw = groqData.choices?.[0]?.message?.content?.replace(/```json|```/g, "").trim() || "{}";
     let result;
-    try {
-      result = JSON.parse(raw);
-    } catch {
+    try { result = JSON.parse(raw); }
+    catch {
       return new Response(JSON.stringify({ error: "Failed to parse LLM response", raw }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    if (type === "combined" && result.pragmatic && result.goal && user?.id) {
-      const lastEntryId = body.entry_id;
-      if (lastEntryId) {
-        await supabase
-          .from("journal_entries")
-          .update({
-            layer2_pragmatic: result.pragmatic,
-            layer4_goal: result.goal
-          })
-          .eq("id", lastEntryId)
-          .eq("user_id", user.id);
+    if (type === "combined" && result.pragmatic && result.goal && user?.id && entry_id) {
+      const sentimentNumeric = sentiment_score != null ? sentiment_score : null;
+      const pragData = result.pragmatic;
+      const goalData = result.goal;
+      const l1 = { sentiment, positiveWordCount: body.positive_word_count || 0, negativeWordCount: body.negative_word_count || 0 };
+      const l2 = { dominant: pragData.dominant || 'assertion', distribution: pragData.distribution || {} };
+      const l3Direction = body.trend_direction || 'neutral';
+      const l3 = { direction: l3Direction, label: body.trend_label || 'stable', slope: body.trend_slope || 0 };
+      const goalScore = goalData.alignment_score != null ? Math.round(goalData.alignment_score * 100) : 50;
+      const l4 = { score: goalScore, label: goalData.alignment || 'ambiguous' };
+      const Cfp = body.cfp_weight ?? 0.4;
+      const Cfn = body.cfn_weight ?? 0.6;
+      const tau = Cfp / (Cfp + Cfn);
+      const sentimentScore_l = sentiment === 'Positive' ? 1 : sentiment === 'Negative' ? -1 : 0;
+      const trendScore = l3Direction === 'up' ? 1 : l3Direction === 'down' ? -1 : 0;
+      const goalScoreNorm = (goalScore - 50) / 50;
+      const pragScore = l2.dominant === 'help-seeking' ? 1 : l2.dominant === 'question' ? 0.5 : 0;
+      const rawUtility = (sentimentScore_l * Cfn) + (trendScore * 0.3) + (goalScoreNorm * 0.2) + (pragScore * Cfp);
+      const utility = Math.max(-1, Math.min(1, rawUtility));
+      const pIntervention = Math.max(0, Math.min(1, 0.5 - (sentimentScore_l * 0.3) - (trendScore * 0.2) - (goalScoreNorm * 0.1)));
+      const shouldIntervene = pIntervention > tau;
+      let action;
+      if (utility >= 0.5) action = 'affirm';
+      else if (utility >= 0.1) action = 'encourage';
+      else if (utility >= -0.1) action = 'reflect';
+      else if (utility >= -0.5 && !shouldIntervene) action = 'support';
+      else action = 'intervene';
+      const l5 = { utility: +utility.toFixed(3), action, tau: +tau.toFixed(2), pIntervention: +pIntervention.toFixed(3), shouldIntervene };
+
+      const updatePayload: Record<string, unknown> = {
+        layer2_pragmatic: pragData,
+        layer4_goal: goalData,
+        layer5_action: l5,
+        layer_enrichment_status: 'complete',
+      };
+      if (sentimentNumeric != null) updatePayload.sentiment_score = sentimentNumeric;
+      if (body.mu_user != null && sentimentNumeric != null) {
+        updatePayload.sentiment_baseline_delta = +(sentimentNumeric - body.mu_user).toFixed(2);
       }
+
+      await supabase
+        .from("journal_entries")
+        .update(updatePayload)
+        .eq("id", entry_id)
+        .eq("user_id", user.id);
+
+      result.layer5_action = l5;
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-
+    return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
