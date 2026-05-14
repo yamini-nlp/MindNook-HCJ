@@ -8,160 +8,81 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root{
-            --bg:#1b2e2b;
-            --bg2:#152422;
-            --bg3:#0d1a18;
-            --card:#1f3430;
-            --card2:#243b37;
-            --border:rgba(217,197,178,0.12);
-            --border2:rgba(217,197,178,0.22);
-            --gold:#d9c5b2;
-            --gold2:#c9a882;
-            --gold3:#e8d8c8;
-            --text:#f0ece2;
-            --text2:rgba(240,236,226,0.65);
-            --text3:rgba(240,236,226,0.38);
-            --sage:#7aad8f;
-            --sage2:#4e8a68;
-            --teal:#5bc4a8;
-            --teal2:#2e8c70;
-            --rose:#c47a8a;
-            --rose2:#9e4e60;
-            --amber:#c4963a;
-            --amber2:#a87828;
-            --neutral:#9b8ea0;
+            --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+            --border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+            --gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+            --text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+            --sage:#7aad8f;--sage2:#4e8a68;--teal:#5bc4a8;--teal2:#2e8c70;
+            --rose:#c47a8a;--rose2:#9e4e60;--amber:#c4963a;--amber2:#a87828;--neutral:#9b8ea0;
         }
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
         body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6;}
-        body::after{
-            content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
-            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
-        }
-        .bg-mesh{
-            position:fixed;inset:0;pointer-events:none;z-index:0;
-            background:
-                radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),
-                radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),
-                radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);
-        }
-
-        nav{
-            position:sticky;top:0;z-index:100;
-            display:flex;justify-content:space-between;align-items:center;
-            padding:18px 52px;
-            background:rgba(21,36,34,0.85);
-            backdrop-filter:blur(24px);
-            border-bottom:1px solid var(--border);
-        }
+        body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");}
+        .bg-mesh{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);}
+        nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:18px 52px;background:rgba(21,36,34,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
         .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;color:var(--gold);}
         .nav-links{display:flex;gap:8px;align-items:center;}
-        .pill{
-            padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;
-            cursor:pointer;transition:all 0.26s;text-decoration:none;
-            font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;
-        }
+        .pill{padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;cursor:pointer;transition:all 0.26s;text-decoration:none;font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;}
         .pill.ghost{border:1px solid var(--border);color:var(--text2);background:transparent;}
         .pill.ghost:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
         .pill.filled{background:var(--gold);color:var(--bg3);font-weight:500;}
         .pill.filled:hover{background:var(--gold3);transform:translateY(-1px);}
-
         .page-header{text-align:center;padding:56px 52px 40px;position:relative;z-index:2;}
         .eyebrow{font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--teal);opacity:0.8;margin-bottom:14px;font-weight:500;}
         .page-header h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,4.5vw,3.6rem);font-weight:400;line-height:1.1;}
         .page-header h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
         .page-title-rule{width:40px;height:2px;background:var(--gold2);border-radius:2px;margin:14px auto 0;}
-
-        .grid{
-            display:grid;
-            grid-template-columns:1fr 1fr 1fr;
-            gap:16px;
-            padding:0 52px 60px;
-            max-width:1060px;
-            margin:0 auto;
-            position:relative;z-index:2;
-        }
-        .card{
-            background:var(--card);border:1px solid var(--border);
-            border-radius:20px;padding:26px 28px;transition:all 0.28s;
-        }
+        .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:0 52px 60px;max-width:1060px;margin:0 auto;position:relative;z-index:2;}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px 28px;transition:all 0.28s;}
         .card:hover{border-color:var(--border2);}
         .card.span2{grid-column:span 2;}
         .card.full{grid-column:1 / -1;}
         .ctag{font-size:0.63rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px;}
         .card h3{font-family:'Playfair Display',serif;font-size:1.12rem;font-weight:400;margin-bottom:14px;color:var(--text);}
         .card p{font-size:0.84rem;line-height:1.75;color:var(--text2);}
-
         .metric-row{display:flex;gap:10px;flex-wrap:wrap;}
-        .metric-box{
-            flex:1;min-width:70px;
-            background:var(--card2);border:1px solid var(--border);
-            border-radius:12px;padding:14px 10px;text-align:center;
-            transition:border-color 0.25s;
-        }
+        .metric-box{flex:1;min-width:70px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;transition:border-color 0.25s;}
         .metric-box:hover{border-color:var(--border2);}
         .metric-box .num{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);line-height:1;}
         .metric-box .lbl{font-size:0.62rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
-
         .lex-score{font-family:'Playfair Display',serif;font-size:3rem;color:var(--gold);line-height:1;}
         .lex-label{font-size:0.66rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:5px;}
         .lex-bar-track{height:5px;background:rgba(255,255,255,0.05);border-radius:50px;margin:12px 0 7px;overflow:hidden;}
         .lex-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--teal2),var(--teal));transition:width 1.2s cubic-bezier(0.16,1,0.3,1);}
         .lex-feedback{font-size:0.82rem;color:var(--text2);line-height:1.6;}
-
         .chip-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
         .chip{padding:4px 14px;border-radius:50px;font-size:0.76rem;background:rgba(240,236,226,0.04);border:1px solid var(--border);color:var(--text2);}
         .chip.warn{border-color:rgba(196,118,138,0.3);background:rgba(196,118,138,0.08);color:var(--rose);}
         .chip.suggest{border-color:rgba(91,196,168,0.3);background:rgba(91,196,168,0.08);color:var(--teal);}
-
         .replace-table{width:100%;border-collapse:collapse;margin-top:8px;}
         .replace-table th{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-weight:500;text-align:left;padding:8px 0;border-bottom:1px solid var(--border);}
         .replace-table td{padding:10px 0;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text2);vertical-align:middle;}
         .replace-table td:first-child{color:var(--rose);width:36%;}
         .replace-table td:last-child{color:var(--teal);}
         .arrow{color:var(--text3);margin:0 8px;}
-
         .mistake-list{margin-top:10px;display:flex;flex-direction:column;gap:7px;}
-        .mistake-item{
-            display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
-            font-size:0.83rem;padding:9px 12px;
-            background:rgba(196,118,138,0.06);border:1px solid rgba(196,118,138,0.18);border-radius:10px;
-        }
+        .mistake-item{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:0.83rem;padding:9px 12px;background:rgba(196,118,138,0.06);border:1px solid rgba(196,118,138,0.18);border-radius:10px;}
         .mistake-item .wrong{color:var(--rose);}
         .mistake-item .arr{color:var(--text3);}
         .mistake-item .right{color:var(--teal);}
         .mistake-item .mtype{color:var(--text3);font-size:0.72rem;font-style:italic;margin-left:auto;}
         .no-mistakes{font-size:0.86rem;color:var(--teal);}
-
-        .vocab-row{
-            display:flex;align-items:center;gap:10px;
-            padding:8px 0;border-bottom:1px solid var(--border);
-            font-size:0.84rem;
-        }
+        .vocab-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.84rem;}
         .vocab-row:last-child{border-bottom:none;}
         .vocab-row .used{color:var(--rose);min-width:110px;}
         .vocab-row .varr{color:var(--text3);}
         .vocab-row .better{color:var(--teal);}
-
         .inline-loading{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:0.81rem;}
         .dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--teal);opacity:0.4;animation:dotpulse 1.4s infinite;}
         .dots span:nth-child(2){animation-delay:0.2s;}
         .dots span:nth-child(3){animation-delay:0.4s;}
         @keyframes dotpulse{0%,80%,100%{opacity:0.2;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
-
         .action{text-align:center;padding:12px 52px 68px;position:relative;z-index:2;}
-        .big-btn{
-            display:inline-flex;align-items:center;gap:10px;
-            padding:10px 32px;border-radius:50px;
-            background:var(--gold);color:var(--bg3);
-            font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;
-            text-decoration:none;border:none;cursor:pointer;transition:all 0.3s;letter-spacing:0.5px;
-        }
+        .big-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 32px;border-radius:50px;background:var(--gold);color:var(--bg3);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;text-decoration:none;border:none;cursor:pointer;transition:all 0.3s;letter-spacing:0.5px;}
         .big-btn:hover{background:var(--gold3);transform:translateY(-2px);box-shadow:0 12px 30px rgba(217,197,178,0.15);}
-
         .fade-in{animation:fadeUp 0.6s ease forwards;opacity:0;}
         @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
         .d1{animation-delay:.05s;}.d2{animation-delay:.15s;}.d3{animation-delay:.25s;}.d4{animation-delay:.35s;}.d5{animation-delay:.45s;}
-
         @media(max-width:800px){
             nav{padding:16px 20px;flex-wrap:wrap;gap:10px;}
             .nav-links{gap:5px;flex-wrap:wrap;}
@@ -181,7 +102,6 @@
 </head>
 <body>
 <div class="bg-mesh"></div>
-
 <nav>
     <div class="nav-logo">MINDNOOK</div>
     <div class="nav-links">
@@ -193,15 +113,12 @@
         <a href="canvas.html" class="pill filled">✏️ Write Again</a>
     </div>
 </nav>
-
 <div class="page-header fade-in">
     <div class="eyebrow">Vocabulary Analysis</div>
     <h1>Words, <em>dissected.</em></h1>
     <div class="page-title-rule"></div>
 </div>
-
 <div class="grid">
-
     <div class="card fade-in d1">
         <div class="ctag">Word Count</div>
         <h3>How much you wrote</h3>
@@ -210,17 +127,15 @@
             <div class="metric-box"><div class="num" id="m-unique">—</div><div class="lbl">Unique</div></div>
         </div>
     </div>
-
     <div class="card fade-in d1">
         <div class="ctag">Sentence Structure</div>
-        <h3>Complexity & flow</h3>
+        <h3>Complexity &amp; flow</h3>
         <div class="metric-row" style="margin-bottom:12px;">
             <div class="metric-box"><div class="num" id="m-sentences">—</div><div class="lbl">Sentences</div></div>
             <div class="metric-box"><div class="num" id="m-avg">—</div><div class="lbl">Avg Length</div></div>
         </div>
         <p id="sentence-feedback">—</p>
     </div>
-
     <div class="card fade-in d1">
         <div class="ctag">Lexical Diversity</div>
         <h3>Vocabulary variety score</h3>
@@ -229,7 +144,6 @@
         <div class="lex-bar-track"><div class="lex-bar-fill" id="lex-bar" style="width:0%"></div></div>
         <div class="lex-feedback" id="lex-feedback">Higher score = more varied vocabulary.</div>
     </div>
-
     <div class="card span2 fade-in d2">
         <div class="ctag">Emotional Tone Score</div>
         <h3>Positive · Negative · Neutral</h3>
@@ -238,76 +152,48 @@
                 <canvas id="tone-chart" width="110" height="110"></canvas>
             </div>
             <div style="flex:1;min-width:140px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;">
-                    <span style="width:9px;height:9px;border-radius:50%;background:var(--teal);display:inline-block;flex-shrink:0;"></span>
-                    <span style="color:var(--text2);">Positive</span>
-                    <span style="margin-left:auto;color:var(--text);" id="tone-pos-n">0</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;">
-                    <span style="width:9px;height:9px;border-radius:50%;background:var(--rose);display:inline-block;flex-shrink:0;"></span>
-                    <span style="color:var(--text2);">Negative</span>
-                    <span style="margin-left:auto;color:var(--text);" id="tone-neg-n">0</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;">
-                    <span style="width:9px;height:9px;border-radius:50%;background:var(--neutral);display:inline-block;flex-shrink:0;"></span>
-                    <span style="color:var(--text2);">Neutral</span>
-                    <span style="margin-left:auto;color:var(--text);" id="tone-neu-n">0</span>
-                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;"><span style="width:9px;height:9px;border-radius:50%;background:var(--teal);display:inline-block;flex-shrink:0;"></span><span style="color:var(--text2);">Positive</span><span style="margin-left:auto;color:var(--text);" id="tone-pos-n">0</span></div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:0.82rem;"><span style="width:9px;height:9px;border-radius:50%;background:var(--rose);display:inline-block;flex-shrink:0;"></span><span style="color:var(--text2);">Negative</span><span style="margin-left:auto;color:var(--text);" id="tone-neg-n">0</span></div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="width:9px;height:9px;border-radius:50%;background:var(--neutral);display:inline-block;flex-shrink:0;"></span><span style="color:var(--text2);">Neutral</span><span style="margin-left:auto;color:var(--text);" id="tone-neu-n">0</span></div>
             </div>
         </div>
     </div>
-
     <div class="card fade-in d2">
-        <div class="ctag">Grammar & Spelling</div>
+        <div class="ctag">Grammar &amp; Spelling</div>
         <h3>Accuracy at a glance</h3>
         <div class="metric-row" style="margin-bottom:12px;">
             <div class="metric-box"><div class="num" id="g-mistakes">—</div><div class="lbl">Mistakes</div></div>
             <div class="metric-box"><div class="num" id="g-readability">—</div><div class="lbl">Readability</div></div>
         </div>
-        <div id="grammar-loading" class="inline-loading">
-            <div class="dots"><span></span><span></span><span></span></div>
-            <span>Finding mistakes…</span>
-        </div>
+        <div id="grammar-loading" class="inline-loading"><div class="dots"><span></span><span></span><span></span></div><span>Finding mistakes…</span></div>
         <div class="mistake-list" id="mistake-list" style="display:none;"></div>
     </div>
-
     <div class="card fade-in d3">
         <div class="ctag">Repeated Word Detection</div>
         <h3>Words used too often</h3>
         <div class="chip-list" id="repeated-chips"></div>
     </div>
-
     <div class="card span2 fade-in d3">
         <div class="ctag">Vocabulary Enrichment</div>
         <h3>Suggested upgrades</h3>
-        <div id="vocab-loading" class="inline-loading">
-            <div class="dots"><span></span><span></span><span></span></div>
-            <span>Finding words from your entry…</span>
-        </div>
+        <div id="vocab-loading" class="inline-loading"><div class="dots"><span></span><span></span><span></span></div><span>Finding words from your entry…</span></div>
         <div id="vocab-rows" style="display:none;"></div>
     </div>
-
     <div class="card full fade-in d4">
         <div class="ctag">Expression Enrichment</div>
         <h3>Stronger ways to say it</h3>
-        <div id="expr-loading" class="inline-loading">
-            <div class="dots"><span></span><span></span><span></span></div>
-            <span>Finding better expressions from your entry…</span>
-        </div>
+        <div id="expr-loading" class="inline-loading"><div class="dots"><span></span><span></span><span></span></div><span>Finding better expressions from your entry…</span></div>
         <table class="replace-table" id="expr-table" style="display:none;">
             <thead><tr><th>Your Expression</th><th></th><th>Stronger Alternative</th></tr></thead>
             <tbody id="replace-tbody"></tbody>
         </table>
     </div>
-
 </div>
-
 <div class="action fade-in d5">
     <a href="history.html" class="big-btn">View History →</a>
-<br><br>
-<a href="canvas.html" class="big-btn" style="background:transparent;border:1px solid rgba(217,197,178,0.22);color:var(--text2);">✏️ Write Again</a>
+    <br><br>
+    <a href="canvas.html" class="big-btn" style="background:transparent;border:1px solid rgba(217,197,178,0.22);color:var(--text2);">✏️ Write Again</a>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="auth.js"></script>
 <script>
@@ -315,15 +201,19 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 
 const POS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','vibrant','alive','appreciative','brave','caring','creative','eager','free','generous','gentle','glowing','healing','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','enjoy','enjoyed','celebrate','celebration','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
 const NEG=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','shame','ashamed','guilt','guilty','hate','bored','burned','chaos','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','powerless','rejection','resentment','restless','shattered','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','hard','bad','worse','worst','never','alone','miss','missing']);
+const NEGATION=new Set(['not','never','no','without','hardly','barely','scarcely','neither','nor','cannot','cant',"can't","won't","don't","doesn't","didn't","isn't","aren't","wasn't","weren't"]);
 
 function tokenise(text){return text.toLowerCase().replace(/['']/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>2);}
 
 function countTone(text){
     const words=tokenise(text);let pos=0,neg=0;
-    words.forEach(w=>{
+    words.forEach((w,i)=>{
+        const negated=words.slice(Math.max(0,i-3),i).some(pw=>NEGATION.has(pw));
         const stems=[w,w.replace(/ing$/,''),w.replace(/ed$/,''),w.replace(/ly$/,''),w.replace(/ness$/,''),w.replace(/ful$/,''),w.replace(/less$/,''),w.replace(/s$/,'')];
-        if(stems.some(s=>POS.has(s)))pos++;
-        else if(stems.some(s=>NEG.has(s)))neg++;
+        const isPos=stems.some(s=>POS.has(s));
+        const isNeg=stems.some(s=>NEG.has(s));
+        if(!negated){if(isPos)pos++;else if(isNeg)neg++;}
+        else{if(isPos)neg++;else if(isNeg)pos++;}
     });
     return{pos,neg,neu:Math.max(0,words.length-pos-neg)};
 }
@@ -332,18 +222,7 @@ function countUnique(text){return new Set(tokenise(text)).size;}
 
 function drawDonut(pos,neg,neu){
     const ctx=document.getElementById('tone-chart').getContext('2d');
-    new Chart(ctx,{
-        type:'doughnut',
-        data:{
-            datasets:[{
-                data:[pos||0.001,neg||0.001,neu||0.001],
-                backgroundColor:['rgba(91,196,168,0.82)','rgba(196,118,138,0.82)','rgba(155,142,160,0.55)'],
-                borderColor:['#152422','#152422','#152422'],
-                borderWidth:3
-            }]
-        },
-        options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:1000}}
-    });
+    new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[pos||0.001,neg||0.001,neu||0.001],backgroundColor:['rgba(91,196,168,0.82)','rgba(196,118,138,0.82)','rgba(155,142,160,0.55)'],borderColor:['#152422','#152422','#152422'],borderWidth:3}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:1000}}});
     document.getElementById('tone-pos-n').innerText=pos;
     document.getElementById('tone-neg-n').innerText=neg;
     document.getElementById('tone-neu-n').innerText=neu;
@@ -426,48 +305,50 @@ async function init(){
     if(!a.repeatedWords||a.repeatedWords.length===0)
         repEl.innerHTML='<span class="chip">No overused words detected 🎉</span>';
 
-    fetchGrammarMistakes(jtext,a.mistakeCount).then(mistakes=>{
-        document.getElementById('grammar-loading').style.display='none';
-        const listEl=document.getElementById('mistake-list');
-        listEl.style.display='flex';
-        if(mistakes.length===0){
-            listEl.innerHTML='<span class="no-mistakes">✓ No significant mistakes found</span>';
-        }else{
-            mistakes.forEach(m=>{
-                const div=document.createElement('div');div.className='mistake-item';
-                div.innerHTML=`<span class="wrong">${m.wrong}</span><span class="arr">→</span><span class="right">${m.correct}</span><span class="mtype">${m.type||''}</span>`;
-                listEl.appendChild(div);
-            });
-        }
-    });
+    const [mistakes, pairs, exprs] = await Promise.all([
+        fetchGrammarMistakes(jtext, a.mistakeCount),
+        fetchVocabEnrichment(jtext),
+        fetchExpressionEnrichment(jtext)
+    ]);
 
-    fetchVocabEnrichment(jtext).then(pairs=>{
-        document.getElementById('vocab-loading').style.display='none';
-        const container=document.getElementById('vocab-rows');
-        container.style.display='block';
-        if(!pairs||pairs.length===0){container.innerHTML='<span class="chip">No common words detected</span>';return;}
+    document.getElementById('grammar-loading').style.display='none';
+    const listEl=document.getElementById('mistake-list');
+    listEl.style.display='flex';
+    if(mistakes.length===0){
+        listEl.innerHTML='<span class="no-mistakes">✓ No significant mistakes found</span>';
+    }else{
+        mistakes.forEach(m=>{
+            const div=document.createElement('div');div.className='mistake-item';
+            div.innerHTML=`<span class="wrong">${m.wrong}</span><span class="arr">→</span><span class="right">${m.correct}</span><span class="mtype">${m.type||''}</span>`;
+            listEl.appendChild(div);
+        });
+    }
+
+    document.getElementById('vocab-loading').style.display='none';
+    const container=document.getElementById('vocab-rows');
+    container.style.display='block';
+    if(!pairs||pairs.length===0){container.innerHTML='<span class="chip">No common words detected</span>';}
+    else{
         pairs.forEach(p=>{
             const div=document.createElement('div');div.className='vocab-row';
             div.innerHTML=`<span class="used">${p.used}</span><span class="varr">→</span><span class="better">${p.better}</span>`;
             container.appendChild(div);
         });
-    });
+    }
 
-    fetchExpressionEnrichment(jtext).then(exprs=>{
-        document.getElementById('expr-loading').style.display='none';
-        const tbl=document.getElementById('expr-table');
-        tbl.style.display='table';
-        const tbody=document.getElementById('replace-tbody');
-        if(!exprs||exprs.length===0){
-            tbody.innerHTML='<tr><td colspan="3" style="color:var(--text2);padding:12px 0;">No weak expressions detected — your writing is already expressive!</td></tr>';
-            return;
-        }
+    document.getElementById('expr-loading').style.display='none';
+    const tbl=document.getElementById('expr-table');
+    tbl.style.display='table';
+    const tbody=document.getElementById('replace-tbody');
+    if(!exprs||exprs.length===0){
+        tbody.innerHTML='<tr><td colspan="3" style="color:var(--text2);padding:12px 0;">No weak expressions detected — your writing is already expressive!</td></tr>';
+    }else{
         exprs.forEach(e=>{
             const tr=document.createElement('tr');
             tr.innerHTML=`<td>${e.weak}</td><td class="arrow">→</td><td>${e.strong}</td>`;
             tbody.appendChild(tr);
         });
-    });
+    }
 }
 
 init();
