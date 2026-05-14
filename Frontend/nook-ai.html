@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nook AI — MindNook</title>
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -10,114 +9,37 @@
 <script src="personal_baseline.js"></script>
 <style>
 :root{
-  --bg:#1b2e2b;
-  --bg2:#152422;
-  --bg3:#0d1a18;
-  --card:#1f3430;
-  --card2:#243b37;
-  --border:rgba(217,197,178,0.12);
-  --border2:rgba(217,197,178,0.22);
-  --gold:#d9c5b2;
-  --gold2:#c9a882;
-  --gold3:#e8d8c8;
-  --text:#f0ece2;
-  --text2:rgba(240,236,226,0.65);
-  --text3:rgba(240,236,226,0.38);
-  --sage:#7aad8f;
-  --sage2:#4e8a68;
-  --teal:#5bc4a8;
-  --teal2:#2e8c70;
-  --rose:#c47a8a;
-  --rose2:#9e4e60;
-  --amber:#c4963a;
-  --amber2:#a87828;
-  --neutral:#9b8ea0;
+  --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+  --border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+  --gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+  --text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+  --sage:#7aad8f;--sage2:#4e8a68;--teal:#5bc4a8;--teal2:#2e8c70;
+  --rose:#c47a8a;--rose2:#9e4e60;--amber:#c4963a;--amber2:#a87828;--neutral:#9b8ea0;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:'DM Sans',sans-serif;
-  display:flex;flex-direction:column;
-}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 55% 45% at 85% 5%,rgba(91,196,168,0.08) 0%,transparent 65%),
-    radial-gradient(ellipse 40% 35% at 5% 85%,rgba(122,173,143,0.07) 0%,transparent 60%),
-    radial-gradient(ellipse 30% 30% at 50% 50%,rgba(217,197,178,0.03) 0%,transparent 70%);
-}
-body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 55% 45% at 85% 5%,rgba(91,196,168,0.08) 0%,transparent 65%),radial-gradient(ellipse 40% 35% at 5% 85%,rgba(122,173,143,0.07) 0%,transparent 60%),radial-gradient(ellipse 30% 30% at 50% 50%,rgba(217,197,178,0.03) 0%,transparent 70%);}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");}
 canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.4;}
-
-nav{
-  position:relative;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 52px;height:62px;flex-shrink:0;
-  background:rgba(21,36,34,0.85);
-  backdrop-filter:blur(28px);
-  border-bottom:1px solid var(--border);
-}
-.nav-logo{
-  font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;
-  color:var(--gold);letter-spacing:2px;
-}
-.nav-center{
-  font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;
-  letter-spacing:4px;text-transform:uppercase;color:var(--teal);
-  display:flex;align-items:center;gap:8px;
-}
+nav{position:relative;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:62px;flex-shrink:0;background:rgba(21,36,34,0.85);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--gold);letter-spacing:2px;}
+.nav-center{font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:8px;}
 .nav-center-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 2.5s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}
 .nav-links{display:flex;align-items:center;gap:4px;}
-.nav-link{
-  font-size:0.73rem;font-weight:500;letter-spacing:0.5px;
-  color:var(--text2);padding:7px 14px;border-radius:50px;
-  cursor:pointer;text-decoration:none;transition:all 0.22s;
-}
+.nav-link{font-size:0.73rem;font-weight:500;letter-spacing:0.5px;color:var(--text2);padding:7px 14px;border-radius:50px;cursor:pointer;text-decoration:none;transition:all 0.22s;}
 .nav-link:hover{color:var(--text);background:rgba(217,197,178,0.06);}
-.nav-btn{
-  padding:7px 18px;border-radius:50px;font-size:0.75rem;font-weight:500;
-  letter-spacing:0.5px;cursor:pointer;transition:all 0.22s;
-  background:transparent;border:1px solid var(--border);color:var(--text2);
-  font-family:'DM Sans',sans-serif;
-}
+.nav-btn{padding:7px 18px;border-radius:50px;font-size:0.75rem;font-weight:500;letter-spacing:0.5px;cursor:pointer;transition:all 0.22s;background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'DM Sans',sans-serif;}
 .nav-btn:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
-
-.layout{
-  position:relative;z-index:1;
-  display:flex;flex:1;overflow:hidden;
-}
-
-.sidebar{
-  width:268px;flex-shrink:0;
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  background:rgba(21,36,34,0.5);
-  backdrop-filter:blur(12px);
-  overflow-y:auto;
-}
+.layout{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
+.sidebar{width:268px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(21,36,34,0.5);backdrop-filter:blur(12px);overflow-y:auto;}
 .sidebar::-webkit-scrollbar{width:3px;}
 .sidebar::-webkit-scrollbar-thumb{background:rgba(217,197,178,0.1);border-radius:2px;}
-
-.sidebar-header{
-  padding:22px 20px 16px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.sidebar-title{
-  font-size:0.62rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;
-  color:var(--teal);margin-bottom:16px;
-}
+.sidebar-header{padding:22px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-title{font-size:0.62rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:16px;}
 .context-cards{display:flex;flex-direction:column;gap:8px;}
-.ctx-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:14px;padding:14px 15px;
-  transition:border-color 0.22s;position:relative;overflow:hidden;
-}
+.ctx-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 15px;transition:border-color 0.22s;position:relative;overflow:hidden;}
 .ctx-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
 .ctx-card:nth-child(1)::before{background:var(--teal);}
 .ctx-card:nth-child(2)::before{background:var(--amber);}
@@ -131,264 +53,77 @@ nav{
 .ctx-card:nth-child(3) .ctx-label{color:var(--sage);}
 .ctx-card:nth-child(4) .ctx-label{color:var(--rose);}
 .ctx-card:nth-child(5) .ctx-label{color:var(--neutral);}
-.ctx-val{
-  font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:400;
-  color:var(--gold);line-height:1;margin-bottom:2px;
-}
+.ctx-val{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:400;color:var(--gold);line-height:1;margin-bottom:2px;}
 .ctx-sub{font-size:0.72rem;font-weight:400;color:var(--text2);}
-
-.sidebar-section{
-  padding:16px 20px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.sidebar-section-title{
-  font-size:0.6rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;
-  color:var(--text3);margin-bottom:12px;
-}
+.sidebar-section{padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-section-title{font-size:0.6rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
 .theme-tags{display:flex;flex-wrap:wrap;gap:6px;}
-.theme-tag{
-  padding:4px 12px;border-radius:50px;
-  font-size:0.7rem;font-weight:400;
-  border:1px solid;
-}
+.theme-tag{padding:4px 12px;border-radius:50px;font-size:0.7rem;font-weight:400;border:1px solid;}
 .theme-tag.pos{border-color:rgba(91,196,168,0.3);color:var(--teal);background:rgba(91,196,168,0.08);}
 .theme-tag.neg{border-color:rgba(196,118,138,0.3);color:var(--rose);background:rgba(196,118,138,0.08);}
 .theme-tag.neu{border-color:rgba(155,142,160,0.25);color:var(--neutral);background:rgba(155,142,160,0.06);}
-
 .prompts-list{display:flex;flex-direction:column;gap:6px;}
-.prompt-chip{
-  padding:9px 13px;border-radius:11px;
-  border:1px solid var(--border);
-  background:transparent;
-  font-size:0.75rem;font-weight:400;color:var(--text2);
-  cursor:pointer;transition:all 0.22s;
-  text-align:left;line-height:1.45;
-  font-family:'DM Sans',sans-serif;
-}
-.prompt-chip:hover{
-  border-color:rgba(91,196,168,0.3);color:var(--text);
-  background:rgba(91,196,168,0.06);transform:translateX(3px);
-}
-
-.chat-area{
-  flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;
-}
-
-.hero{
-  flex-shrink:0;
-  padding:22px 48px 18px;
-  border-bottom:1px solid var(--border);
-}
+.prompt-chip{padding:9px 13px;border-radius:11px;border:1px solid var(--border);background:transparent;font-size:0.75rem;font-weight:400;color:var(--text2);cursor:pointer;transition:all 0.22s;text-align:left;line-height:1.45;font-family:'DM Sans',sans-serif;}
+.prompt-chip:hover{border-color:rgba(91,196,168,0.3);color:var(--text);background:rgba(91,196,168,0.06);transform:translateX(3px);}
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.hero{flex-shrink:0;padding:22px 48px 18px;border-bottom:1px solid var(--border);}
 .hero-inner{display:flex;align-items:center;gap:20px;}
-.hero-orb{
-  width:48px;height:48px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(135deg,rgba(91,196,168,0.18),rgba(122,173,143,0.08));
-  border:1px solid rgba(91,196,168,0.25);
-  display:flex;align-items:center;justify-content:center;
-  position:relative;
-}
-.hero-orb::before{
-  content:'';position:absolute;inset:-5px;border-radius:50%;
-  border:1px solid rgba(91,196,168,0.1);
-  animation:orbPulse 3s ease-in-out infinite;
-}
+.hero-orb{width:48px;height:48px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,rgba(91,196,168,0.18),rgba(122,173,143,0.08));border:1px solid rgba(91,196,168,0.25);display:flex;align-items:center;justify-content:center;position:relative;}
+.hero-orb::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(91,196,168,0.1);animation:orbPulse 3s ease-in-out infinite;}
 @keyframes orbPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.12);opacity:0.4;}}
 .hero-orb-inner{font-size:1.2rem;color:var(--teal);}
-.hero-title{
-  font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;
-  color:var(--text);line-height:1;margin-bottom:4px;
-}
+.hero-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;color:var(--text);line-height:1;margin-bottom:4px;}
 .hero-title em{font-style:italic;color:var(--teal);font-weight:400;}
 .hero-sub{font-size:0.8rem;font-weight:400;color:var(--text2);line-height:1.55;}
-
-.waveform{
-  margin-left:auto;display:flex;align-items:center;gap:3px;height:28px;flex-shrink:0;
-}
-.wave-bar{
-  width:3px;border-radius:2px;
-  background:linear-gradient(to top,rgba(91,196,168,0.15),rgba(91,196,168,0.6));
-  animation:waveAnim 1.4s ease-in-out infinite;
-}
-.wave-bar:nth-child(1){height:8px;animation-delay:0s;}
-.wave-bar:nth-child(2){height:18px;animation-delay:0.1s;}
-.wave-bar:nth-child(3){height:26px;animation-delay:0.2s;}
-.wave-bar:nth-child(4){height:14px;animation-delay:0.3s;}
-.wave-bar:nth-child(5){height:20px;animation-delay:0.4s;}
-.wave-bar:nth-child(6){height:10px;animation-delay:0.5s;}
-.wave-bar:nth-child(7){height:22px;animation-delay:0.6s;}
-.wave-bar:nth-child(8){height:16px;animation-delay:0.7s;}
-.wave-bar:nth-child(9){height:18px;animation-delay:0.8s;}
-.wave-bar:nth-child(10){height:8px;animation-delay:0.9s;}
-@keyframes waveAnim{
-  0%,100%{transform:scaleY(0.5);opacity:0.4;}
-  50%{transform:scaleY(1);opacity:1;}
-}
-
-.messages-wrap{
-  flex:1;overflow-y:auto;
-  padding:24px 48px;
-  display:flex;flex-direction:column;gap:16px;
-  scroll-behavior:smooth;
-}
+.waveform{margin-left:auto;display:flex;align-items:center;gap:3px;height:28px;flex-shrink:0;}
+.wave-bar{width:3px;border-radius:2px;background:linear-gradient(to top,rgba(91,196,168,0.15),rgba(91,196,168,0.6));animation:waveAnim 1.4s ease-in-out infinite;}
+.wave-bar:nth-child(1){height:8px;animation-delay:0s;}.wave-bar:nth-child(2){height:18px;animation-delay:0.1s;}.wave-bar:nth-child(3){height:26px;animation-delay:0.2s;}.wave-bar:nth-child(4){height:14px;animation-delay:0.3s;}.wave-bar:nth-child(5){height:20px;animation-delay:0.4s;}.wave-bar:nth-child(6){height:10px;animation-delay:0.5s;}.wave-bar:nth-child(7){height:22px;animation-delay:0.6s;}.wave-bar:nth-child(8){height:16px;animation-delay:0.7s;}.wave-bar:nth-child(9){height:18px;animation-delay:0.8s;}.wave-bar:nth-child(10){height:8px;animation-delay:0.9s;}
+@keyframes waveAnim{0%,100%{transform:scaleY(0.5);opacity:0.4;}50%{transform:scaleY(1);opacity:1;}}
+.messages-wrap{flex:1;overflow-y:auto;padding:24px 48px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;}
 .messages-wrap::-webkit-scrollbar{width:4px;}
 .messages-wrap::-webkit-scrollbar-thumb{background:rgba(217,197,178,0.1);border-radius:2px;}
-
-.msg{
-  display:flex;gap:12px;align-items:flex-start;
-  animation:msgIn 0.4s cubic-bezier(.22,1,.36,1) forwards;
-  opacity:0;
-}
+.msg{display:flex;gap:12px;align-items:flex-start;animation:msgIn 0.4s cubic-bezier(.22,1,.36,1) forwards;opacity:0;}
 @keyframes msgIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 .msg.user{flex-direction:row-reverse;}
-
-.msg-avatar{
-  width:34px;height:34px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.75rem;font-weight:600;letter-spacing:0.5px;margin-top:2px;
-}
-.msg.ai .msg-avatar{
-  background:rgba(91,196,168,0.12);
-  border:1px solid rgba(91,196,168,0.25);color:var(--teal);font-size:1rem;
-}
-.msg.user .msg-avatar{
-  background:rgba(217,197,178,0.12);
-  border:1px solid rgba(217,197,178,0.22);color:var(--gold2);
-}
-
-.msg-bubble{
-  max-width:68%;border-radius:20px;padding:14px 18px;
-  position:relative;
-}
-.msg.ai .msg-bubble{
-  background:rgba(240,236,226,0.93);
-  border:1px solid rgba(217,197,178,0.28);
-  border-bottom-left-radius:6px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.12);
-}
-.msg.user .msg-bubble{
-  background:rgba(235,228,218,0.95);
-  border:1px solid rgba(217,197,178,0.22);
-  border-bottom-right-radius:6px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.1);
-}
-.msg-bubble p{
-  font-size:0.87rem;font-weight:400;line-height:1.75;
-  color:#1a2e2a;
-}
+.msg-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;letter-spacing:0.5px;margin-top:2px;}
+.msg.ai .msg-avatar{background:rgba(91,196,168,0.12);border:1px solid rgba(91,196,168,0.25);color:var(--teal);font-size:1rem;}
+.msg.user .msg-avatar{background:rgba(217,197,178,0.12);border:1px solid rgba(217,197,178,0.22);color:var(--gold2);}
+.msg-bubble{max-width:68%;border-radius:20px;padding:14px 18px;position:relative;}
+.msg.ai .msg-bubble{background:rgba(240,236,226,0.93);border:1px solid rgba(217,197,178,0.28);border-bottom-left-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,0.12);}
+.msg.user .msg-bubble{background:rgba(235,228,218,0.95);border:1px solid rgba(217,197,178,0.22);border-bottom-right-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.msg-bubble p{font-size:0.87rem;font-weight:400;line-height:1.75;color:#1a2e2a;}
 .msg-bubble p+p{margin-top:8px;}
-.msg-meta{
-  font-size:0.65rem;font-weight:400;
-  color:rgba(0,0,0,0.3);
-  margin-top:6px;letter-spacing:0.3px;
-}
-.msg-tag{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:0.62rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
-  margin-bottom:7px;color:rgba(46,140,112,0.75);
-}
-
-.typing-bubble{
-  display:flex;gap:12px;align-items:flex-start;
-  animation:msgIn 0.3s ease forwards;
-}
-.typing-dots{
-  background:rgba(240,236,226,0.92);border:1px solid rgba(217,197,178,0.28);
-  border-radius:20px;border-bottom-left-radius:6px;
-  padding:14px 20px;display:flex;gap:5px;align-items:center;
-}
-.typing-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:rgba(0,0,0,0.25);
-  animation:typDot 1.3s ease-in-out infinite;
-}
+.msg-meta{font-size:0.65rem;font-weight:400;color:rgba(0,0,0,0.3);margin-top:6px;letter-spacing:0.3px;}
+.msg-tag{display:inline-flex;align-items:center;gap:5px;font-size:0.62rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;color:rgba(46,140,112,0.75);}
+.typing-bubble{display:flex;gap:12px;align-items:flex-start;animation:msgIn 0.3s ease forwards;}
+.typing-dots{background:rgba(240,236,226,0.92);border:1px solid rgba(217,197,178,0.28);border-radius:20px;border-bottom-left-radius:6px;padding:14px 20px;display:flex;gap:5px;align-items:center;}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,0.25);animation:typDot 1.3s ease-in-out infinite;}
 .typing-dot:nth-child(2){animation-delay:0.18s;}
 .typing-dot:nth-child(3){animation-delay:0.36s;}
 @keyframes typDot{0%,60%,100%{transform:translateY(0);opacity:0.25;}30%{transform:translateY(-6px);opacity:1;}}
-
-.empty-state{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  gap:14px;text-align:center;padding:40px;
-}
-.empty-icon{
-  width:68px;height:68px;border-radius:50%;
-  background:rgba(91,196,168,0.07);border:1px solid rgba(91,196,168,0.2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.6rem;color:var(--teal);margin-bottom:6px;
-  animation:orbPulse 3s ease-in-out infinite;
-}
-.empty-title{
-  font-family:'Playfair Display',serif;font-size:1.4rem;
-  font-weight:400;color:var(--text);margin-bottom:4px;
-}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:40px;}
+.empty-icon{width:68px;height:68px;border-radius:50%;background:rgba(91,196,168,0.07);border:1px solid rgba(91,196,168,0.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--teal);margin-bottom:6px;animation:orbPulse 3s ease-in-out infinite;}
+.empty-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:4px;}
 .empty-sub{font-size:0.83rem;font-weight:400;color:var(--text2);max-width:380px;line-height:1.75;}
-
-.input-area{
-  flex-shrink:0;padding:14px 48px 18px;
-  border-top:1px solid var(--border);
-  background:rgba(21,36,34,0.7);
-  backdrop-filter:blur(20px);
-}
-.input-row{
-  display:flex;align-items:center;gap:10px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:50px;padding:10px 12px 10px 20px;
-  transition:border-color 0.22s;
-}
+.input-area{flex-shrink:0;padding:14px 48px 18px;border-top:1px solid var(--border);background:rgba(21,36,34,0.7);backdrop-filter:blur(20px);}
+.input-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:50px;padding:10px 12px 10px 20px;transition:border-color 0.22s;}
 .input-row:focus-within{border-color:rgba(91,196,168,0.35);}
-.chat-input{
-  flex:1;background:transparent;border:none;outline:none;
-  font-family:'DM Sans',sans-serif;font-size:0.87rem;font-weight:400;
-  color:var(--text);line-height:1.5;
-  resize:none;max-height:100px;overflow-y:auto;
-}
+.chat-input{flex:1;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.87rem;font-weight:400;color:var(--text);line-height:1.5;resize:none;max-height:100px;overflow-y:auto;}
 .chat-input::placeholder{color:var(--text3);}
 .chat-input::-webkit-scrollbar{width:3px;}
-.send-btn{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  background:var(--gold);
-  border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.9rem;color:var(--bg3);
-  transition:all 0.22s;
-}
+.send-btn{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--bg3);transition:all 0.22s;}
 .send-btn:hover{background:var(--gold3);transform:scale(1.06);}
 .send-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
-.input-hint{
-  text-align:center;margin-top:8px;
-  font-size:0.66rem;font-weight:400;color:var(--text3);letter-spacing:0.3px;
-}
-
-@media(max-width:1024px){
-  .sidebar{width:220px;}
-  .messages-wrap{padding:20px 28px;}
-  .input-area{padding:14px 28px 18px;}
-  .hero{padding:18px 28px 14px;}
-}
-@media(max-width:768px){
-  nav{padding:0 16px;}
-  .nav-links{display:none;}
-  .sidebar{display:none;}
-  .messages-wrap{padding:16px;}
-  .input-area{padding:12px 16px 16px;}
-  .hero{padding:16px 16px 14px;}
-  .msg-bubble{max-width:85%;}
-  .waveform{display:none;}
-}
+.input-hint{text-align:center;margin-top:8px;font-size:0.66rem;font-weight:400;color:var(--text3);letter-spacing:0.3px;}
+@media(max-width:1024px){.sidebar{width:220px;}.messages-wrap{padding:20px 28px;}.input-area{padding:14px 28px 18px;}.hero{padding:18px 28px 14px;}}
+@media(max-width:768px){nav{padding:0 16px;}.nav-links{display:none;}.sidebar{display:none;}.messages-wrap{padding:16px;}.input-area{padding:12px 16px 16px;}.hero{padding:16px 16px 14px;}.msg-bubble{max-width:85%;}.waveform{display:none;}}
 </style>
 </head>
 <body>
-
 <canvas id="particles"></canvas>
-
 <nav>
   <div class="nav-logo">MindNook</div>
-  <div class="nav-center">
-    <div class="nav-center-dot"></div>
-    Nook AI
-  </div>
+  <div class="nav-center"><div class="nav-center-dot"></div>Nook AI</div>
   <div class="nav-links">
     <a href="history.html" class="nav-link">History</a>
     <a href="dashboard.html" class="nav-link">Dashboard</a>
@@ -396,48 +131,22 @@ nav{
     <button onclick="signOut()" class="nav-btn">Sign Out</button>
   </div>
 </nav>
-
 <div class="layout">
-
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">Memory Context</div>
       <div class="context-cards">
-        <div class="ctx-card">
-          <div class="ctx-label">Mood Trend</div>
-          <div class="ctx-val" id="ctx-mood">—</div>
-          <div class="ctx-sub" id="ctx-mood-sub">Loading…</div>
-        </div>
-        <div class="ctx-card">
-          <div class="ctx-label">Writing Streak</div>
-          <div class="ctx-val" id="ctx-streak">—</div>
-          <div class="ctx-sub" id="ctx-streak-sub">Loading…</div>
-        </div>
-        <div class="ctx-card">
-          <div class="ctx-label">Emotional Stability</div>
-          <div class="ctx-val" id="ctx-stability">—</div>
-          <div class="ctx-sub" id="ctx-stability-sub">Loading…</div>
-        </div>
-        <div class="ctx-card">
-          <div class="ctx-label">Vocabulary Growth</div>
-          <div class="ctx-val" id="ctx-vocab">—</div>
-          <div class="ctx-sub" id="ctx-vocab-sub">Loading…</div>
-        </div>
-        <div class="ctx-card">
-          <div class="ctx-label">Total Entries</div>
-          <div class="ctx-val" id="ctx-entries">—</div>
-          <div class="ctx-sub" id="ctx-entries-sub">Loading…</div>
-        </div>
+        <div class="ctx-card"><div class="ctx-label">Mood Trend</div><div class="ctx-val" id="ctx-mood">—</div><div class="ctx-sub" id="ctx-mood-sub">Loading…</div></div>
+        <div class="ctx-card"><div class="ctx-label">Writing Streak</div><div class="ctx-val" id="ctx-streak">—</div><div class="ctx-sub" id="ctx-streak-sub">Loading…</div></div>
+        <div class="ctx-card"><div class="ctx-label">Emotional Stability</div><div class="ctx-val" id="ctx-stability">—</div><div class="ctx-sub" id="ctx-stability-sub">Loading…</div></div>
+        <div class="ctx-card"><div class="ctx-label">Vocabulary Growth</div><div class="ctx-val" id="ctx-vocab">—</div><div class="ctx-sub" id="ctx-vocab-sub">Loading…</div></div>
+        <div class="ctx-card"><div class="ctx-label">Total Entries</div><div class="ctx-val" id="ctx-entries">—</div><div class="ctx-sub" id="ctx-entries-sub">Loading…</div></div>
       </div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-title">Recurring Themes</div>
-      <div class="theme-tags" id="themeTags">
-        <span class="theme-tag neu">Loading…</span>
-      </div>
+      <div class="theme-tags" id="themeTags"><span class="theme-tag neu">Loading…</span></div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-title">Suggested Questions</div>
       <div class="prompts-list">
@@ -452,7 +161,6 @@ nav{
       </div>
     </div>
   </aside>
-
   <div class="chat-area">
     <div class="hero">
       <div class="hero-inner">
@@ -462,15 +170,11 @@ nav{
           <div class="hero-sub">A reflective intelligence companion built from your emotional history.</div>
         </div>
         <div class="waveform">
-          <div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
         </div>
       </div>
     </div>
-
     <div class="messages-wrap" id="messagesWrap">
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">◈</div>
@@ -478,7 +182,6 @@ nav{
         <div class="empty-sub">Ask Nook AI anything about your reflections, emotional patterns, writing evolution, or wellbeing. It remembers your journey.</div>
       </div>
     </div>
-
     <div class="input-area">
       <div class="input-row">
         <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask Nook AI about your reflections…"></textarea>
@@ -487,9 +190,7 @@ nav{
       <div class="input-hint">Nook AI draws from your journal history · responses are reflective, not clinical</div>
     </div>
   </div>
-
 </div>
-
 <script>
 const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
 const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
@@ -498,7 +199,6 @@ const sb=createClient(SUPABASE_URL,ANON_KEY);
 
 let session=null;
 let journalContext='';
-let statsContext='';
 let conversationHistory=[];
 let userEntries=[];
 
@@ -545,11 +245,7 @@ function showTyping(){
   div.className='typing-bubble';
   div.innerHTML=`
     <div class="msg-avatar" style="width:34px;height:34px;border-radius:50%;background:rgba(91,196,168,0.1);border:1px solid rgba(91,196,168,0.22);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--teal);">◈</div>
-    <div class="typing-dots">
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-    </div>`;
+    <div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
   wrap.appendChild(div);
   wrap.scrollTop=wrap.scrollHeight;
 }
@@ -560,7 +256,7 @@ async function loadUserData(){
   if(!session)return;
   try{
     const{data:entries,error}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(20);
-    if(error||!entries||entries.length===0){setEmptySidebar();return;}
+    if(error||!entries||!entries.length){setEmptySidebar();return;}
     userEntries=entries;
     buildContext(entries);
     buildSidebar(entries);
@@ -580,7 +276,6 @@ function setEmptySidebar(){
   document.getElementById('ctx-entries-sub').innerText='Your journey begins here';
   document.getElementById('themeTags').innerHTML='<span class="theme-tag neu">No themes yet</span>';
   journalContext='The user has no journal entries yet. Encourage them to start writing.';
-  statsContext='No data available yet.';
 }
 
 function buildContext(entries){
@@ -592,7 +287,6 @@ function buildContext(entries){
   const avgUnique=Math.round(entries.reduce((a,e)=>a+(e.unique_words||0),0)/entries.length);
   const avgReadability=Math.round(entries.reduce((a,e)=>a+(parseInt(e.readability)||50),0)/entries.length);
   const avgLex=parseFloat((entries.reduce((a,e)=>a+(parseFloat(e.lexical_diversity)||0),0)/entries.length).toFixed(2));
-  const moodTrend=posCount>negCount?'Improving':'Needs attention';
   const recentSentiments=entries.slice(0,5).map(e=>e.sentiment||'Neutral').join(', ');
   const allEmotionWords=entries.flatMap(e=>{try{return Array.isArray(e.emotion_words)?e.emotion_words:(JSON.parse(e.emotion_words||'[]'));}catch{return[];}});
   const wordFreq={};
@@ -601,10 +295,18 @@ function buildContext(entries){
   const recentSnippets=entries.slice(0,5).map((e,i)=>{
     const content=e.content?e.content.replace(/<[^>]*>/g,'').substring(0,200):'';
     const date=e.created_at?new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
-    return `Entry ${i+1} (${date}, sentiment: ${e.sentiment||'Neutral'}, words: ${e.word_count||0}): "${content}"`;
+    return`Entry ${i+1} (${date}, sentiment: ${e.sentiment||'Neutral'}, words: ${e.word_count||0}): "${content}"`;
   }).join('\n\n');
-  journalContext=`USER JOURNAL HISTORY (${entries.length} total entries, showing most recent):\n\n${recentSnippets}\n\nAGGREGATE STATS:\n- Total entries: ${entries.length}\n- Positive entries: ${posCount} (${Math.round(posCount/entries.length*100)}%)\n- Negative entries: ${negCount} (${Math.round(negCount/entries.length*100)}%)\n- Neutral entries: ${neuCount} (${Math.round(neuCount/entries.length*100)}%)\n- Average word count: ${avgWords}\n- Average unique words per entry: ${avgUnique}\n- Average lexical diversity: ${avgLex}\n- Average readability score: ${avgReadability}\n- Recent sentiment sequence: ${recentSentiments}\n- Recurring emotional words/themes: ${topThemes.join(', ')||'not enough data yet'}`;
-  statsContext=`Mood trend: ${moodTrend}. Writing ${entries.length} entries total. Recent sentiments: ${recentSentiments}. Average ${avgWords} words per entry.`;
+
+  let sentimentBaselineNote='';
+  if(window.MindNookBaseline&&entries.length>=3){
+    const baseline=window.MindNookBaseline.computeSentimentBaseline(entries);
+    if(baseline){
+      sentimentBaselineNote=`\n- User sentiment baseline (personal avg): ${baseline.muUser}/100 (stdDev: ${baseline.stdDev}, n=${baseline.sampleSize})`;
+    }
+  }
+
+  journalContext=`USER JOURNAL HISTORY (${entries.length} total entries, showing most recent):\n\n${recentSnippets}\n\nAGGREGATE STATS:\n- Total entries: ${entries.length}\n- Positive entries: ${posCount} (${Math.round(posCount/entries.length*100)}%)\n- Negative entries: ${negCount} (${Math.round(negCount/entries.length*100)}%)\n- Neutral entries: ${neuCount} (${Math.round(neuCount/entries.length*100)}%)\n- Average word count: ${avgWords}\n- Average unique words per entry: ${avgUnique}\n- Average lexical diversity: ${avgLex}\n- Average readability score: ${avgReadability}\n- Recent sentiment sequence: ${recentSentiments}\n- Recurring emotional themes: ${topThemes.join(', ')||'not enough data yet'}${sentimentBaselineNote}`;
 }
 
 function buildSidebar(entries){
@@ -664,12 +366,19 @@ async function sendMessage(){
     };
     const l2=lastAnalysis.pragmatic||window.MindNookBaseline.classifyPragmatic(lastText||msg);
     const l3=window.MindNookBaseline.classifyTemporalTrend(userEntries);
-    const l4=window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries);
-    const l5=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4);
+    const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
+    const l4=storedGoals.length>0
+      ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries)
+      :{score:null,label:'No goals set',detail:'',goals:[]};
+    const cfpW=parseFloat(localStorage.getItem('mindnook_cfp')||'0.4');
+    const cfnW=parseFloat(localStorage.getItem('mindnook_cfn')||'0.6');
+    const l5Raw=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4,{cfp_weight:cfpW,cfn_weight:cfnW});
+    const l5Action=window.MindNookBaseline.applyEthicalFilter(l5Raw.action,userEntries,{sentiment:l1.sentiment});
+    const l5={...l5Raw,action:l5Action};
 
     systemPrompt=window.MindNookBaseline.buildDynamicSystemPrompt(l1,l2,l3,l4,l5,journalContext);
   }else{
-    systemPrompt=`You are Nook AI, an emotionally intelligent reflective companion for MindNook.\n\nYour personality:\n- Deeply empathetic, observant, and psychologically safe\n- Analytical but warmly human, never clinical or robotic\n- Keep responses 2-4 paragraphs\n- Never give medical or clinical advice\n\nUSER JOURNAL CONTEXT:\n${journalContext}`;
+    systemPrompt=`You are Nook AI, an emotionally intelligent reflective companion for MindNook.\n\nYour personality:\n- Deeply empathetic, observant, and psychologically safe\n- Analytical but warmly human, never clinical or robotic\n- Keep responses 2-4 paragraphs\n- Never give medical or clinical advice. Never diagnose.\n\nUSER JOURNAL CONTEXT:\n${journalContext}`;
   }
 
   try{
@@ -705,13 +414,13 @@ function generateLocalReply(msg){
   const moodPct=Math.round(posCount/userEntries.length*100);
   const avgWords=Math.round(userEntries.reduce((a,e)=>a+(e.word_count||0),0)/userEntries.length);
   const recentSentiment=userEntries[0]?.sentiment||'Neutral';
-  if(m.includes('anxious')||m.includes('anxiety')||m.includes('stress')||m.includes('stressed')){return`Looking across your ${userEntries.length} entries, I can see that stress and anxiety surface most in entries written later at night — and often coincide with periods where your word count drops slightly, which sometimes signals emotional compression.\n\nYour most recent entry carried a ${recentSentiment.toLowerCase()} sentiment. If you've been feeling anxious lately, it may be worth noticing what was happening in the hours before you sat down to write — those environmental patterns tend to matter a great deal.\n\nWhat's been weighing on you specifically?`;}
-  if(m.includes('pattern')||m.includes('patterns')||m.includes('emotional')){return`Across your ${userEntries.length} entries, a few patterns emerge clearly. ${moodPct}% of your reflections carry positive sentiment, which is a meaningful baseline. The entries with the most emotional depth — measured by word count and lexical diversity — tend to appear when you're processing something complex rather than simply recording events.\n\nNegative sentiment has appeared in ${Math.round(negCount/userEntries.length*100)}% of entries. These aren't failures — they're often your most revealing writing. Would you like me to explore what themes surface during those lower periods?`;}
-  if(m.includes('writing')||m.includes('evolve')||m.includes('vocabulary')||m.includes('vocab')){return`Your writing shows real growth. You average ${avgWords} words per entry, and your lexical diversity — the ratio of unique words to total words — reflects a genuinely expanding expressive range.\n\nThe entries where you write most freely tend to be the most emotionally honest, and that honesty is where vocabulary naturally grows. You're not just journaling — you're developing a more precise language for your inner life. That's worth acknowledging.`;}
-  if(m.includes('positive')||m.includes('better')||m.includes('improv')){return`${moodPct}% of your reflections carry positive sentiment — and more meaningfully, your most recent entries show a ${recentSentiment.toLowerCase()} emotional tone.\n\nPositive growth in journaling isn't always linear. The fact that you're here, reflecting consistently, is itself the most reliable indicator of emotional resilience. What feels different for you lately, compared to when you first started writing?`;}
-  if(m.includes('burnout')||m.includes('exhausted')||m.includes('tired')){return`Burnout tends to show up in writing before we consciously name it — shorter entries, repetitive phrasing, reduced emotional range. Looking at your patterns, the entries with the lowest word counts often cluster around periods of higher negative sentiment.\n\nIf you're feeling depleted right now, your body and mind are communicating something real. Rest isn't a retreat from reflection — sometimes it's the most honest response.\n\nWhat does a lower-demand day look like for you?`;}
-  if(m.includes('summar')||m.includes('overview')||m.includes('month')){return`Here's what your journal history reveals: ${userEntries.length} total reflections, with ${moodPct}% positive sentiment overall. Your average entry is ${avgWords} words — suggesting you engage with reflection thoughtfully, not just briefly.\n\nThe most recent tone in your writing is ${recentSentiment.toLowerCase()}, and your recurring emotional themes include the words that appear most across your entries.\n\nYour consistency here is worth something. Most people think about journaling. You actually do it.`;}
-  return`That's a meaningful question to sit with. Looking at your ${userEntries.length} entries, what stands out is that your most reflective writing — the entries where you seem most honest with yourself — tends to unlock something real about whatever you were carrying at the time.\n\nYour current mood trend shows ${moodPct}% positive sentiment, and your most recent entry was ${recentSentiment.toLowerCase()}. That context matters for how I'd interpret your question.\n\nCould you tell me a bit more about what's prompting this? The more specific you are, the more specifically I can reflect back.`;
+  if(m.includes('anxious')||m.includes('anxiety')||m.includes('stress')||m.includes('stressed')){return`Looking across your ${userEntries.length} entries, stress and anxiety tend to surface most in entries written later in the day — and often coincide with periods where your word count shifts noticeably.\n\nYour most recent entry carried a ${recentSentiment.toLowerCase()} tone. If you've been feeling anxious lately, it may be worth noticing what was happening in the hours before you sat down to write — those environmental patterns tend to matter a great deal.\n\nWhat's been weighing on you specifically?`;}
+  if(m.includes('pattern')||m.includes('patterns')||m.includes('emotional')){return`Across your ${userEntries.length} entries, a few patterns emerge clearly. ${moodPct}% of your reflections carry positive sentiment, which is a meaningful baseline. The entries with the most emotional depth tend to appear when you're processing something complex.\n\nNegative sentiment has appeared in ${Math.round(negCount/userEntries.length*100)}% of entries. These aren't failures — they're often your most revealing writing.\n\nWould you like me to explore what themes surface during those lower periods?`;}
+  if(m.includes('writing')||m.includes('evolve')||m.includes('vocabulary')||m.includes('vocab')){return`Your writing shows real growth. You average ${avgWords} words per entry, and your lexical diversity reflects a genuinely expanding expressive range.\n\nThe entries where you write most freely tend to be the most emotionally honest, and that honesty is where vocabulary naturally grows. You're developing a more precise language for your inner life.`;}
+  if(m.includes('positive')||m.includes('better')||m.includes('improv')){return`${moodPct}% of your reflections carry positive sentiment — and your most recent entries show a ${recentSentiment.toLowerCase()} emotional tone.\n\nPositive growth in journaling isn't always linear. The fact that you're here, reflecting consistently, is itself the most reliable indicator of emotional resilience.\n\nWhat feels different for you lately?`;}
+  if(m.includes('burnout')||m.includes('exhausted')||m.includes('tired')){return`Burnout tends to show up in writing before we consciously name it — shorter entries, repetitive phrasing, reduced emotional range.\n\nIf you're feeling depleted right now, your mind is communicating something real. Rest isn't a retreat from reflection — sometimes it's the most honest response.\n\nWhat does a lower-demand day look like for you?`;}
+  if(m.includes('summar')||m.includes('overview')){return`Here's what your journal history reveals: ${userEntries.length} total reflections, with ${moodPct}% positive sentiment overall. Your average entry is ${avgWords} words.\n\nThe most recent tone in your writing is ${recentSentiment.toLowerCase()}.\n\nYour consistency here is worth something. Most people think about journaling. You actually do it.`;}
+  return`That's a meaningful question to sit with. Looking at your ${userEntries.length} entries, what stands out is that your most reflective writing tends to unlock something real about whatever you were carrying at the time.\n\nYour current mood trend shows ${moodPct}% positive sentiment, and your most recent entry was ${recentSentiment.toLowerCase()}.\n\nCould you tell me a bit more about what's prompting this? The more specific you are, the more specifically I can reflect back.`;
 }
 
 function usePrompt(el){
@@ -721,13 +430,16 @@ function usePrompt(el){
   input.focus();
 }
 
-async function signOut(){await sb.auth.signOut();window.location.href='login.html';}
+async function signOut(){await sb.auth.signOut();localStorage.clear();window.location.href='login.html';}
 window.signOut=signOut;
 
 async function init(){
   const{data:{session:s}}=await sb.auth.getSession();
   if(!s){window.location.href='login.html';return;}
   session=s;
+  if(window.MindNookBaseline){
+    await window.MindNookBaseline.syncGoalsFromSupabase(sb,session.user.id);
+  }
   await loadUserData();
   setTimeout(()=>{
     const greeting=userEntries.length>0
