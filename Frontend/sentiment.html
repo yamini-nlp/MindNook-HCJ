@@ -9,60 +9,25 @@
 <script src="personal_baseline.js"></script>
 <style>
 :root{
-  --bg:#1b2e2b;
-  --bg2:#152422;
-  --bg3:#0d1a18;
-  --card:#1f3430;
-  --card2:#243b37;
-  --border:rgba(217,197,178,0.12);
-  --border2:rgba(217,197,178,0.22);
-  --gold:#d9c5b2;
-  --gold2:#c9a882;
-  --gold3:#e8d8c8;
-  --text:#f0ece2;
-  --text2:rgba(240,236,226,0.65);
-  --text3:rgba(240,236,226,0.38);
-  --sage:#7aad8f;
-  --sage2:#4e8a68;
-  --teal:#5bc4a8;
-  --teal2:#2e8c70;
-  --rose:#c47a8a;
-  --rose2:#9e4e60;
-  --amber:#c4963a;
-  --amber2:#a87828;
-  --neutral:#9b8ea0;
+  --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+  --border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+  --gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+  --text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+  --sage:#7aad8f;--sage2:#4e8a68;--teal:#5bc4a8;--teal2:#2e8c70;
+  --rose:#c47a8a;--rose2:#9e4e60;--amber:#c4963a;--amber2:#a87828;--neutral:#9b8ea0;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6;}
-body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
-}
-.bg-mesh{
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),
-    radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);
-}
-#loading{
-  position:fixed;inset:0;background:var(--bg);z-index:500;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
-}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");}
+.bg-mesh{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);}
+#loading{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
 .ring{width:44px;height:44px;border:2px solid rgba(91,196,168,0.15);border-top-color:var(--teal);border-radius:50%;animation:spin 0.9s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-title{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold2);font-style:italic;}
 .load-sub{font-size:0.84rem;color:var(--text2);letter-spacing:0.5px;}
 .hidden{display:none!important;}
-nav{
-  position:sticky;top:0;z-index:100;
-  display:flex;justify-content:space-between;align-items:center;
-  padding:18px 52px;
-  background:rgba(21,36,34,0.85);
-  backdrop-filter:blur(24px);
-  border-bottom:1px solid var(--border);
-}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:18px 52px;background:rgba(21,36,34,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;color:var(--gold);}
 .nav-links{display:flex;gap:8px;align-items:center;}
 .pill{padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;cursor:pointer;transition:all 0.26s;text-decoration:none;font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;}
@@ -101,12 +66,7 @@ nav{
 .sc-l{font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);font-weight:500;}
 .section{max-width:800px;margin:0 auto;padding:0 52px;}
 .story-wrap{padding-top:48px;}
-.story-frame{
-  position:relative;
-  background:linear-gradient(145deg,rgba(31,52,48,0.7) 0%,rgba(21,36,34,0.85) 100%);
-  border:1px solid var(--border2);
-  border-radius:20px;padding:40px 44px;overflow:hidden;min-height:180px;
-}
+.story-frame{position:relative;background:linear-gradient(145deg,rgba(31,52,48,0.7) 0%,rgba(21,36,34,0.85) 100%);border:1px solid var(--border2);border-radius:20px;padding:40px 44px;overflow:hidden;min-height:180px;}
 .story-frame::before{content:'\201C';position:absolute;top:-20px;left:36px;font-family:'Playfair Display',serif;font-size:12rem;color:rgba(91,196,168,0.04);line-height:1;pointer-events:none;}
 .story-frame::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(91,196,168,0.35),transparent);}
 .story-tag{display:inline-flex;align-items:center;gap:7px;margin-bottom:22px;padding:5px 16px;border-radius:50px;font-size:0.65rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;border:1px solid rgba(91,196,168,0.2);color:var(--teal);background:rgba(91,196,168,0.06);}
@@ -131,6 +91,11 @@ nav{
 .tf{height:100%;border-radius:10px;width:0;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
 .tv{font-size:0.8rem;font-weight:500;color:var(--text);width:32px;text-align:right;}
 .tone-pct{font-size:0.72rem;color:var(--text3);width:40px;text-align:right;}
+.emotion-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.etag{padding:5px 14px;border-radius:50px;font-size:0.74rem;font-weight:400;letter-spacing:0.3px;}
+.etag.pos{background:rgba(91,196,168,0.1);border:1px solid rgba(91,196,168,0.25);color:var(--teal);}
+.etag.neg{background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);}
+.etag.neu{background:rgba(155,142,160,0.08);border:1px solid rgba(155,142,160,0.2);color:var(--neutral);}
 .insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:22px;}
 .insight-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 22px;transition:all 0.28s;position:relative;overflow:hidden;}
 .insight-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
@@ -149,33 +114,19 @@ nav{
 .ic-val{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:var(--gold);line-height:1;margin-bottom:4px;}
 .ic-label{font-size:0.8rem;font-weight:400;color:var(--text2);}
 .emotion-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-.etag{padding:5px 14px;border-radius:50px;font-size:0.74rem;font-weight:400;letter-spacing:0.3px;}
-.etag.pos{background:rgba(91,196,168,0.1);border:1px solid rgba(91,196,168,0.25);color:var(--teal);}
-.etag.neg{background:rgba(196,118,138,0.1);border:1px solid rgba(196,118,138,0.25);color:var(--rose);}
-.etag.neu{background:rgba(155,142,160,0.08);border:1px solid rgba(155,142,160,0.2);color:var(--neutral);}
-.goal-align-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:18px;padding:24px 26px;
-  transition:all 0.28s;position:relative;overflow:hidden;
-  grid-column:1 / -1;
-}
+.goal-align-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 26px;transition:all 0.28s;position:relative;overflow:hidden;grid-column:1 / -1;}
 .goal-align-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--gold2));}
 .goal-align-card:hover{border-color:var(--border2);transform:translateY(-2px);}
 .goal-align-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.goal-align-score{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:400;color:var(--gold);line-height:1;}
-.goal-align-score span{font-size:1rem;color:var(--text3);}
 .goal-align-label{font-size:0.9rem;font-weight:500;color:var(--text);margin-bottom:4px;}
 .goal-align-detail{font-size:0.8rem;color:var(--text2);line-height:1.6;}
 .goal-align-bar-track{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;margin-top:14px;overflow:hidden;}
 .goal-align-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--gold2));transition:width 1.2s cubic-bezier(0.16,1,0.3,1);}
 .goal-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
 .goal-tag{padding:3px 11px;border-radius:50px;font-size:0.7rem;background:rgba(196,150,58,0.08);border:1px solid rgba(196,150,58,0.2);color:var(--amber);}
-.pragmatic-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:18px;padding:22px 22px;
-  transition:all 0.28s;position:relative;overflow:hidden;
-  grid-column:1 / -1;
-}
+.goal-align-qualitative{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;color:var(--gold);line-height:1;}
+.goal-align-hint{font-size:0.7rem;color:var(--text3);margin-top:6px;font-style:italic;}
+.pragmatic-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 22px;transition:all 0.28s;position:relative;overflow:hidden;grid-column:1 / -1;}
 .pragmatic-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--teal);}
 .pragmatic-card:hover{border-color:var(--border2);transform:translateY(-2px);}
 .pragmatic-dist{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
@@ -190,12 +141,11 @@ nav{
 .ghost-btn:hover{border-color:var(--gold2);color:var(--text);background:rgba(217,197,178,0.06);transform:translateY(-1px);}
 .rise{opacity:0;transform:translateY(20px);animation:rise 0.7s ease forwards;}
 @keyframes rise{to{opacity:1;transform:translateY(0);}}
-.d0{animation-delay:.06s;}.d1{animation-delay:.16s;}.d2{animation-delay:.28s;}
-.d3{animation-delay:.40s;}.d4{animation-delay:.52s;}.d5{animation-delay:.64s;}
+.d0{animation-delay:.06s;}.d1{animation-delay:.16s;}.d2{animation-delay:.28s;}.d3{animation-delay:.40s;}.d4{animation-delay:.52s;}.d5{animation-delay:.64s;}
 @media(max-width:700px){
   nav{padding:16px 20px;}
   .hero{padding:44px 20px 20px;}
-  .stats{padding:28px 20px 0;gap:0;}
+  .stats{padding:28px 20px 0;}
   .sc{min-width:64px;padding:16px 10px;}
   .sc-n{font-size:1.7rem;}
   .section{padding-left:20px;padding-right:20px;}
@@ -210,13 +160,11 @@ nav{
 </head>
 <body>
 <div class="bg-mesh"></div>
-
 <div id="loading">
   <div class="ring"></div>
   <div class="load-title">Reading your words…</div>
   <div class="load-sub">Preparing your reflection</div>
 </div>
-
 <div id="page" class="hidden">
   <nav>
     <div class="nav-logo">MINDNOOK</div>
@@ -228,7 +176,6 @@ nav{
         <button onclick="signOut()" class="pill ghost">Sign Out</button>
     </div>
   </nav>
-
   <div class="page">
     <div class="hero rise d0">
       <div class="eyebrow" id="entry-date">—</div>
@@ -238,7 +185,6 @@ nav{
         <span class="orb-word" id="orb-word"></span>
       </div>
     </div>
-
     <div class="stats rise d1">
       <div class="sc"><div class="sc-n" id="sw">—</div><div class="sc-l">Words</div></div>
       <div class="sc"><div class="sc-n" id="ss">—</div><div class="sc-l">Sentences</div></div>
@@ -246,7 +192,6 @@ nav{
       <div class="sc"><div class="sc-n" id="sm">—</div><div class="sc-l">Mistakes</div></div>
       <div class="sc"><div class="sc-n" id="sr">—</div><div class="sc-l">Readability</div></div>
     </div>
-
     <div class="section story-wrap rise d2">
       <div class="story-frame">
         <div class="story-tag" id="story-tag">✦ For You</div>
@@ -257,33 +202,16 @@ nav{
         <div id="story-body" style="display:none;"></div>
       </div>
     </div>
-
     <div class="section tone-wrap rise d3">
       <div class="card">
         <div class="ctag">Emotional Word Ratio</div>
         <div class="card-title">Tone of your writing</div>
-        <div class="tr">
-          <span class="tl">Positive</span>
-          <div class="tt"><div class="tf" id="tfp" style="background:linear-gradient(90deg,rgba(91,196,168,0.3),var(--teal))"></div></div>
-          <span class="tv" id="tvp">0</span>
-          <span class="tone-pct" id="pcp"></span>
-        </div>
-        <div class="tr">
-          <span class="tl">Negative</span>
-          <div class="tt"><div class="tf" id="tfn" style="background:linear-gradient(90deg,rgba(196,118,138,0.3),var(--rose))"></div></div>
-          <span class="tv" id="tvn">0</span>
-          <span class="tone-pct" id="pcn"></span>
-        </div>
-        <div class="tr">
-          <span class="tl">Neutral</span>
-          <div class="tt"><div class="tf" id="tfu" style="background:linear-gradient(90deg,rgba(155,142,160,0.25),var(--neutral))"></div></div>
-          <span class="tv" id="tvu">0</span>
-          <span class="tone-pct" id="pcu"></span>
-        </div>
+        <div class="tr"><span class="tl">Positive</span><div class="tt"><div class="tf" id="tfp" style="background:linear-gradient(90deg,rgba(91,196,168,0.3),var(--teal))"></div></div><span class="tv" id="tvp">0</span><span class="tone-pct" id="pcp"></span></div>
+        <div class="tr"><span class="tl">Negative</span><div class="tt"><div class="tf" id="tfn" style="background:linear-gradient(90deg,rgba(196,118,138,0.3),var(--rose))"></div></div><span class="tv" id="tvn">0</span><span class="tone-pct" id="pcn"></span></div>
+        <div class="tr"><span class="tl">Neutral</span><div class="tt"><div class="tf" id="tfu" style="background:linear-gradient(90deg,rgba(155,142,160,0.25),var(--neutral))"></div></div><span class="tv" id="tvu">0</span><span class="tone-pct" id="pcu"></span></div>
         <div class="emotion-tags" id="emotionTags"></div>
       </div>
     </div>
-
     <div class="section insights-grid rise d4">
       <div class="insight-card teal">
         <div class="ic-tag">Vocabulary</div>
@@ -305,22 +233,23 @@ nav{
         <div class="ic-val" id="ic-density">—</div>
         <div class="ic-label">Emotional words per 100</div>
       </div>
-
       <div class="pragmatic-card" id="pragmatic-card" style="display:none">
-        <div class="ic-tag" style="color:var(--teal);font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;margin-bottom:6px">Pragmatic Mode · Layer 2</div>
+        <div class="ic-tag" style="color:var(--teal);font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;margin-bottom:6px">Communication Style</div>
         <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);margin-bottom:6px" id="pragmatic-dominant">—</div>
         <div style="font-size:0.8rem;color:var(--text2)">Dominant communication mode in this entry</div>
         <div class="pragmatic-dist" id="pragmatic-dist"></div>
       </div>
-
       <div class="goal-align-card" id="goal-align-card" style="display:none">
         <div class="goal-align-header">
           <div>
-            <div style="font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--amber);margin-bottom:6px">Goal Alignment · Layer 4</div>
+            <div style="font-size:0.62rem;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--amber);margin-bottom:6px">Goal Alignment</div>
             <div class="goal-align-label" id="goal-align-label">—</div>
             <div class="goal-align-detail" id="goal-align-detail">—</div>
+            <div class="goal-align-hint">Reflects heuristic alignment with your stated journaling goals</div>
           </div>
-          <div class="goal-align-score" id="goal-align-score">—<span>/100</span></div>
+          <div>
+            <div class="goal-align-qualitative" id="goal-align-qualitative">—</div>
+          </div>
         </div>
         <div class="goal-align-bar-track">
           <div class="goal-align-bar-fill" id="goal-align-bar" style="width:0%"></div>
@@ -328,7 +257,6 @@ nav{
         <div class="goal-tags" id="goal-tags"></div>
       </div>
     </div>
-
     <div class="action rise d5">
       <div class="btn-row">
         <a href="vocab.html" class="big-btn">View Vocabulary Analysis →</a>
@@ -338,7 +266,6 @@ nav{
     </div>
   </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
 <script>
@@ -348,227 +275,275 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const POS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','victorious','vibrant','alive','appreciative','brave','caring','charmed','creative','eager','free','generous','gentle','glowing','graceful','healing','honest','imaginative','kind','light','mindful','nurturing','open','patient','receptive','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','smiling','enjoy','enjoyed','enjoying','celebrate','celebration','achievement','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
 const NEG=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','regretful','shame','ashamed','guilt','guilty','hate','hatred','bored','boredom','burned','burnout','chaos','chaotic','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','paralyzed','powerless','rejection','resentment','restless','shattered','silent','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','mistakes','hard','bad','worse','worst','never','cannot','alone','miss','missing','confused']);
 
+const NEGATION=new Set(['not','never','no','without','hardly','barely','scarcely','neither','nor','cannot','cant',"can't","won't","don't","doesn't","didn't","isn't","aren't","wasn't","weren't"]);
+
 function tokenise(t){return t.toLowerCase().replace(/['']/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>2);}
 
 function countTone(text){
-  const words=tokenise(text);let pos=0,neg=0;
-  const posFound=[],negFound=[];
-  words.forEach(w=>{
-    const forms=[w,w.replace(/ing$/,''),w.replace(/ed$/,''),w.replace(/ly$/,''),w.replace(/ness$/,''),w.replace(/ful$/,''),w.replace(/less$/,''),w.replace(/s$/,'')];
-    if(forms.some(x=>POS.has(x))){pos++;posFound.push(w);}
-    else if(forms.some(x=>NEG.has(x))){neg++;negFound.push(w);}
-  });
-  return{pos,neg,neu:Math.max(0,words.length-pos-neg),total:words.length,posFound:[...new Set(posFound)].slice(0,6),negFound:[...new Set(negFound)].slice(0,6)};
+    const words=tokenise(text);let pos=0,neg=0;
+    const posFound=[],negFound=[];
+    words.forEach((w,i)=>{
+        const negated=words.slice(Math.max(0,i-3),i).some(pw=>NEGATION.has(pw));
+        const forms=[w,w.replace(/ing$/,''),w.replace(/ed$/,''),w.replace(/ly$/,''),w.replace(/ness$/,''),w.replace(/ful$/,''),w.replace(/less$/,''),w.replace(/s$/,'')];
+        const isPos=forms.some(x=>POS.has(x));
+        const isNeg=forms.some(x=>NEG.has(x));
+        if(!negated){
+            if(isPos){pos++;posFound.push(w);}
+            else if(isNeg){neg++;negFound.push(w);}
+        } else {
+            if(isPos){neg++;negFound.push(w);}
+            else if(isNeg){pos++;posFound.push(w);}
+        }
+    });
+    return{pos,neg,neu:Math.max(0,words.length-pos-neg),total:words.length,posFound:[...new Set(posFound)].slice(0,6),negFound:[...new Set(negFound)].slice(0,6)};
 }
 
 function setBar(fid,vid,pcid,count,total){
-  document.getElementById(vid).innerText=count;
-  const pct=total>0?Math.round(count/total*100):0;
-  document.getElementById(pcid).innerText=pct+'%';
-  setTimeout(()=>{document.getElementById(fid).style.width=pct+'%';},500);
+    document.getElementById(vid).innerText=count;
+    const pct=total>0?Math.round(count/total*100):0;
+    document.getElementById(pcid).innerText=pct+'%';
+    setTimeout(()=>{document.getElementById(fid).style.width=pct+'%';},500);
 }
 
 function typewrite(el,text,speed=16){
-  el.innerHTML='';let i=0;
-  const cur=document.createElement('span');cur.className='cursor';el.appendChild(cur);
-  const iv=setInterval(()=>{
-    if(i<text.length){el.insertBefore(document.createTextNode(text[i++]),cur);}
-    else{clearInterval(iv);cur.remove();}
-  },speed);
+    el.innerHTML='';let i=0;
+    const cur=document.createElement('span');cur.className='cursor';el.appendChild(cur);
+    const iv=setInterval(()=>{
+        if(i<text.length){el.insertBefore(document.createTextNode(text[i++]),cur);}
+        else{clearInterval(iv);cur.remove();}
+    },speed);
 }
 
 function getNextType(){
-  const last=localStorage.getItem('lastContentType')||'quote';
-  const next=last==='quote'?'story':'quote';
-  localStorage.setItem('lastContentType',next);
-  return next;
+    const last=localStorage.getItem('lastContentType')||'quote';
+    const next=last==='quote'?'story':'quote';
+    localStorage.setItem('lastContentType',next);
+    return next;
 }
 
 async function fetchContent(a,jtext){
-  const type=getNextType();const isStory=type==='story';
-  const bodyEl=document.getElementById('story-body');
-  const loadEl=document.getElementById('story-loading');
-  document.getElementById('story-tag').innerText=isStory?'✦ A Story For You':'✦ A Quote For You';
-  const snippet=jtext.substring(0,500);
-  const sentiment=a.sentiment||'Neutral';
-  const prompt=isStory
-    ?`You are a compassionate creative writer. A person just wrote this journal entry (sentiment: ${sentiment}):\n\n"${snippet}"\n\nWrite a complete, original short story (minimum 6-8 sentences, 120-180 words) mirroring the emotional themes with a clear arc ending on a hopeful note. Return ONLY valid JSON: {"story": "<full story>"}`
-    :`You are a literary curator. A person just wrote this journal entry (sentiment: ${sentiment}):\n\n"${snippet}"\n\nFind ONE deeply resonant, non-cliché quote with attribution. Return ONLY valid JSON: {"quote": "<quote text>", "author": "<Author Name>"}`;
-  try{
-    const r=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},
-      body:JSON.stringify({text:prompt})
-    });
-    const d=await r.json();
-    loadEl.style.display='none';bodyEl.style.display='block';
-    if(isStory){
-      const storyText=d.story||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>40)||'Every step forward is a step toward the light.';
-      bodyEl.className='story-body';typewrite(bodyEl,storyText,15);
-    }else{
-      const quoteText=d.quote||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>20)||'The only way out is through.';
-      const authorText=d.author||'';
-      bodyEl.className='quote-body';typewrite(bodyEl,quoteText,18);
-      if(authorText){
-        setTimeout(()=>{
-          const ae=document.createElement('div');ae.className='quote-author';
-          ae.innerText='— '+authorText;bodyEl.parentNode.appendChild(ae);
-        },quoteText.length*18+500);
-      }
+    const type=getNextType();const isStory=type==='story';
+    const bodyEl=document.getElementById('story-body');
+    const loadEl=document.getElementById('story-loading');
+    document.getElementById('story-tag').innerText=isStory?'✦ A Story For You':'✦ A Quote For You';
+    const snippet=jtext.substring(0,500);
+    const sentiment=a.sentiment||'Neutral';
+    const prompt=isStory
+        ?`You are a compassionate creative writer. A person just wrote this journal entry (sentiment: ${sentiment}):\n\n"${snippet}"\n\nWrite a complete, original short story (minimum 6-8 sentences, 120-180 words) mirroring the emotional themes with a clear arc ending on a hopeful note. Return ONLY valid JSON: {"story": "<full story>"}`
+        :`You are a literary curator. A person just wrote this journal entry (sentiment: ${sentiment}):\n\n"${snippet}"\n\nFind ONE deeply resonant, non-cliché quote with attribution. Return ONLY valid JSON: {"quote": "<quote text>", "author": "<Author Name>"}`;
+    try{
+        const r=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},
+            body:JSON.stringify({text:prompt})
+        });
+        const d=await r.json();
+        loadEl.style.display='none';bodyEl.style.display='block';
+        if(isStory){
+            const storyText=d.story||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>40)||'Every step forward is a step toward the light.';
+            bodyEl.className='story-body';typewrite(bodyEl,storyText,15);
+        }else{
+            const quoteText=d.quote||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>20)||'The only way out is through.';
+            const authorText=d.author||'';
+            bodyEl.className='quote-body';typewrite(bodyEl,quoteText,18);
+            if(authorText){
+                setTimeout(()=>{
+                    const ae=document.createElement('div');ae.className='quote-author';
+                    ae.innerText='— '+authorText;bodyEl.parentNode.appendChild(ae);
+                },quoteText.length*18+500);
+            }
+        }
+    }catch(err){
+        loadEl.style.display='none';bodyEl.style.display='block';
+        bodyEl.className='story-body';
+        bodyEl.innerText=a.moodLifter||'Every word you write is a step forward.';
     }
-  }catch(err){
-    console.error('Content fetch error:',err);
-    loadEl.style.display='none';bodyEl.style.display='block';
-    bodyEl.className='story-body';
-    bodyEl.innerText=a.moodLifter||'Every word you write is a step forward.';
-  }
 }
 
 function calcReadability(text){
-  const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
-  const words=text.trim().split(/\s+/).filter(w=>w.length>0);
-  const syllables=words.reduce((acc,w)=>{
-    const clean=w.toLowerCase().replace(/[^a-z]/g,'');
-    const count=clean.replace(/[^aeiouy]/g,'').length||1;
-    return acc+Math.max(1,count);
-  },0);
-  if(!sentences.length||!words.length)return{score:0,label:'N/A',avgSentLen:0};
-  const score=206.835-1.015*(words.length/sentences.length)-84.6*(syllables/words.length);
-  const clamped=Math.max(0,Math.min(100,Math.round(score)));
-  let label='Advanced';
-  if(clamped>90)label='Very Easy';
-  else if(clamped>70)label='Easy';
-  else if(clamped>50)label='Standard';
-  else if(clamped>30)label='Difficult';
-  return{score:clamped,label,avgSentLen:Math.round(words.length/sentences.length)};
+    const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+    const words=text.trim().split(/\s+/).filter(w=>w.length>0);
+    const syllables=words.reduce((acc,w)=>{
+        const clean=w.toLowerCase().replace(/[^a-z]/g,'');
+        const count=clean.replace(/[^aeiouy]/g,'').length||1;
+        return acc+Math.max(1,count);
+    },0);
+    if(!sentences.length||!words.length)return{score:0,label:'N/A',avgSentLen:0};
+    const score=206.835-1.015*(words.length/sentences.length)-84.6*(syllables/words.length);
+    const clamped=Math.max(0,Math.min(100,Math.round(score)));
+    let label='Advanced';
+    if(clamped>90)label='Very Easy';
+    else if(clamped>70)label='Easy';
+    else if(clamped>50)label='Standard';
+    else if(clamped>30)label='Difficult';
+    return{score:clamped,label,avgSentLen:Math.round(words.length/sentences.length)};
 }
 
 function renderPragmatic(pragmatic){
-  if(!pragmatic)return;
-  const card=document.getElementById('pragmatic-card');
-  card.style.display='block';
-  const labelMap={assertion:'Assertion',expression:'Expression','help-seeking':'Help-Seeking',question:'Question'};
-  document.getElementById('pragmatic-dominant').innerText=labelMap[pragmatic.dominant]||pragmatic.dominant;
-  const distEl=document.getElementById('pragmatic-dist');
-  const dist=pragmatic.distribution||{};
-  const items=[
-    {key:'assertion',label:'Assert'},
-    {key:'expression',label:'Express'},
-    {key:'helpSeeking',label:'Help'},
-    {key:'question',label:'Question'},
-  ];
-  distEl.innerHTML=items.map(it=>`
-    <div class="pragmatic-item">
-      <div class="pragmatic-item-val">${dist[it.key]||0}%</div>
-      <div class="pragmatic-item-label">${it.label}</div>
-    </div>
-  `).join('');
+    if(!pragmatic)return;
+    const card=document.getElementById('pragmatic-card');
+    card.style.display='block';
+    const labelMap={assertion:'Assertion',expression:'Expression','help-seeking':'Help-Seeking',question:'Question',catharsis:'Catharsis',help_seeking:'Help-Seeking',request:'Request'};
+    document.getElementById('pragmatic-dominant').innerText=labelMap[pragmatic.dominant]||pragmatic.dominant;
+    const distEl=document.getElementById('pragmatic-dist');
+    const dist=pragmatic.distribution||{};
+    const items=[
+        {key:'assertion',label:'Assert'},
+        {key:'expression',label:'Express'},
+        {key:'helpSeeking',label:'Help'},
+        {key:'question',label:'Question'},
+    ];
+    distEl.innerHTML=items.map(it=>`
+        <div class="pragmatic-item">
+            <div class="pragmatic-item-val">${dist[it.key]||0}%</div>
+            <div class="pragmatic-item-label">${it.label}</div>
+        </div>`).join('');
+}
+
+function scoreToQualitative(score){
+    if(score>=75)return'Strong';
+    if(score>=55)return'Partial';
+    if(score>=35)return'Loose';
+    return'Low';
 }
 
 async function renderGoalAlignment(a,jtext){
-  if(!window.MindNookBaseline)return;
-  const card=document.getElementById('goal-align-card');
-  const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
-  if(!storedGoals.length){card.style.display='none';return;}
+    if(!window.MindNookBaseline)return;
+    const card=document.getElementById('goal-align-card');
+    const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
+    if(!storedGoals.length){card.style.display='none';return;}
 
-  let entries=[];
-  try{
-    const{createClient}=supabase;
-    const sb=createClient(SUPABASE_URL,ANON);
-    const{data:{session}}=await sb.auth.getSession();
-    if(session){
-      const{data}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(10);
-      entries=data||[];
-    }
-  }catch(e){console.warn('Could not fetch entries for goal alignment',e);}
+    let entries=[];
+    try{
+        if(window.__sb){
+            const{data:{session}}=await window.__sb.auth.getSession();
+            if(session){
+                const{data}=await window.__sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(10);
+                entries=data||[];
+            }
+        }
+    }catch(e){console.warn('Could not fetch entries for goal alignment',e);}
 
-  const goalAlign=window.MindNookBaseline.computeGoalAlignment(a,entries);
-  if(goalAlign.score===null){card.style.display='none';return;}
+    const goalAlign=window.MindNookBaseline.computeGoalAlignment(a,entries);
+    if(goalAlign.score===null){card.style.display='none';return;}
 
-  card.style.display='block';
-  document.getElementById('goal-align-score').innerHTML=`${goalAlign.score}<span>/100</span>`;
-  document.getElementById('goal-align-label').innerText=goalAlign.label;
-  document.getElementById('goal-align-detail').innerText=goalAlign.detail;
-  setTimeout(()=>{document.getElementById('goal-align-bar').style.width=goalAlign.score+'%';},400);
+    card.style.display='block';
+    document.getElementById('goal-align-qualitative').innerText=scoreToQualitative(goalAlign.score);
+    document.getElementById('goal-align-label').innerText=goalAlign.label;
+    document.getElementById('goal-align-detail').innerText=goalAlign.detail;
+    setTimeout(()=>{document.getElementById('goal-align-bar').style.width=goalAlign.score+'%';},400);
 
-  const tagsEl=document.getElementById('goal-tags');
-  (goalAlign.goals||[]).forEach(g=>{
-    const span=document.createElement('span');
-    span.className='goal-tag';
-    span.innerText=g;
-    tagsEl.appendChild(span);
-  });
+    const tagsEl=document.getElementById('goal-tags');
+    (goalAlign.goals||[]).forEach(g=>{
+        const span=document.createElement('span');
+        span.className='goal-tag';
+        span.innerText=g;
+        tagsEl.appendChild(span);
+    });
+}
+
+async function loadFromDB(entryId){
+    if(!entryId||!window.__sb)return null;
+    try{
+        const{data:{session}}=await window.__sb.auth.getSession();
+        if(!session)return null;
+        const{data,error}=await window.__sb.from('journal_entries').select('*').eq('id',entryId).eq('user_id',session.user.id).single();
+        if(error||!data)return null;
+        return data;
+    }catch(e){return null;}
 }
 
 async function init(){
-  const raw=localStorage.getItem('latestAnalysis');
-  const jtext=localStorage.getItem('latestJournalText')||'';
-  if(!raw){window.location.href='canvas.html';return;}
-  const a=JSON.parse(raw);
+    const raw=localStorage.getItem('latestAnalysis');
+    const jtext=localStorage.getItem('latestJournalText')||'';
+    if(!raw){window.location.href='canvas.html';return;}
+    let a=JSON.parse(raw);
 
-  document.getElementById('entry-date').innerText=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const entryId=localStorage.getItem('mindnook_last_entry_id');
+    if(entryId){
+        const dbEntry=await loadFromDB(entryId);
+        if(dbEntry){
+            if(dbEntry.layer2_pragmatic)a.pragmatic=dbEntry.layer2_pragmatic;
+            if(dbEntry.layer4_goal)a.goalAlignment=dbEntry.layer4_goal;
+            if(dbEntry.layer5_action)a.utilityScore=dbEntry.layer5_action;
+            if(dbEntry.sentiment)a.sentiment=dbEntry.sentiment;
+            if(dbEntry.word_count)a.wordCount=dbEntry.word_count;
+            if(dbEntry.sentence_count)a.sentenceCount=dbEntry.sentence_count;
+            if(dbEntry.unique_words)a.uniqueWords=dbEntry.unique_words;
+            if(dbEntry.mistake_count!=null)a.mistakeCount=dbEntry.mistake_count;
+            if(dbEntry.readability)a.readability=dbEntry.readability;
+            if(dbEntry.positive_word_count!=null)a.positiveWordCount=dbEntry.positive_word_count;
+            if(dbEntry.negative_word_count!=null)a.negativeWordCount=dbEntry.negative_word_count;
+            if(dbEntry.neutral_word_count!=null)a.neutralWordCount=dbEntry.neutral_word_count;
+            if(dbEntry.emotion_words)a.emotionWords=dbEntry.emotion_words;
+            if(dbEntry.sentiment_score!=null)a.sentimentScore=dbEntry.sentiment_score;
+            localStorage.setItem('latestAnalysis',JSON.stringify(a));
+        }
+    }
 
-  const icons={Positive:'☀️',Negative:'🌧️',Neutral:'🌤️'};
-  const orb=document.getElementById('sent-orb');
-  orb.className='orb '+(a.sentiment||'Neutral');
-  document.getElementById('orb-icon').innerText=icons[a.sentiment]||'🌤️';
-  document.getElementById('orb-word').innerText=a.sentiment||'Neutral';
+    document.getElementById('entry-date').innerText=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  document.getElementById('sw').innerText=a.wordCount||0;
-  document.getElementById('ss').innerText=a.sentenceCount||0;
-  document.getElementById('su').innerText=a.uniqueWords||'—';
-  document.getElementById('sm').innerText=a.mistakeCount||0;
-  document.getElementById('sr').innerText=a.readability||'—';
+    const icons={Positive:'☀️',Negative:'🌧️',Neutral:'🌤️'};
+    const orb=document.getElementById('sent-orb');
+    orb.className='orb '+(a.sentiment||'Neutral');
+    document.getElementById('orb-icon').innerText=icons[a.sentiment]||'🌤️';
+    document.getElementById('orb-word').innerText=a.sentiment||'Neutral';
 
-  const counts=countTone(jtext);
-  let pos=counts.pos,neg=counts.neg,neu=counts.neu;
-  if((a.positiveWordCount||0)+(a.negativeWordCount||0)>0){
-    pos=Math.round((pos+(a.positiveWordCount||0))/2);
-    neg=Math.round((neg+(a.negativeWordCount||0))/2);
-    neu=Math.round((neu+(a.neutralWordCount||0))/2);
-  }
-  const total=(pos+neg+neu)||1;
-  setBar('tfp','tvp','pcp',pos,total);
-  setBar('tfn','tvn','pcn',neg,total);
-  setBar('tfu','tvu','pcu',neu,total);
+    document.getElementById('sw').innerText=a.wordCount||0;
+    document.getElementById('ss').innerText=a.sentenceCount||0;
+    document.getElementById('su').innerText=a.uniqueWords||'—';
+    document.getElementById('sm').innerText=a.mistakeCount||0;
+    document.getElementById('sr').innerText=a.readability||'—';
 
-  const tagsEl=document.getElementById('emotionTags');
-  counts.posFound.forEach(w=>{const t=document.createElement('span');t.className='etag pos';t.textContent=w;tagsEl.appendChild(t);});
-  counts.negFound.forEach(w=>{const t=document.createElement('span');t.className='etag neg';t.textContent=w;tagsEl.appendChild(t);});
+    const counts=countTone(jtext);
+    let pos=counts.pos,neg=counts.neg,neu=counts.neu;
+    if((a.positiveWordCount||0)+(a.negativeWordCount||0)>0){
+        pos=Math.round((pos+(a.positiveWordCount||0))/2);
+        neg=Math.round((neg+(a.negativeWordCount||0))/2);
+        neu=Math.round((neu+(a.neutralWordCount||0))/2);
+    }
+    const total=(pos+neg+neu)||1;
+    setBar('tfp','tvp','pcp',pos,total);
+    setBar('tfn','tvn','pcn',neg,total);
+    setBar('tfu','tvu','pcu',neu,total);
 
-  const words=jtext.trim().split(/\s+/).filter(w=>w.length>0);
-  const uniqueRatio=words.length>0?((a.uniqueWords||0)/words.length*100).toFixed(0)+'%':'—';
-  document.getElementById('ic-vocab').innerText=uniqueRatio;
+    const tagsEl=document.getElementById('emotionTags');
+    counts.posFound.forEach(w=>{const t=document.createElement('span');t.className='etag pos';t.textContent=w;tagsEl.appendChild(t);});
+    counts.negFound.forEach(w=>{const t=document.createElement('span');t.className='etag neg';t.textContent=w;tagsEl.appendChild(t);});
 
-  const rd=calcReadability(jtext);
-  document.getElementById('ic-complex').innerText=rd.avgSentLen||'—';
-  document.getElementById('ic-read').innerText=rd.score?rd.score+' · '+rd.label:'—';
+    const words=jtext.trim().split(/\s+/).filter(w=>w.length>0);
+    const uniqueRatio=words.length>0?((a.uniqueWords||0)/words.length*100).toFixed(0)+'%':'—';
+    document.getElementById('ic-vocab').innerText=uniqueRatio;
 
-  const emotionalWords=pos+neg;
-  const density=words.length>0?((emotionalWords/words.length)*100).toFixed(1):'—';
-  document.getElementById('ic-density').innerText=density+'%';
+    const rd=calcReadability(jtext);
+    document.getElementById('ic-complex').innerText=rd.avgSentLen||'—';
+    document.getElementById('ic-read').innerText=rd.score?rd.score+' · '+rd.label:'—';
 
-  if(a.pragmatic){
-    renderPragmatic(a.pragmatic);
-  }else if(window.MindNookBaseline&&jtext){
-    const pragmatic=window.MindNookBaseline.classifyPragmatic(jtext);
-    renderPragmatic(pragmatic);
-  }
+    const emotionalWords=pos+neg;
+    const density=words.length>0?((emotionalWords/words.length)*100).toFixed(1):'—';
+    document.getElementById('ic-density').innerText=density+'%';
 
-  await renderGoalAlignment(a,jtext);
+    if(a.pragmatic){
+        renderPragmatic(a.pragmatic);
+    }else if(window.MindNookBaseline&&jtext){
+        const pragmatic=window.MindNookBaseline.classifyPragmatic(jtext);
+        renderPragmatic(pragmatic);
+    }
 
-  document.getElementById('loading').classList.add('hidden');
-  document.getElementById('page').classList.remove('hidden');
-  fetchContent(a,jtext);
+    await renderGoalAlignment(a,jtext);
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('page').classList.remove('hidden');
+    fetchContent(a,jtext);
 }
 
 window.addEventListener('auth-ready',()=>{init();});
 window.addEventListener('load',()=>{
-  setTimeout(()=>{
-    if(document.getElementById('loading')&&!document.getElementById('loading').classList.contains('hidden')){
-      init();
-    }
-  },2000);
+    setTimeout(()=>{
+        if(document.getElementById('loading')&&!document.getElementById('loading').classList.contains('hidden')){
+            init();
+        }
+    },2000);
 });
 </script>
 </body>

@@ -253,6 +253,7 @@ let moodLineChartInst=null,moodBarChartInst=null,toneChartInst=null,radarChartIn
 let entries=[];
 
 function sentimentScore(e){
+    if(e.sentiment_score!=null)return e.sentiment_score;
     if(e.positive_word_count>0||e.negative_word_count>0){
         const wc=e.word_count||1;
         const score=50+((e.positive_word_count-e.negative_word_count)/wc)*50;
@@ -265,23 +266,39 @@ function sentimentScore(e){
     return 50;
 }
 
+const NEGATION_WORDS=new Set(['not','never','no','without','hardly','barely','scarcely','neither','nor','cannot','cant',"can't","won't","don't","doesn't","didn't","isn't","aren't","wasn't","weren't"]);
+
+function hasNegationBefore(words,index){
+    for(let i=Math.max(0,index-3);i<index;i++){
+        const w=words[i].toLowerCase().replace(/[^a-z']/g,'');
+        if(NEGATION_WORDS.has(w))return true;
+    }
+    return false;
+}
+
 function computeEmotionIntensity(data){
     const emotionMap={Joy:0,Calm:0,Hope:0,Uncertain:0,Melancholy:0};
-    const posWords=new Set(['happy','joy','glad','grateful','love','hopeful','hope','excited','inspired','motivated','wonderful','great','good','cheerful','delight','satisfied','bright','thrilled','confident','fulfilled','playful','serene','sunny','alive','fun','laugh','smile','celebrate','grow','growth','peace','calm','content','proud','warm','free']);
-    const calmWords=new Set(['calm','peace','peaceful','serene','content','still','quiet','gentle','patient','soft','ease','rest','breathe','steady','grounded','balanced']);
-    const hopeWords=new Set(['hope','hopeful','optimistic','inspired','motivation','dream','future','forward','progress','grow','growth','possible','believe','trust','faith']);
-    const uncertainWords=new Set(['uncertain','confused','lost','unsure','doubt','unclear','worried','anxious','nervous','hesitant','wondering','maybe','perhaps','unknown','afraid']);
-    const sadWords=new Set(['sad','melancholy','sorrow','grief','lonely','hurt','pain','broken','tears','cry','empty','heavy','dark','miss','regret','shame','guilt','numb','hopeless','depressed']);
+    const posWords=new Set(['happy','joy','glad','grateful','love','hopeful','hope','excited','inspired','motivated','wonderful','great','good','cheerful','delight','satisfied','bright','thrilled','confident','fulfilled','playful','serene','sunny','alive','fun','laugh','smile','celebrate','grow','growth','peace','calm','content','proud','warm','free','elated','ecstatic','blessed','radiant','refreshed','uplifted','vibrant','appreciative','brave','caring','creative','eager','generous','gentle','glowing','healing','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','enjoy','achievement','accomplish','success','progress','adventure','positive','empowered','lively']);
+    const calmWords=new Set(['calm','peace','peaceful','serene','content','still','quiet','gentle','patient','soft','ease','rest','breathe','steady','grounded','balanced','tranquil','relaxed','composed','settled','centered','mindful','present','unhurried','restful','undisturbed','placid','harmonious']);
+    const hopeWords=new Set(['hope','hopeful','optimistic','inspired','motivation','dream','future','forward','progress','grow','growth','possible','believe','trust','faith','aspire','vision','anticipate','expect','wish','yearn','eager','aspiration','prospect','promise','potential','encourage','uplift','bright','opportunity','renewal']);
+    const uncertainWords=new Set(['uncertain','confused','lost','unsure','doubt','unclear','worried','anxious','nervous','hesitant','wondering','maybe','perhaps','unknown','afraid','apprehensive','indecisive','ambivalent','perplexed','baffled','puzzled','bewildered','disoriented','vulnerable','insecure','uneasy','restless','unsettled','troubled','wary','skeptical']);
+    const sadWords=new Set(['sad','melancholy','sorrow','grief','lonely','hurt','pain','broken','tears','cry','empty','heavy','dark','miss','regret','shame','guilt','numb','hopeless','depressed','suffering','anguish','despair','desolate','mourning','lamenting','heartbroken','miserable','wretched','gloomy','downcast','discouraged','defeated','dejected','disheartened','forlorn','bereft','abandoned','neglected','forgotten','isolated','alienated','worthless','useless','helpless','powerless','trapped','stuck']);
 
     data.forEach(e=>{
         const words=(e.emotion_words||[]);
-        words.forEach(w=>{
-            const wl=w.toLowerCase();
-            if(posWords.has(wl))emotionMap.Joy++;
-            if(calmWords.has(wl))emotionMap.Calm++;
-            if(hopeWords.has(wl))emotionMap.Hope++;
-            if(uncertainWords.has(wl))emotionMap.Uncertain++;
-            if(sadWords.has(wl))emotionMap.Melancholy++;
+        const allWords=words.map(w=>w.toLowerCase());
+        allWords.forEach((w,i)=>{
+            const negated=hasNegationBefore(allWords,i);
+            if(!negated){
+                if(posWords.has(w))emotionMap.Joy++;
+                if(calmWords.has(w))emotionMap.Calm++;
+                if(hopeWords.has(w))emotionMap.Hope++;
+                if(uncertainWords.has(w))emotionMap.Uncertain++;
+                if(sadWords.has(w))emotionMap.Melancholy++;
+            } else {
+                if(posWords.has(w))emotionMap.Melancholy++;
+                if(sadWords.has(w))emotionMap.Joy++;
+            }
         });
     });
 
@@ -404,13 +421,11 @@ function buildMoodBarChart(data){
     const ctx=document.getElementById('moodBarChart').getContext('2d');
     if(moodBarChartInst)moodBarChartInst.destroy();
     const weeks=['Wk1','Wk2','Wk3','Wk4'];
-    const posData=[0,0,0,0],neuData=[0,0,0,0],negData=[0,0,0,0],counts=[0,0,0,0];
+    const posData=[0,0,0,0],neuData=[0,0,0,0],negData=[0,0,0,0];
     data.forEach(e=>{
-        const d=new Date(e.created_at);
         const weekMs=7*24*3600*1000;
-        const ago=Date.now()-d.getTime();
+        const ago=Date.now()-new Date(e.created_at).getTime();
         const wi=Math.min(3,Math.floor(ago/weekMs));
-        counts[3-wi]++;
         const s=(e.sentiment||'').toLowerCase();
         if(s.includes('positive'))posData[3-wi]++;
         else if(s.includes('negative'))negData[3-wi]++;
@@ -608,9 +623,9 @@ function injectTrendCard(trend){
         <div class="panel-header" style="border-bottom:none;padding-bottom:0">
             <div>
                 <h2 style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400">
-                    Temporal Pattern · <span style="color:${colorMap[trend.direction]};font-style:italic">${trend.label}</span>
+                    Sentiment Trajectory · <span style="color:${colorMap[trend.direction]};font-style:italic">${trend.label}</span>
                 </h2>
-                <p style="font-size:0.78rem;color:var(--text3);margin-top:4px">Layer 3 — Longitudinal trend classification</p>
+                <p style="font-size:0.78rem;color:var(--text3);margin-top:4px">Trend Analysis — ${trend.method||'multi-window-regression'}</p>
             </div>
             <div style="font-size:2.5rem;color:${colorMap[trend.direction]}">${iconMap[trend.direction]}</div>
         </div>
@@ -641,6 +656,9 @@ async function init(){
     try{
         const{data:{session}}=await sb.auth.getSession();
         if(session){
+            if(window.MindNookBaseline){
+                await window.MindNookBaseline.syncGoalsFromSupabase(sb,session.user.id);
+            }
             const{data:rows,error}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:true});
             if(!error&&rows&&rows.length>0){
                 entries=rows;
