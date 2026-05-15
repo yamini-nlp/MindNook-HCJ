@@ -1,4 +1,4 @@
-(function() {
+(function () {
   const { createClient } = supabase;
   const sb = createClient(
     'https://dowtaqgkcbppyjxknaqx.supabase.co',
@@ -7,19 +7,77 @@
 
   window.__sb = sb;
 
-  sb.auth.getSession().then(({ data: { session } }) => {
+  const PUBLIC_PAGES = ['login.html', 'index.html', ''];
+
+  function currentPage() {
+    const parts = window.location.pathname.split('/');
+    return parts[parts.length - 1] || '';
+  }
+
+  function isPublicPage() {
+    const page = currentPage();
+    return PUBLIC_PAGES.some(p => page === p || page === '');
+  }
+
+  function resolveSession(session) {
     if (!session) {
-      window.location.href = 'login.html';
+      if (!isPublicPage()) {
+        window.location.href = 'login.html';
+      }
       return;
     }
     window.__session = session;
     window.__user = session.user;
     window.__authHeader = `Bearer ${session.access_token}`;
-    const event = new Event('auth-ready');
-    window.dispatchEvent(event);
+    window.dispatchEvent(new Event('auth-ready'));
+  }
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      window.__session = session;
+      window.__user = session.user;
+      window.__authHeader = `Bearer ${session.access_token}`;
+
+      const { data: prefs } = await sb
+        .from('user_preferences')
+        .select('user_id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      const page = currentPage();
+      if (page === 'login.html' || page === '') {
+        if (prefs) {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'onboarding.html';
+        }
+      } else {
+        window.dispatchEvent(new Event('auth-ready'));
+      }
+      return;
+    }
+
+    if (event === 'SIGNED_OUT') {
+      localStorage.clear();
+      if (!isPublicPage()) {
+        window.location.href = 'login.html';
+      }
+      return;
+    }
+
+    if (event === 'TOKEN_REFRESHED' && session) {
+      window.__session = session;
+      window.__user = session.user;
+      window.__authHeader = `Bearer ${session.access_token}`;
+      return;
+    }
   });
 
-  window.signOut = async function() {
+  sb.auth.getSession().then(({ data: { session } }) => {
+    resolveSession(session);
+  });
+
+  window.signOut = async function () {
     await sb.auth.signOut();
     localStorage.clear();
     window.location.href = 'login.html';

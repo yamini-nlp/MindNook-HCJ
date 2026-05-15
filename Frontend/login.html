@@ -74,6 +74,7 @@ body::after{
   margin-bottom:10px;letter-spacing:0.2px;
 }
 .social-btn:hover{border-color:rgba(217,197,178,0.3);color:var(--text);background:rgba(240,236,226,0.08);}
+.social-btn:disabled{opacity:0.5;cursor:not-allowed;}
 .social-icon{width:18px;height:18px;flex-shrink:0;}
 .divider-line{display:flex;align-items:center;gap:14px;margin:20px 0;}
 .divider-line::before,.divider-line::after{content:'';flex:1;height:1px;background:var(--gline);}
@@ -329,19 +330,57 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk'
 );
 
-async function redirectByHistory() {
+async function redirectAfterAuth(session) {
   try {
-    const { data: entries } = await sb.from('journal_entries').select('id').limit(1);
-    window.location.href = (entries && entries.length > 0) ? 'dashboard.html' : 'onboarding.html';
+    const { data: prefs } = await sb
+      .from('user_preferences')
+      .select('user_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+    window.location.href = prefs ? 'dashboard.html' : 'onboarding.html';
   } catch (e) {
     window.location.href = 'onboarding.html';
   }
 }
 
-(async function checkSession() {
+async function handleOAuthCallback() {
+  const hash = window.location.hash;
+  if (!hash) return false;
+  const params = new URLSearchParams(hash.replace(/^#/, ''));
+  if (params.get('error')) {
+    const desc = params.get('error_description') || 'Authentication failed.';
+    showMsg('login-msg', decodeURIComponent(desc.replace(/\+/g, ' ')), 'error');
+    window.history.replaceState(null, '', window.location.pathname);
+    return true;
+  }
+  if (params.get('access_token') || params.get('type')) {
+    window.history.replaceState(null, '', window.location.pathname);
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error || !session) {
+      showMsg('login-msg', 'Sign in failed. Please try again.', 'error');
+      return true;
+    }
+    await redirectAfterAuth(session);
+    return true;
+  }
+  return false;
+}
+
+(async function init() {
+  const wasCallback = await handleOAuthCallback();
+  if (wasCallback) return;
   const { data: { session } } = await sb.auth.getSession();
-  if (session) await redirectByHistory();
+  if (session) await redirectAfterAuth(session);
 })();
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    const path = window.location.pathname;
+    if (path.endsWith('login.html') || path === '/' || path === '') {
+      await redirectAfterAuth(session);
+    }
+  }
+});
 
 function show(id) {
   ['login-view','signup-view','forgot-view','verify-view'].forEach(v => {
@@ -370,6 +409,7 @@ function getPasswordStrength(pw) {
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
   return Math.min(score, 4);
 }
+
 document.getElementById('signup-password').addEventListener('input', function() {
   const pw = this.value;
   const strength = getPasswordStrength(pw);
@@ -383,6 +423,7 @@ document.getElementById('signup-password').addEventListener('input', function() 
   lbl.textContent = pw.length === 0 ? 'Use 8+ characters, a number, and a symbol' : labels[strength];
   lbl.style.color = strength >= 3 ? 'var(--pos)' : strength >= 2 ? 'var(--neu)' : 'var(--neg)';
 });
+
 document.getElementById('signup-confirm').addEventListener('input', function() {
   const pw = document.getElementById('signup-password').value;
   const errEl = document.getElementById('signup-confirm-err');
@@ -393,11 +434,13 @@ document.getElementById('signup-confirm').addEventListener('input', function() {
     if (this.value && this.value === pw) this.classList.add('success');
   }
 });
+
 let termsAccepted = false;
 document.getElementById('terms-check').addEventListener('click', function() {
   termsAccepted = !termsAccepted;
   this.className = 'checkbox-custom' + (termsAccepted ? ' checked' : '');
 });
+
 function setupPasswordToggle(inputId, btnId) {
   document.getElementById(btnId).addEventListener('click', function() {
     const input = document.getElementById(inputId);
@@ -409,11 +452,13 @@ function setupPasswordToggle(inputId, btnId) {
 setupPasswordToggle('login-password', 'toggle-login-pw');
 setupPasswordToggle('signup-password', 'toggle-signup-pw');
 setupPasswordToggle('signup-confirm', 'toggle-confirm-pw');
+
 document.getElementById('go-signup').addEventListener('click', () => show('signup-view'));
 document.getElementById('go-login').addEventListener('click', () => { show('login-view'); hideMsg('login-msg'); });
 document.getElementById('forgot-link').addEventListener('click', (e) => { e.preventDefault(); show('forgot-view'); });
 document.getElementById('back-to-login').addEventListener('click', () => show('login-view'));
 document.getElementById('go-login-from-verify').addEventListener('click', () => show('login-view'));
+
 document.getElementById('login-btn').addEventListener('click', async () => {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
@@ -429,15 +474,18 @@ document.getElementById('login-btn').addEventListener('click', async () => {
   document.getElementById('login-pw-err').style.display = 'none';
   setLoading('login-btn', true, 'Signing in…');
   try {
-    const { error } = await sb.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    await redirectByHistory();
+    await redirectAfterAuth(data.session);
   } catch (e) {
-    const msg = e.message.includes('Invalid login') ? 'Incorrect email or password. Please try again.' : e.message;
+    let msg = e.message;
+    if (msg.includes('Invalid login')) msg = 'Incorrect email or password. Please try again.';
+    if (msg.toLowerCase().includes('email not confirmed')) msg = 'Please confirm your email before signing in.';
     showMsg('login-msg', msg, 'error');
     setLoading('login-btn', false, 'Sign In');
   }
 });
+
 document.getElementById('signup-btn').addEventListener('click', async () => {
   const first = document.getElementById('signup-first').value.trim();
   const last = document.getElementById('signup-last').value.trim();
@@ -471,19 +519,29 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
   if (!valid) return;
   setLoading('signup-btn', true, 'Creating account…');
   try {
-    const { error } = await sb.auth.signUp({
+    const { data, error } = await sb.auth.signUp({
       email, password,
-      options: { data: { full_name: (first + ' ' + last).trim() || email.split('@')[0], first_name: first, last_name: last } }
+      options: {
+        data: { full_name: (first + ' ' + last).trim() || email.split('@')[0], first_name: first, last_name: last },
+        emailRedirectTo: window.location.origin + '/login.html'
+      }
     });
     if (error) throw error;
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      showMsg('signup-msg', 'This email is already registered. Try signing in instead.', 'error');
+      setLoading('signup-btn', false, 'Create Account');
+      return;
+    }
     document.getElementById('verify-email-shown').textContent = email;
     show('verify-view');
   } catch (e) {
-    const msg = e.message.includes('already registered') ? 'This email is already registered. Try signing in instead.' : e.message;
+    let msg = e.message;
+    if (msg.includes('already registered')) msg = 'This email is already registered. Try signing in instead.';
     showMsg('signup-msg', msg, 'error');
     setLoading('signup-btn', false, 'Create Account');
   }
 });
+
 document.getElementById('forgot-btn').addEventListener('click', async () => {
   const email = document.getElementById('forgot-email').value.trim();
   hideMsg('forgot-msg');
@@ -499,6 +557,7 @@ document.getElementById('forgot-btn').addEventListener('click', async () => {
     setLoading('forgot-btn', false, 'Send Reset Link');
   }
 });
+
 document.getElementById('resend-btn').addEventListener('click', async () => {
   const email = document.getElementById('verify-email-shown').textContent;
   if (!email) return;
@@ -508,15 +567,26 @@ document.getElementById('resend-btn').addEventListener('click', async () => {
     setTimeout(() => { document.getElementById('resend-btn').textContent = 'resend the email.'; }, 3000);
   } catch (e) { console.error(e); }
 });
+
 async function signInWithGoogle() {
+  const btns = [document.getElementById('google-login-btn'), document.getElementById('google-signup-btn')];
+  btns.forEach(b => { b.disabled = true; });
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + '/onboarding.html' }
+    options: {
+      redirectTo: window.location.origin + '/login.html',
+      queryParams: { access_type: 'offline', prompt: 'select_account' }
+    }
   });
-  if (error) console.error(error);
+  if (error) {
+    showMsg('login-msg', error.message, 'error');
+    btns.forEach(b => { b.disabled = false; });
+  }
 }
+
 document.getElementById('google-login-btn').addEventListener('click', signInWithGoogle);
 document.getElementById('google-signup-btn').addEventListener('click', signInWithGoogle);
+
 document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
 document.getElementById('signup-confirm').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('signup-btn').click(); });
 document.getElementById('forgot-email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('forgot-btn').click(); });
