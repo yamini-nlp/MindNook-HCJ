@@ -113,7 +113,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 .insight-card.gold .ic-tag{color:var(--gold2);}
 .ic-val{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:var(--gold);line-height:1;margin-bottom:4px;}
 .ic-label{font-size:0.8rem;font-weight:400;color:var(--text2);}
-.emotion-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
 .goal-align-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 26px;transition:all 0.28s;position:relative;overflow:hidden;grid-column:1 / -1;}
 .goal-align-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--gold2));}
 .goal-align-card:hover{border-color:var(--border2);transform:translateY(-2px);}
@@ -414,8 +413,7 @@ async function renderGoalAlignment(a,jtext){
     let entries=[];
     try{
         if(window.__sb){
-            const ctrl=new AbortController();
-            const t=setTimeout(()=>ctrl.abort(),3000);
+            const t=setTimeout(()=>{},3000);
             const{data:{session}}=await window.__sb.auth.getSession();
             clearTimeout(t);
             if(session){
@@ -443,8 +441,6 @@ async function renderGoalAlignment(a,jtext){
 async function loadFromDB(entryId){
     if(!entryId||!window.__sb)return null;
     try{
-        const ctrl=new AbortController();
-        setTimeout(()=>ctrl.abort(),4000);
         const{data:{session}}=await window.__sb.auth.getSession();
         if(!session)return null;
         const{data,error}=await window.__sb.from('journal_entries').select('*').eq('id',entryId).eq('user_id',session.user.id).single();
@@ -549,18 +545,18 @@ async function init(){
 }
 
 const hardTimeout=setTimeout(()=>{
-    if(!initDone){
-        initDone=true;
-        revealPage();
-    }
+    if(!initDone){initDone=true;revealPage();}
 },8000);
 
 window.addEventListener('auth-ready',()=>{clearTimeout(hardTimeout);init();});
+
 window.addEventListener('load',()=>{
     setTimeout(()=>{
         if(!initDone){clearTimeout(hardTimeout);init();}
     },1500);
 });
+
+if(window.__authReady&&!initDone){clearTimeout(hardTimeout);init();}
 </script>
 </body>
 </html>

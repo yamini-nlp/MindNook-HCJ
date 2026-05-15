@@ -6,6 +6,7 @@
   );
 
   window.__sb = sb;
+  window.__authReady = false;
 
   const PUBLIC_PAGES = ['login.html', 'index.html', ''];
 
@@ -19,6 +20,12 @@
     return PUBLIC_PAGES.some(p => page === p || page === '');
   }
 
+  function fireAuthReady() {
+    if (window.__authReady) return;
+    window.__authReady = true;
+    window.dispatchEvent(new Event('auth-ready'));
+  }
+
   function resolveSession(session) {
     if (!session) {
       if (!isPublicPage()) {
@@ -29,7 +36,7 @@
     window.__session = session;
     window.__user = session.user;
     window.__authHeader = `Bearer ${session.access_token}`;
-    window.dispatchEvent(new Event('auth-ready'));
+    fireAuthReady();
   }
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -52,7 +59,7 @@
           window.location.href = 'onboarding.html';
         }
       } else {
-        window.dispatchEvent(new Event('auth-ready'));
+        fireAuthReady();
       }
       return;
     }
