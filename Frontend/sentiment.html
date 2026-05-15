@@ -274,7 +274,6 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 
 const POS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','victorious','vibrant','alive','appreciative','brave','caring','charmed','creative','eager','free','generous','gentle','glowing','graceful','healing','honest','imaginative','kind','light','mindful','nurturing','open','patient','receptive','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','smiling','enjoy','enjoyed','enjoying','celebrate','celebration','achievement','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
 const NEG=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','regretful','shame','ashamed','guilt','guilty','hate','hatred','bored','boredom','burned','burnout','chaos','chaotic','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','paralyzed','powerless','rejection','resentment','restless','shattered','silent','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','mistakes','hard','bad','worse','worst','never','cannot','alone','miss','missing','confused']);
-
 const NEGATION=new Set(['not','never','no','without','hardly','barely','scarcely','neither','nor','cannot','cant',"can't","won't","don't","doesn't","didn't","isn't","aren't","wasn't","weren't"]);
 
 function tokenise(t){return t.toLowerCase().replace(/['']/g,'').replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>2);}
@@ -412,27 +411,26 @@ async function renderGoalAlignment(a,jtext){
     const card=document.getElementById('goal-align-card');
     const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
     if(!storedGoals.length){card.style.display='none';return;}
-
     let entries=[];
     try{
         if(window.__sb){
+            const ctrl=new AbortController();
+            const t=setTimeout(()=>ctrl.abort(),3000);
             const{data:{session}}=await window.__sb.auth.getSession();
+            clearTimeout(t);
             if(session){
                 const{data}=await window.__sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(10);
                 entries=data||[];
             }
         }
     }catch(e){console.warn('Could not fetch entries for goal alignment',e);}
-
     const goalAlign=window.MindNookBaseline.computeGoalAlignment(a,entries);
     if(goalAlign.score===null){card.style.display='none';return;}
-
     card.style.display='block';
     document.getElementById('goal-align-qualitative').innerText=scoreToQualitative(goalAlign.score);
     document.getElementById('goal-align-label').innerText=goalAlign.label;
     document.getElementById('goal-align-detail').innerText=goalAlign.detail;
     setTimeout(()=>{document.getElementById('goal-align-bar').style.width=goalAlign.score+'%';},400);
-
     const tagsEl=document.getElementById('goal-tags');
     (goalAlign.goals||[]).forEach(g=>{
         const span=document.createElement('span');
@@ -445,6 +443,8 @@ async function renderGoalAlignment(a,jtext){
 async function loadFromDB(entryId){
     if(!entryId||!window.__sb)return null;
     try{
+        const ctrl=new AbortController();
+        setTimeout(()=>ctrl.abort(),4000);
         const{data:{session}}=await window.__sb.auth.getSession();
         if(!session)return null;
         const{data,error}=await window.__sb.from('journal_entries').select('*').eq('id',entryId).eq('user_id',session.user.id).single();
@@ -453,97 +453,113 @@ async function loadFromDB(entryId){
     }catch(e){return null;}
 }
 
-async function init(){
-    const raw=localStorage.getItem('latestAnalysis');
-    const jtext=localStorage.getItem('latestJournalText')||'';
-    if(!raw){window.location.href='canvas.html';return;}
-    let a=JSON.parse(raw);
-
-    const entryId=localStorage.getItem('mindnook_last_entry_id');
-    if(entryId){
-        const dbEntry=await loadFromDB(entryId);
-        if(dbEntry){
-            if(dbEntry.layer2_pragmatic)a.pragmatic=dbEntry.layer2_pragmatic;
-            if(dbEntry.layer4_goal)a.goalAlignment=dbEntry.layer4_goal;
-            if(dbEntry.layer5_action)a.utilityScore=dbEntry.layer5_action;
-            if(dbEntry.sentiment)a.sentiment=dbEntry.sentiment;
-            if(dbEntry.word_count)a.wordCount=dbEntry.word_count;
-            if(dbEntry.sentence_count)a.sentenceCount=dbEntry.sentence_count;
-            if(dbEntry.unique_words)a.uniqueWords=dbEntry.unique_words;
-            if(dbEntry.mistake_count!=null)a.mistakeCount=dbEntry.mistake_count;
-            if(dbEntry.readability)a.readability=dbEntry.readability;
-            if(dbEntry.positive_word_count!=null)a.positiveWordCount=dbEntry.positive_word_count;
-            if(dbEntry.negative_word_count!=null)a.negativeWordCount=dbEntry.negative_word_count;
-            if(dbEntry.neutral_word_count!=null)a.neutralWordCount=dbEntry.neutral_word_count;
-            if(dbEntry.emotion_words)a.emotionWords=dbEntry.emotion_words;
-            if(dbEntry.sentiment_score!=null)a.sentimentScore=dbEntry.sentiment_score;
-            localStorage.setItem('latestAnalysis',JSON.stringify(a));
-        }
-    }
-
-    document.getElementById('entry-date').innerText=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-    const icons={Positive:'☀️',Negative:'🌧️',Neutral:'🌤️'};
-    const orb=document.getElementById('sent-orb');
-    orb.className='orb '+(a.sentiment||'Neutral');
-    document.getElementById('orb-icon').innerText=icons[a.sentiment]||'🌤️';
-    document.getElementById('orb-word').innerText=a.sentiment||'Neutral';
-
-    document.getElementById('sw').innerText=a.wordCount||0;
-    document.getElementById('ss').innerText=a.sentenceCount||0;
-    document.getElementById('su').innerText=a.uniqueWords||'—';
-    document.getElementById('sm').innerText=a.mistakeCount||0;
-    document.getElementById('sr').innerText=a.readability||'—';
-
-    const counts=countTone(jtext);
-    let pos=counts.pos,neg=counts.neg,neu=counts.neu;
-    if((a.positiveWordCount||0)+(a.negativeWordCount||0)>0){
-        pos=Math.round((pos+(a.positiveWordCount||0))/2);
-        neg=Math.round((neg+(a.negativeWordCount||0))/2);
-        neu=Math.round((neu+(a.neutralWordCount||0))/2);
-    }
-    const total=(pos+neg+neu)||1;
-    setBar('tfp','tvp','pcp',pos,total);
-    setBar('tfn','tvn','pcn',neg,total);
-    setBar('tfu','tvu','pcu',neu,total);
-
-    const tagsEl=document.getElementById('emotionTags');
-    counts.posFound.forEach(w=>{const t=document.createElement('span');t.className='etag pos';t.textContent=w;tagsEl.appendChild(t);});
-    counts.negFound.forEach(w=>{const t=document.createElement('span');t.className='etag neg';t.textContent=w;tagsEl.appendChild(t);});
-
-    const words=jtext.trim().split(/\s+/).filter(w=>w.length>0);
-    const uniqueRatio=words.length>0?((a.uniqueWords||0)/words.length*100).toFixed(0)+'%':'—';
-    document.getElementById('ic-vocab').innerText=uniqueRatio;
-
-    const rd=calcReadability(jtext);
-    document.getElementById('ic-complex').innerText=rd.avgSentLen||'—';
-    document.getElementById('ic-read').innerText=rd.score?rd.score+' · '+rd.label:'—';
-
-    const emotionalWords=pos+neg;
-    const density=words.length>0?((emotionalWords/words.length)*100).toFixed(1):'—';
-    document.getElementById('ic-density').innerText=density+'%';
-
-    if(a.pragmatic){
-        renderPragmatic(a.pragmatic);
-    }else if(window.MindNookBaseline&&jtext){
-        const pragmatic=window.MindNookBaseline.classifyPragmatic(jtext);
-        renderPragmatic(pragmatic);
-    }
-
-    await renderGoalAlignment(a,jtext);
-
+function revealPage(){
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('page').classList.remove('hidden');
-    fetchContent(a,jtext);
 }
 
-window.addEventListener('auth-ready',()=>{init();});
+let initDone=false;
+async function init(){
+    if(initDone)return;
+    initDone=true;
+    try{
+        const raw=localStorage.getItem('latestAnalysis');
+        const jtext=localStorage.getItem('latestJournalText')||'';
+        if(!raw){window.location.href='canvas.html';return;}
+        let a=JSON.parse(raw);
+
+        const entryId=localStorage.getItem('mindnook_last_entry_id');
+        if(entryId){
+            const dbEntry=await loadFromDB(entryId);
+            if(dbEntry){
+                if(dbEntry.layer2_pragmatic)a.pragmatic=dbEntry.layer2_pragmatic;
+                if(dbEntry.layer4_goal)a.goalAlignment=dbEntry.layer4_goal;
+                if(dbEntry.layer5_action)a.utilityScore=dbEntry.layer5_action;
+                if(dbEntry.sentiment)a.sentiment=dbEntry.sentiment;
+                if(dbEntry.word_count)a.wordCount=dbEntry.word_count;
+                if(dbEntry.sentence_count)a.sentenceCount=dbEntry.sentence_count;
+                if(dbEntry.unique_words)a.uniqueWords=dbEntry.unique_words;
+                if(dbEntry.mistake_count!=null)a.mistakeCount=dbEntry.mistake_count;
+                if(dbEntry.readability)a.readability=dbEntry.readability;
+                if(dbEntry.positive_word_count!=null)a.positiveWordCount=dbEntry.positive_word_count;
+                if(dbEntry.negative_word_count!=null)a.negativeWordCount=dbEntry.negative_word_count;
+                if(dbEntry.neutral_word_count!=null)a.neutralWordCount=dbEntry.neutral_word_count;
+                if(dbEntry.emotion_words)a.emotionWords=dbEntry.emotion_words;
+                if(dbEntry.sentiment_score!=null)a.sentimentScore=dbEntry.sentiment_score;
+                localStorage.setItem('latestAnalysis',JSON.stringify(a));
+            }
+        }
+
+        document.getElementById('entry-date').innerText=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+        const icons={Positive:'☀️',Negative:'🌧️',Neutral:'🌤️'};
+        const orb=document.getElementById('sent-orb');
+        orb.className='orb '+(a.sentiment||'Neutral');
+        document.getElementById('orb-icon').innerText=icons[a.sentiment]||'🌤️';
+        document.getElementById('orb-word').innerText=a.sentiment||'Neutral';
+
+        document.getElementById('sw').innerText=a.wordCount||0;
+        document.getElementById('ss').innerText=a.sentenceCount||0;
+        document.getElementById('su').innerText=a.uniqueWords||'—';
+        document.getElementById('sm').innerText=a.mistakeCount||0;
+        document.getElementById('sr').innerText=a.readability||'—';
+
+        const counts=countTone(jtext);
+        let pos=counts.pos,neg=counts.neg,neu=counts.neu;
+        if((a.positiveWordCount||0)+(a.negativeWordCount||0)>0){
+            pos=Math.round((pos+(a.positiveWordCount||0))/2);
+            neg=Math.round((neg+(a.negativeWordCount||0))/2);
+            neu=Math.round((neu+(a.neutralWordCount||0))/2);
+        }
+        const total=(pos+neg+neu)||1;
+        setBar('tfp','tvp','pcp',pos,total);
+        setBar('tfn','tvn','pcn',neg,total);
+        setBar('tfu','tvu','pcu',neu,total);
+
+        const tagsEl=document.getElementById('emotionTags');
+        counts.posFound.forEach(w=>{const t=document.createElement('span');t.className='etag pos';t.textContent=w;tagsEl.appendChild(t);});
+        counts.negFound.forEach(w=>{const t=document.createElement('span');t.className='etag neg';t.textContent=w;tagsEl.appendChild(t);});
+
+        const words=jtext.trim().split(/\s+/).filter(w=>w.length>0);
+        const uniqueRatio=words.length>0?((a.uniqueWords||0)/words.length*100).toFixed(0)+'%':'—';
+        document.getElementById('ic-vocab').innerText=uniqueRatio;
+
+        const rd=calcReadability(jtext);
+        document.getElementById('ic-complex').innerText=rd.avgSentLen||'—';
+        document.getElementById('ic-read').innerText=rd.score?rd.score+' · '+rd.label:'—';
+
+        const emotionalWords=pos+neg;
+        const density=words.length>0?((emotionalWords/words.length)*100).toFixed(1):'—';
+        document.getElementById('ic-density').innerText=density+'%';
+
+        if(a.pragmatic){
+            renderPragmatic(a.pragmatic);
+        }else if(window.MindNookBaseline&&jtext){
+            const pragmatic=window.MindNookBaseline.classifyPragmatic(jtext);
+            renderPragmatic(pragmatic);
+        }
+
+        await renderGoalAlignment(a,jtext);
+        fetchContent(a,jtext);
+    }catch(err){
+        console.error('init error',err);
+    }finally{
+        revealPage();
+    }
+}
+
+const hardTimeout=setTimeout(()=>{
+    if(!initDone){
+        initDone=true;
+        revealPage();
+    }
+},8000);
+
+window.addEventListener('auth-ready',()=>{clearTimeout(hardTimeout);init();});
 window.addEventListener('load',()=>{
     setTimeout(()=>{
-        if(document.getElementById('loading')&&!document.getElementById('loading').classList.contains('hidden')){
-            init();
-        }
-    },2000);
+        if(!initDone){clearTimeout(hardTimeout);init();}
+    },1500);
 });
 </script>
 </body>
