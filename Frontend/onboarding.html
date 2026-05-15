@@ -17,7 +17,7 @@
 --teal:#5bc4a8;--teal2:#2e8c70;--rose:#c47a8a;--sage:#7aad8f;--amber:#c4963a;
 }
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;}
-canvas#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35;}
+canvas#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
 .ob-wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;}
 .card{width:100%;max-width:640px;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:52px 48px;box-shadow:0 24px 80px rgba(0,0,0,0.4),0 0 0 1px rgba(217,197,178,0.04);position:relative;overflow:hidden;}
 .card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(217,197,178,0.04) 0%,transparent 70%);pointer-events:none;}
@@ -66,9 +66,9 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
 .slider-value{font-family:'Playfair Display',serif;font-size:2rem;font-weight:400;color:var(--gold2);margin-top:16px;text-align:center;}
 .privacy-note{font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:300;color:var(--text3);margin-top:20px;letter-spacing:0.3px;line-height:1.7;}
 .freq-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
-.pill{padding:9px 22px;border-radius:50px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:300;letter-spacing:0.3px;color:var(--text2);cursor:pointer;transition:all 0.25s ease;background:transparent;}
-.pill:hover{border-color:var(--border2);color:var(--text);}
-.pill.selected{border-color:rgba(217,197,178,0.35);background:rgba(217,197,178,0.07);color:var(--text);}
+.pill-select{padding:9px 22px;border-radius:50px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:300;letter-spacing:0.3px;color:var(--text2);cursor:pointer;transition:all 0.25s ease;background:transparent;}
+.pill-select:hover{border-color:var(--border2);color:var(--text);}
+.pill-select.selected{border-color:rgba(217,197,178,0.35);background:rgba(217,197,178,0.07);color:var(--text);}
 .section-sub{font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin:22px 0 14px;}
 .toggle-list{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:14px;border:1px solid var(--border);background:var(--card2);transition:border-color 0.25s;}
@@ -105,6 +105,8 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
 @keyframes pulseRing{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(1.4);}}
 .pulse-inner{font-size:20px;color:var(--gold2);}
 .divider{height:1px;background:var(--border);margin:20px 0;}
+.intervention-section{margin-top:20px;}
+.intervention-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 </style>
 </head>
 <body>
@@ -168,17 +170,17 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
       <h1>How often would you like <em>to reflect?</em></h1>
       <p class="sub">We'll shape your experience around your natural rhythm.</p>
       <div class="freq-pills">
-        <div class="pill" onclick="togglePill(this,'freq')">Daily</div>
-        <div class="pill" onclick="togglePill(this,'freq')">Several times a week</div>
-        <div class="pill" onclick="togglePill(this,'freq')">Weekly</div>
-        <div class="pill" onclick="togglePill(this,'freq')">Only when needed</div>
+        <div class="pill-select" onclick="togglePill(this,'freq')">Daily</div>
+        <div class="pill-select" onclick="togglePill(this,'freq')">Several times a week</div>
+        <div class="pill-select" onclick="togglePill(this,'freq')">Weekly</div>
+        <div class="pill-select" onclick="togglePill(this,'freq')">Only when needed</div>
       </div>
       <div class="section-sub">When do you usually reflect?</div>
       <div class="freq-pills">
-        <div class="pill" onclick="togglePill(this,'time')">Morning</div>
-        <div class="pill" onclick="togglePill(this,'time')">Afternoon</div>
-        <div class="pill" onclick="togglePill(this,'time')">Night</div>
-        <div class="pill" onclick="togglePill(this,'time')">Late Night</div>
+        <div class="pill-select" onclick="togglePill(this,'time')">Morning</div>
+        <div class="pill-select" onclick="togglePill(this,'time')">Afternoon</div>
+        <div class="pill-select" onclick="togglePill(this,'time')">Night</div>
+        <div class="pill-select" onclick="togglePill(this,'time')">Late Night</div>
       </div>
     </div>
     <div class="step" id="step5">
@@ -191,6 +193,15 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
         <div class="toggle-row"><span class="toggle-label">Longitudinal mood tracking</span><div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
         <div class="toggle-row"><span class="toggle-label">Vocabulary &amp; writing growth</span><div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
         <div class="toggle-row"><span class="toggle-label">Reflect AI recommendations</span><div class="toggle-switch on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="intervention-section">
+        <div class="slider-label">AI Insight Sensitivity</div>
+        <div style="font-size:0.78rem;color:var(--text2);margin-bottom:12px;">How proactively should your AI companion respond to emotional patterns?</div>
+        <div class="intervention-pills">
+          <div class="pill-select selected" id="ip-minimal" onclick="selectIntervention(this,'minimal')">Minimal</div>
+          <div class="pill-select" id="ip-balanced" onclick="selectIntervention(this,'balanced')">Balanced</div>
+          <div class="pill-select" id="ip-proactive" onclick="selectIntervention(this,'proactive')">Proactive</div>
+        </div>
       </div>
     </div>
     <div class="step" id="step6">
@@ -230,6 +241,13 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 let current=1;
 const total=6;
+let selectedIntervention='minimal';
+
+const interventionWeights={
+  minimal:{cfp:0.6,cfn:0.4},
+  balanced:{cfp:0.4,cfn:0.6},
+  proactive:{cfp:0.25,cfn:0.75}
+};
 
 function updateUI(){
   const header=document.getElementById('cardHeader');
@@ -266,6 +284,12 @@ function togglePill(el,group){
 function toggleSwitch(el){el.classList.toggle('on');}
 function updateStress(v){document.getElementById('stressVal').textContent=v;}
 
+function selectIntervention(el,value){
+  document.querySelectorAll('.intervention-pills .pill-select').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedIntervention=value;
+}
+
 async function enterMindNook(){
   const btn=document.getElementById('enterBtn');
   btn.disabled=true;
@@ -282,9 +306,13 @@ async function enterMindNook(){
   const journalingFrequency=freqEl?freqEl.textContent.trim():'';
   const preferredTime=timeEl?timeEl.textContent.trim():'';
 
+  const weights=interventionWeights[selectedIntervention]||interventionWeights.balanced;
+
   localStorage.setItem('mindnook_goals',JSON.stringify(selectedGoals));
   localStorage.setItem('mindnook_emotions',JSON.stringify(selectedEmotions));
   localStorage.setItem('mindnook_stress',String(stressVal));
+  localStorage.setItem('mindnook_cfp',String(weights.cfp));
+  localStorage.setItem('mindnook_cfn',String(weights.cfn));
 
   try{
     await sb.from('user_preferences').upsert({
@@ -293,7 +321,10 @@ async function enterMindNook(){
       initial_emotions:selectedEmotions,
       stress_level:stressVal,
       journaling_frequency:journalingFrequency,
-      preferred_time:preferredTime
+      preferred_time:preferredTime,
+      cfp_weight:weights.cfp,
+      cfn_weight:weights.cfn,
+      intervention_preference:selectedIntervention
     },{onConflict:'user_id'});
   }catch(e){
     console.warn('Could not save preferences to Supabase (non-fatal):',e);
