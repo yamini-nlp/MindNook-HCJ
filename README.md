@@ -386,3 +386,10 @@ All five framework layers are implemented, persisted to PostgreSQL, and actively
 | Auth | Supabase Auth (email) with row-level security |
 | Frontend Hosting | Vercel (static, root directory: `Frontend`) |
 | Backend Hosting | Supabase Edge (serverless Deno runtime) |
+
+---
+<div align="center">
+
+**Built by [Yamini G](https://github.com/yamireddy04)**
+
+</div>
