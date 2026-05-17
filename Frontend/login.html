@@ -162,7 +162,7 @@ body::after{
   font-size:0.83rem;font-weight:400;
   margin-bottom:16px;display:none;line-height:1.55;
 }
-.msg-box.error{background:rgba(196,118,138,0.08);border:1px solid rgba(196,118,138,0.24);color:rgba(196,118,138,0.9);}
+.msg-box.error{background:rgba(196,118,138,0.08);border:1px solid rgba(196,118,138,0.24);color:rgba(196,118,134,0.9);}
 .msg-box.success{background:rgba(91,196,168,0.08);border:1px solid rgba(91,196,168,0.24);color:rgba(91,196,168,0.9);}
 .msg-box.info{background:var(--gsoft);border:1px solid var(--gline);color:var(--dim);}
 .toggle-mode{text-align:center;font-size:0.83rem;font-weight:400;color:var(--dim);line-height:1.5;}
@@ -327,7 +327,8 @@ body::after{
 const { createClient } = supabase;
 const sb = createClient(
   'https://dowtaqgkcbppyjxknaqx.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk',
+  { auth: { flowType: 'implicit' } }
 );
 
 let googleAuthInProgress = false;
@@ -347,25 +348,43 @@ async function redirectAfterAuth(session) {
 
 async function handleOAuthCallback() {
   const hash = window.location.hash;
-  if (!hash) return false;
-  const params = new URLSearchParams(hash.replace(/^#/, ''));
-  if (params.get('error')) {
+  const search = window.location.search;
+
+  if (search.includes('code=')) {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (!error && session) {
+      window.history.replaceState(null, '', window.location.pathname);
+      await redirectAfterAuth(session);
+      return true;
+    }
+    if (error) {
+      showMsg('login-msg', 'Sign in failed. Please try again.', 'error');
+      window.history.replaceState(null, '', window.location.pathname);
+      return true;
+    }
+  }
+
+  if (hash && hash.includes('error')) {
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
     const desc = params.get('error_description') || 'Authentication failed.';
     showMsg('login-msg', decodeURIComponent(desc.replace(/\+/g, ' ')), 'error');
     window.history.replaceState(null, '', window.location.pathname);
     return true;
   }
-  if (params.get('access_token') || params.get('type')) {
-    window.history.replaceState(null, '', window.location.pathname);
-    await new Promise(r => setTimeout(r, 500));
+
+  if (hash && hash.includes('access_token')) {
+    await new Promise(r => setTimeout(r, 600));
     const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) {
-      showMsg('login-msg', 'Sign in failed. Please try again.', 'error');
+    if (!error && session) {
+      window.history.replaceState(null, '', window.location.pathname);
+      await redirectAfterAuth(session);
       return true;
     }
-    await redirectAfterAuth(session);
+    showMsg('login-msg', 'Sign in failed. Please try again.', 'error');
+    window.history.replaceState(null, '', window.location.pathname);
     return true;
   }
+
   return false;
 }
 
@@ -373,16 +392,13 @@ async function handleOAuthCallback() {
   const wasCallback = await handleOAuthCallback();
   if (wasCallback) return;
   const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await redirectAfterAuth(session);
-  }
+  if (session) await redirectAfterAuth(session);
 })();
 
 sb.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session && !googleAuthInProgress) {
-    const hash = window.location.hash;
-    const hasTokenInHash = hash && (hash.includes('access_token') || hash.includes('type='));
-    if (hasTokenInHash) return;
+    const isCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token');
+    if (isCallback) return;
     await redirectAfterAuth(session);
   }
 });
