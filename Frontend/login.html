@@ -355,6 +355,7 @@ async function handleOAuthCallback() {
   }
   if (params.get('access_token') || params.get('type')) {
     window.history.replaceState(null, '', window.location.pathname);
+    await new Promise(r => setTimeout(r, 300));
     const { data: { session }, error } = await sb.auth.getSession();
     if (error || !session) {
       showMsg('login-msg', 'Sign in failed. Please try again.', 'error');
@@ -370,17 +371,10 @@ async function handleOAuthCallback() {
   const wasCallback = await handleOAuthCallback();
   if (wasCallback) return;
   const { data: { session } } = await sb.auth.getSession();
-  if (session) await redirectAfterAuth(session);
-})();
-
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    const path = window.location.pathname;
-    if (path.endsWith('login.html') || path === '/' || path === '') {
-      await redirectAfterAuth(session);
-    }
+  if (session) {
+    await redirectAfterAuth(session);
   }
-});
+})();
 
 function show(id) {
   ['login-view','signup-view','forgot-view','verify-view'].forEach(v => {
@@ -570,7 +564,7 @@ document.getElementById('resend-btn').addEventListener('click', async () => {
 
 async function signInWithGoogle() {
   const btns = [document.getElementById('google-login-btn'), document.getElementById('google-signup-btn')];
-  btns.forEach(b => { b.disabled = true; });
+  btns.forEach(b => { if (b) b.disabled = true; });
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -580,7 +574,7 @@ async function signInWithGoogle() {
   });
   if (error) {
     showMsg('login-msg', error.message, 'error');
-    btns.forEach(b => { b.disabled = false; });
+    btns.forEach(b => { if (b) b.disabled = false; });
   }
 }
 

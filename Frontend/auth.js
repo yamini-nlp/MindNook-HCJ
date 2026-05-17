@@ -17,7 +17,12 @@
 
   function isPublicPage() {
     const page = currentPage();
-    return PUBLIC_PAGES.some(p => page === p || page === '');
+    return PUBLIC_PAGES.some(p => page === p);
+  }
+
+  function isLoginPage() {
+    const page = currentPage();
+    return page === 'login.html' || page === '';
   }
 
   function fireAuthReady() {
@@ -45,21 +50,20 @@
       window.__user = session.user;
       window.__authHeader = `Bearer ${session.access_token}`;
 
-      const { data: prefs } = await sb
-        .from('user_preferences')
-        .select('user_id')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      const page = currentPage();
-      if (page === 'login.html' || page === '') {
-        if (prefs) {
-          window.location.href = 'dashboard.html';
-        } else {
-          window.location.href = 'onboarding.html';
-        }
-      } else {
+      if (!isLoginPage()) {
         fireAuthReady();
+        return;
+      }
+
+      try {
+        const { data: prefs } = await sb
+          .from('user_preferences')
+          .select('user_id')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        window.location.href = prefs ? 'dashboard.html' : 'onboarding.html';
+      } catch (e) {
+        window.location.href = 'onboarding.html';
       }
       return;
     }
