@@ -330,6 +330,8 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk'
 );
 
+let googleAuthInProgress = false;
+
 async function redirectAfterAuth(session) {
   try {
     const { data: prefs } = await sb
@@ -355,7 +357,7 @@ async function handleOAuthCallback() {
   }
   if (params.get('access_token') || params.get('type')) {
     window.history.replaceState(null, '', window.location.pathname);
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 500));
     const { data: { session }, error } = await sb.auth.getSession();
     if (error || !session) {
       showMsg('login-msg', 'Sign in failed. Please try again.', 'error');
@@ -375,6 +377,15 @@ async function handleOAuthCallback() {
     await redirectAfterAuth(session);
   }
 })();
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session && !googleAuthInProgress) {
+    const hash = window.location.hash;
+    const hasTokenInHash = hash && (hash.includes('access_token') || hash.includes('type='));
+    if (hasTokenInHash) return;
+    await redirectAfterAuth(session);
+  }
+});
 
 function show(id) {
   ['login-view','signup-view','forgot-view','verify-view'].forEach(v => {
@@ -563,8 +574,9 @@ document.getElementById('resend-btn').addEventListener('click', async () => {
 });
 
 async function signInWithGoogle() {
-  const btns = [document.getElementById('google-login-btn'), document.getElementById('google-signup-btn')];
-  btns.forEach(b => { if (b) b.disabled = true; });
+  if (googleAuthInProgress) return;
+  googleAuthInProgress = true;
+  document.querySelectorAll('.social-btn').forEach(b => { b.disabled = true; });
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -574,7 +586,8 @@ async function signInWithGoogle() {
   });
   if (error) {
     showMsg('login-msg', error.message, 'error');
-    btns.forEach(b => { if (b) b.disabled = false; });
+    googleAuthInProgress = false;
+    document.querySelectorAll('.social-btn').forEach(b => { b.disabled = false; });
   }
 }
 
