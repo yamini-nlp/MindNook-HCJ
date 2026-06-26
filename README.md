@@ -2,7 +2,8 @@
 
 > A full-stack journaling platform implementing a five-layer hybrid NLP framework for real-time sentiment analysis, longitudinal mood tracking, and utility-based AI response selection.
 
-**Live Demo:** https://mindnook-hcj.vercel.app &nbsp;|&nbsp; **Preprint:** [TechRxiv / IEEE — DOI: 10.36227/techrxiv.177274130.07417144/v1](https://doi.org/10.36227/techrxiv.177274130.07417144/v1)
+**Live Demo:** https://mindnook-hcj.vercel.app &nbsp;|&nbsp; 
+**Preprint:** https://doi.org/10.36227/techrxiv.177274130.07417144/v1
 
 ![Stack](https://img.shields.io/badge/Stack-HTML%20%7C%20JS%20%7C%20Deno%20%7C%20Supabase-blue?style=flat-square)
 ![LLM](https://img.shields.io/badge/LLM-LLaMA%203.3%2070B%20%7C%20Groq-orange?style=flat-square)
@@ -292,20 +293,36 @@ Connect the GitHub repository. Set Root Directory to `Frontend`. No build comman
 MindNook-HCJ/
 ├── Frontend/
 │   ├── index.html
-│   ├── journal.html
+│   ├── login.html
+│   ├── onboarding.html
+│   ├── dashboard.html
+│   ├── analysis.html
 │   ├── sentiment.html
-│   ├── analytics.html
-│   ├── chat.html
-│   ├── js/
-│   │   └── personal_baseline.js   # Five-layer client NLP module
-│   └── css/
+│   ├── history.html
+│   ├── vocab.html
+│   ├── canvas.html
+│   ├── nook-ai.html
+│   ├── app.js                      # Core app logic
+│   ├── auth.js                     # Supabase auth handling
+│   ├── env.js                      # Environment config
+│   ├── personal_baseline.js        # Five-layer client NLP module
+│   └── images/                     # Logo + UI assets
 ├── supabase/
 │   └── functions/
-│       ├── analyze-journal/       # Deno edge function — analysis + chat + insights
-│       └── pragmatic-analysis/    # Deno edge function — async L2/L4 enrichment
+│       ├── analyze-journal/
+│       │   ├── deno.json
+│       │   └── index.ts            # Deno edge function — analysis + chat + insights
+│       └── pragmatic-analysis/
+│           └── index.ts            # Deno edge function — async L2/L4 enrichment
+├── sentiment_aware_framework.pdf   # Published preprint
+├── LICENSE
 └── README.md
 ```
 
 ---
 
+<div align="center">
+
 *Built by Yamini G &nbsp;·&nbsp; [GitHub](https://github.com/yamireddy04/MindNook-HCJ) &nbsp;·&nbsp; [Live Demo](https://mindnook-hcj.vercel.app) &nbsp;·&nbsp; [Preprint](https://doi.org/10.36227/techrxiv.177274130.07417144/v1)*
+
+</div>
