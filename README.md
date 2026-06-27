@@ -195,7 +195,7 @@ Users set asymmetric misclassification costs during onboarding, stored in `user_
 
 **1. Clone**
 ```bash
-git clone https://github.com/yamireddy04/MindNook-HCJ.git
+git clone https://github.com/yamini-nlp/MindNook-HCJ.git
 cd MindNook-HCJ
 ```
 
