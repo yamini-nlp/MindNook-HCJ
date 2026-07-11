@@ -1,97 +1,151 @@
 (function () {
-  const { createClient } = supabase;
-  const sb = createClient(
-    'https://dowtaqgkcbppyjxknaqx.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk',
-    { auth: { flowType: 'implicit' } }
-  );
+  var cfg = window._env || {};
+  var sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
+    auth: { flowType: 'implicit' }
+  });
 
   window.__sb = sb;
   window.__authReady = false;
+  window.__session = null;
+  window.__user = null;
+  window.__authHeader = null;
 
-  const PUBLIC_PAGES = ['login.html', 'index.html', ''];
+  var PUBLIC_PAGES = ['login.html', 'index.html', ''];
 
   function currentPage() {
-    const parts = window.location.pathname.split('/');
+    var parts = window.location.pathname.split('/');
     return parts[parts.length - 1] || '';
   }
 
   function isPublicPage() {
-    const page = currentPage();
-    return PUBLIC_PAGES.some(p => page === p);
+    return PUBLIC_PAGES.indexOf(currentPage()) !== -1;
   }
 
   function isLoginPage() {
-    const page = currentPage();
+    var page = currentPage();
     return page === 'login.html' || page === '';
+  }
+
+  function revealPage() {
+    document.documentElement.classList.remove('mn-auth-pending');
+    document.documentElement.classList.add('mn-auth-ready');
   }
 
   function fireAuthReady() {
     if (window.__authReady) return;
     window.__authReady = true;
+    revealPage();
     window.dispatchEvent(new Event('auth-ready'));
+  }
+
+  function sendToLogin() {
+    var target = 'login.html';
+    var here = window.location.pathname + window.location.search;
+    window.location.href = target + '?redirect=' + encodeURIComponent(here);
+  }
+
+  function setSession(session) {
+    window.__session = session;
+    window.__user = session.user;
+    window.__authHeader = 'Bearer ' + session.access_token;
+  }
+
+  function clearSession() {
+    window.__session = null;
+    window.__user = null;
+    window.__authHeader = null;
   }
 
   function resolveSession(session) {
     if (!session) {
+      clearSession();
       if (!isPublicPage()) {
-        window.location.href = 'login.html';
+        sendToLogin();
+        return;
       }
+      fireAuthReady();
       return;
     }
-    window.__session = session;
-    window.__user = session.user;
-    window.__authHeader = `Bearer ${session.access_token}`;
+    setSession(session);
     fireAuthReady();
   }
 
-  sb.auth.onAuthStateChange(async (event, session) => {
+  sb.auth.onAuthStateChange(function (event, session) {
     if (event === 'SIGNED_IN' && session) {
-      window.__session = session;
-      window.__user = session.user;
-      window.__authHeader = `Bearer ${session.access_token}`;
+      setSession(session);
 
       if (!isLoginPage()) {
         fireAuthReady();
         return;
       }
 
-      try {
-        const { data: prefs } = await sb
-          .from('user_preferences')
-          .select('user_id')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-        window.location.href = prefs ? 'dashboard.html' : 'onboarding.html';
-      } catch (e) {
-        window.location.href = 'onboarding.html';
-      }
+      sb.from('user_preferences').select('user_id').eq('user_id', session.user.id).maybeSingle()
+        .then(function (res) {
+          window.location.href = res.data ? 'dashboard.html' : 'onboarding.html';
+        })
+        .catch(function () {
+          window.location.href = 'onboarding.html';
+        });
       return;
     }
 
     if (event === 'SIGNED_OUT') {
-      localStorage.clear();
+      clearSession();
+      try { localStorage.clear(); } catch (e) {}
       if (!isPublicPage()) {
-        window.location.href = 'login.html';
+        sendToLogin();
+        return;
       }
+      fireAuthReady();
       return;
     }
 
     if (event === 'TOKEN_REFRESHED' && session) {
-      window.__session = session;
-      window.__user = session.user;
-      window.__authHeader = `Bearer ${session.access_token}`;
+      setSession(session);
       return;
+    }
+
+    if (event === 'USER_UPDATED' && session) {
+      setSession(session);
     }
   });
 
-  sb.auth.getSession().then(({ data: { session } }) => {
-    resolveSession(session);
+  var authTimedOut = false;
+  var authTimeout = setTimeout(function () {
+    authTimedOut = true;
+    if (!window.__authReady && !isPublicPage()) {
+      sendToLogin();
+    } else if (!window.__authReady) {
+      fireAuthReady();
+    }
+  }, 8000);
+
+  sb.auth.getSession().then(function (res) {
+    clearTimeout(authTimeout);
+    if (authTimedOut) return;
+    resolveSession(res.data.session);
+  }).catch(function () {
+    clearTimeout(authTimeout);
+    if (authTimedOut) return;
+    if (!isPublicPage()) {
+      sendToLogin();
+    } else {
+      fireAuthReady();
+    }
   });
 
-  window.signOut = async function () {
-    await sb.auth.signOut();
-    localStorage.clear();
-    window.location.href = 'login.html';
+  window.signOut = function () {
+    return sb.auth.signOut().then(function () {
+      try { localStorage.clear(); } catch (e) {}
+      window.location.href = 'login.html';
+    });
+  };
+
+  window.mnRequireUser = function () {
+    if (!window.__user) {
+      sendToLogin();
+      return null;
+    }
+    return window.__user;
   };
 })();

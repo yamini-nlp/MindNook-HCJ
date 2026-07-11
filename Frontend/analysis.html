@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="mn-auth-pending">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+<script src="auth.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="personal_baseline.js"></script>
 <title>MindNook | Analytics</title>
 <style>
+html.mn-auth-pending body{visibility:hidden}
+html.mn-auth-ready body{visibility:visible}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
 --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
@@ -244,10 +248,9 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 </div>
 <div style="height:60px"></div>
 <script>
-const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
-const{createClient}=supabase;
-const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const SUPABASE_URL=window._env.SUPABASE_URL;
+const SUPABASE_ANON_KEY=window._env.SUPABASE_ANON_KEY;
+const sb=window.__sb;
 
 let moodLineChartInst=null,moodBarChartInst=null,toneChartInst=null,radarChartInst=null,trendMiniInst=null;
 let entries=[];
@@ -653,16 +656,15 @@ function injectTrendCard(trend){
 }
 
 async function init(){
+    const user=window.mnRequireUser();
+    if(!user)return;
     try{
-        const{data:{session}}=await sb.auth.getSession();
-        if(session){
-            if(window.MindNookBaseline){
-                await window.MindNookBaseline.syncGoalsFromSupabase(sb,session.user.id);
-            }
-            const{data:rows,error}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:true});
-            if(!error&&rows&&rows.length>0){
-                entries=rows;
-            }
+        if(window.MindNookBaseline){
+            await window.MindNookBaseline.syncGoalsFromSupabase(sb,user.id);
+        }
+        const{data:rows,error}=await sb.from('journal_entries').select('*').eq('user_id',user.id).order('created_at',{ascending:true});
+        if(!error&&rows&&rows.length>0){
+            entries=rows;
         }
     }catch(e){console.warn('Could not load entries:',e);}
 
@@ -687,7 +689,8 @@ async function init(){
     }
 }
 
-init();
+if(window.__authReady){init();}
+window.addEventListener('auth-ready',init);
 </script>
 </body>
 </html>

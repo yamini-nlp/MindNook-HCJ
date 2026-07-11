@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="mn-auth-pending">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,12 @@
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
 <script src="auth.js"></script>
 <style>
+html.mn-auth-pending body{visibility:hidden}
+html.mn-auth-ready body{visibility:visible}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
 --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
@@ -131,13 +135,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;ba
     <p>Write your first journal entry and it will appear here.</p>
     <a href="canvas.html" class="pill filled">Begin Writing</a>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const{createClient}=supabase;
-const sb=createClient(
-'https://dowtaqgkcbppyjxknaqx.supabase.co',
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk'
-);
+const sb=window.__sb;
 const SI={Positive:'↑',Negative:'↓',Neutral:'→'};
 function formatDate(iso){
 const d=new Date(iso);
@@ -178,11 +177,11 @@ y:{display:false,min:-0.3,max:2.3},
 });
 }
 async function load(){
-const{data:{session}}=await sb.auth.getSession();
-if(!session){window.location.href='login.html';return;}
+const user=window.mnRequireUser();
+if(!user)return;
 const{data:entries,error}=await sb
 .from('journal_entries').select('id,created_at,sentiment')
-.eq('user_id',session.user.id)
+.eq('user_id',user.id)
 .order('created_at',{ascending:false});
 document.getElementById('loading').style.display='none';
 if(error||!entries||!entries.length){
@@ -231,7 +230,8 @@ tl.appendChild(row);
 });
 });
 }
-load();
+if(window.__authReady){load();}
+window.addEventListener('auth-ready',load);
 </script>
 </body>
 </html>

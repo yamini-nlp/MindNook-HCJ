@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="mn-auth-pending">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +7,13 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="env.js"></script>
+    <script src="auth.js"></script>
     <script src="personal_baseline.js"></script>
     <title>MindNook | Canvas Editor</title>
     <style>
+        html.mn-auth-pending body{visibility:hidden}
+        html.mn-auth-ready body{visibility:visible}
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
             --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
@@ -139,10 +143,9 @@
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-        const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
-        const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
-        const{createClient}=supabase;
-        const supabaseClient=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+        const SUPABASE_URL=window._env.SUPABASE_URL;
+        const SUPABASE_ANON_KEY=window._env.SUPABASE_ANON_KEY;
+        const supabaseClient=window.__sb;
 
         const POS_WORDS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','victorious','vibrant','alive','appreciative','brave','caring','creative','eager','free','generous','gentle','glowing','graceful','healing','honest','imaginative','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','smiling','enjoy','enjoyed','enjoying','celebrate','celebration','achievement','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
         const NEG_WORDS=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','regretful','shame','ashamed','guilt','guilty','hate','hatred','bored','boredom','burned','burnout','chaos','chaotic','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','paralyzed','powerless','rejection','resentment','restless','shattered','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','mistakes','hard','bad','worse','worst','never','cannot','alone','miss','missing']);

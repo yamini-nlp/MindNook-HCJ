@@ -5,6 +5,8 @@
 <title>MindNook — Reflective Intelligence</title>
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -319,7 +321,6 @@ footer{border-top:1px solid var(--gline);padding:40px 60px;display:flex;align-it
   <div class="footer-links"><a href="#features" class="footer-link">Features</a><a href="#research" class="footer-link">Research</a><a href="#" class="footer-link">Privacy</a><a href="https://github.com/yamireddy04/MindNook-HCJ" target="_blank" rel="noopener" class="footer-link">GitHub</a><a href="login.html" class="footer-link" id="footer-login-link">Login</a></div>
   <div class="footer-copy">AI-Powered Reflective Intelligence · MindNook © 2026</div>
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const html=document.documentElement;
 const saved=localStorage.getItem('mindnook_theme')||'dark';
@@ -330,7 +331,7 @@ function updateThemeIcon(theme){if(theme==='dark'){moonIcon.style.display='';sun
 updateThemeIcon(saved);
 document.getElementById('theme-toggle').addEventListener('click',()=>{const current=html.getAttribute('data-theme');const next=current==='dark'?'light':'dark';html.setAttribute('data-theme',next);localStorage.setItem('mindnook_theme',next);updateThemeIcon(next);});
 const{createClient}=supabase;
-const sb=createClient('https://dowtaqgkcbppyjxknaqx.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk');
+const sb=createClient(window._env.SUPABASE_URL,window._env.SUPABASE_ANON_KEY);
 (async function(){
   const{data:{session}}=await sb.auth.getSession();
   if(session){

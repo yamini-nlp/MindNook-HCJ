@@ -1,51 +1,198 @@
-const features = [
-  { id: '01', title: 'Real-Book Experience', desc: 'Minimalist, distraction-free journaling.', img: '1.jpeg' },
-  { id: '02', title: 'Vocabulary Builder', desc: 'Enhance your language with AI-powered suggestions.', img: '2.jpeg' },
-  { id: '03', title: 'Growth Analytics', desc: 'Track moods, goals, and progress over time.', img: '3.jpeg' },
-  { id: '04', title: 'Typography Insights', desc: 'Discover patterns in your writing style.', img: '4.jpeg' },
-  { id: '05', title: 'AI Writing Assistant', desc: 'Improve your writing with smart feedback.', img: '5.jpeg' },
-  { id: '06', title: 'Sentiment Analysis', desc: 'Tracks mood and generates uplifting AI stories.', img: '6.jpeg' }
-];
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const grid = document.getElementById('feature-container');
-if (grid) {
-  features.forEach(f => {
-    grid.innerHTML += `
-      <div class="feature-card-new">
-        <span class="card-num">${f.id}</span>
-        <h3>${f.title}</h3>
-        <p>${f.desc}</p>
-        <div class="asset-mini-placeholder">
-          <img src="images/${f.img}" alt="${f.title}" class="feature-image">
-        </div>
-      </div>
-    `;
-  });
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
-const toggleBtn = document.getElementById('theme-toggle');
-if (toggleBtn) {
-  toggleBtn.addEventListener('click', () => {
-    const body = document.body;
-    body.classList.toggle('light');
-    body.classList.toggle('dark');
-    toggleBtn.innerText = body.classList.contains('light') ? '☀️' : '🌙';
-  });
-}
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-async function analyzeJournalEntry(journalText) {
-  const url = 'https://dowtaqgkcbppyjxknaqx.supabase.co/functions/v1/analyze-journal';
-  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
-      body: JSON.stringify({ text: journalText })
+    const GROQ_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_KEY) {
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "").trim();
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    if (token && token !== ANON_KEY) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        ANON_KEY,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const body = await req.json();
+    const { text, mode, systemPrompt, history } = body;
+
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return new Response(JSON.stringify({ error: "Missing or invalid text field" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (mode === "chat") {
+      const messages = [];
+      if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+      if (Array.isArray(history)) {
+        for (const h of history) {
+          if (h.role && h.content) messages.push({ role: h.role, content: h.content });
+        }
+      }
+      messages.push({ role: "user", content: text });
+
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 1024, temperature: 0.7, messages }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return new Response(JSON.stringify({ error: data.error?.message || "Groq error" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const reply = data.choices?.[0]?.message?.content || "";
+      return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (mode === "insights") {
+      const insightPrompt = `You are a journaling analytics engine. You ONLY return valid JSON. No markdown, no backticks, no explanations.
+
+Entries:
+${text}
+
+Return exactly this structure:
+{"insights":[{"label":"string","text":"string","delta":"string"},{"label":"string","text":"string","delta":"string"},{"label":"string","text":"string","delta":"string"},{"label":"string","text":"string","delta":"string"}],"aiCards":[{"tag":"string","text":"string","footer":"string"},{"tag":"string","text":"string","footer":"string"},{"tag":"string","text":"string","footer":"string"},{"tag":"string","text":"string","footer":"string"}]}`;
+
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 1200,
+          temperature: 0.7,
+          messages: [
+            { role: "system", content: "You are a journaling analytics engine. You ONLY return valid JSON. No markdown, no backticks, no explanations." },
+            { role: "user", content: insightPrompt },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return new Response(JSON.stringify({ error: data.error?.message || "Groq error" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const raw = data.choices?.[0]?.message?.content || "{}";
+      let parsed;
+      try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
+      catch { parsed = { insights: [], aiCards: [] }; }
+
+      return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const analysisPrompt = `You are a journal entry analyzer. Analyze this journal entry and return ONLY valid JSON with no markdown, no backticks, no extra text.
+
+Journal entry: "${text.replace(/"/g, "'").slice(0, 2000)}"
+
+Return exactly this JSON:
+{
+  "sentiment": "Positive or Negative or Neutral",
+  "wordCount": <number>,
+  "sentenceCount": <number>,
+  "uniqueWords": <number>,
+  "mistakeCount": <number>,
+  "readability": <number 0-100 Flesch score>,
+  "positiveWordCount": <number>,
+  "negativeWordCount": <number>,
+  "neutralWordCount": <number>,
+  "lexicalDiversity": <float 0-1>,
+  "sentimentScore": <float 0-100 where 0=very negative 50=neutral 100=very positive>,
+  "sentimentConfidence": <float 0-1>,
+  "emotionWords": ["word1","word2","word3"],
+  "repeatedWords": ["word1","word2"],
+  "writingStyle": "Expressive or Conversational or Simple or Reflective or Descriptive",
+  "grammarTrend": "Improving or Stable or Declining",
+  "vocabularyTrend": "Improving or Developing or Stable",
+  "progressSummary": "one sentence summary of writing quality",
+  "moodLifter": "one uplifting sentence for the writer",
+  "vocabularySuggestions": ["suggestion1","suggestion2","suggestion3"]
+}`;
+
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 1000,
+        temperature: 0.3,
+        messages: [{ role: "user", content: analysisPrompt }],
+        response_format: { type: "json_object" },
+      }),
     });
-    const result = await response.json();
-    console.log("AI Analysis:", result);
-    alert("Analysis received! Check the console.");
-  } catch (error) {
-    console.error("Error calling AI:", error);
+
+    const data = await res.json();
+    if (!res.ok) {
+      return new Response(JSON.stringify({ error: data.error?.message || "Groq error" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const raw = data.choices?.[0]?.message?.content || "{}";
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
+    catch {
+      parsed = {
+        sentiment: "Neutral",
+        wordCount: text.split(/\s+/).length,
+        sentenceCount: text.split(/[.!?]+/).filter(s => s.trim()).length,
+        uniqueWords: new Set(text.toLowerCase().split(/\s+/)).size,
+        mistakeCount: 0,
+        readability: 50,
+        positiveWordCount: 0,
+        negativeWordCount: 0,
+        neutralWordCount: 0,
+        lexicalDiversity: 0.5,
+        sentimentScore: 50,
+        sentimentConfidence: 0.5,
+        emotionWords: [],
+        repeatedWords: [],
+        writingStyle: "Conversational",
+        grammarTrend: "Stable",
+        vocabularyTrend: "Developing",
+        progressSummary: "Entry analyzed.",
+        moodLifter: "Every word you write is a step forward.",
+        vocabularySuggestions: [],
+      };
+    }
+
+    return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-}
+});

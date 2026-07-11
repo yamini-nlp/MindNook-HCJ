@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="mn-auth-pending">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,12 @@
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+<script src="auth.js"></script>
 <script src="personal_baseline.js"></script>
 <style>
+html.mn-auth-pending body{visibility:hidden}
+html.mn-auth-ready body{visibility:visible}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
 --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
@@ -302,9 +306,9 @@ canvas.mini-chart{width:100%;height:100%;}
 </div>
 </div>
 <script>
-const SUPABASE_URL='https://dowtaqgkcbppyjxknaqx.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const SUPABASE_URL=window._env.SUPABASE_URL;
+const SUPABASE_ANON_KEY=window._env.SUPABASE_ANON_KEY;
+const sb=window.__sb;
 let allEntries=[];
 let currentSession=null;
 
@@ -488,13 +492,12 @@ function injectSentimentBaselineCard(sentimentBaseline,sentimentBaselineDelta){
 
 function getTimeOfDay(){const h=new Date().getHours();if(h<12)return'morning';if(h<17)return'afternoon';return'evening';}
 function capitalize(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
-async function signOut(){await sb.auth.signOut();window.location.href='login.html';}
+async function signOut(){await window.signOut();}
 
 async function initDashboard(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session){window.location.href='login.html';return;}
-  currentSession=session;
-  const user=session.user;
+  const user=window.mnRequireUser();
+  if(!user)return;
+  currentSession=window.__session;
   const name=user.user_metadata?.full_name||user.email?.split('@')[0]||'there';
   document.getElementById('navAvatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('heroGreeting').innerHTML=`Good ${getTimeOfDay()}, <em>${capitalize(name)}.</em>`;
@@ -579,7 +582,8 @@ async function initDashboard(){
   }
   fetchAIInsights(allEntries);
 }
-initDashboard();
+if(window.__authReady){initDashboard();}
+window.addEventListener('auth-ready',initDashboard);
 </script>
 </body>
 </html>
