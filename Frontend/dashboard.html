@@ -10,6 +10,7 @@
 <script src="env.js"></script>
 <script src="auth.js"></script>
 <script src="hyperbole_lexicon.js"></script>
+<script src="baseline_constants.js"></script>
 <script src="personal_baseline.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
@@ -260,6 +261,14 @@ canvas.mini-chart{width:100%;height:100%;}
         </div>
       </div>
     </div>
+    <div class="panel" id="baselineComparisonPanel" style="margin-bottom:44px;">
+      <div class="panel-head">
+        <div class="panel-title">Population vs Personal Baseline</div>
+        <div class="panel-tag" title="μ_pop is an illustrative reference, not a clinically validated norm">Illustrative reference</div>
+      </div>
+      <div class="chart-wrap" style="height:170px;"><canvas id="baselineComparisonChart" class="mini-chart"></canvas></div>
+      <div id="baselineComparisonStrip" style="margin-top:18px;"></div>
+    </div>
     <div class="section-header">
       <div class="section-title">AI Insights</div>
       <a class="section-link" href="reflect.html">Open Reflect AI →</a>
@@ -349,6 +358,50 @@ function drawChart(data,labels){
   for(let i=1;i<ps.length;i++){const cp={x:(ps[i-1].x+ps[i].x)/2,y:(ps[i-1].y+ps[i].y)/2};cx.quadraticCurveTo(ps[i-1].x,ps[i-1].y,cp.x,cp.y);}
   cx.strokeStyle='rgba(217,197,178,0.5)';cx.lineWidth=1.5;cx.stroke();
   ps.forEach((p,i)=>{cx.fillStyle=i===ps.length-1?'rgba(217,197,178,0.7)':'rgba(200,180,160,0.28)';cx.beginPath();cx.arc(p.x,p.y,3,0,Math.PI*2);cx.fill();if(labels&&labels[i]){cx.fillStyle='rgba(240,236,226,0.28)';cx.font='400 9px DM Sans';cx.textAlign='center';cx.fillText(labels[i],p.x,h-2);}});
+}
+
+function drawBaselineComparisonChart(entries,sentimentBaseline){
+  const cvs=document.getElementById('baselineComparisonChart');if(!cvs)return;
+  cvs.width=cvs.offsetWidth||400;cvs.height=cvs.offsetHeight||170;
+  const cx=cvs.getContext('2d');const w=cvs.width,h=cvs.height,pad=22;
+  cx.clearRect(0,0,w,h);
+  if(!entries||entries.length<3){cx.fillStyle='rgba(240,236,226,0.18)';cx.font='300 11px DM Sans';cx.textAlign='center';cx.fillText('Personal baseline needs at least 3 entries — showing population reference only',w/2,h/2);return;}
+  const constants=window.MindNookBaselineConstants;
+  const pop=(constants&&constants.POPULATION_BASELINE)||{mean:50,stdDev:15};
+  const scores=entries.slice(0,20).reverse().map(e=>window.MindNookBaseline.computeNumericSentimentScore(e));
+  const min=0,max=100;
+  const yScale=v=>{const clamped=Math.max(min,Math.min(max,v));return h-pad-(clamped-min)/(max-min)*(h-pad*2);};
+  const xStep=(w-pad*2)/Math.max(1,scores.length-1);
+  const muUser=sentimentBaseline?sentimentBaseline.muUser:null;
+  const sdUser=sentimentBaseline?sentimentBaseline.stdDev:null;
+  if(muUser!=null&&sdUser!=null){
+    const top=yScale(muUser+sdUser),bot=yScale(muUser-sdUser);
+    cx.fillStyle='rgba(91,196,168,0.08)';cx.fillRect(pad,top,w-pad*2,bot-top);
+  }
+  const popTop=yScale(pop.mean+pop.stdDev),popBot=yScale(pop.mean-pop.stdDev);
+  cx.fillStyle='rgba(196,122,138,0.06)';cx.fillRect(pad,popTop,w-pad*2,popBot-popTop);
+  cx.strokeStyle='rgba(196,122,138,0.5)';cx.lineWidth=1;cx.setLineDash([4,3]);
+  cx.beginPath();cx.moveTo(pad,yScale(pop.mean));cx.lineTo(w-pad,yScale(pop.mean));cx.stroke();
+  if(muUser!=null){
+    cx.strokeStyle='rgba(91,196,168,0.6)';
+    cx.beginPath();cx.moveTo(pad,yScale(muUser));cx.lineTo(w-pad,yScale(muUser));cx.stroke();
+  }
+  cx.setLineDash([]);
+  const ps=scores.map((v,i)=>({x:pad+i*xStep,y:yScale(v)}));
+  cx.beginPath();cx.moveTo(ps[0].x,ps[0].y);
+  for(let i=1;i<ps.length;i++)cx.lineTo(ps[i].x,ps[i].y);
+  cx.strokeStyle='rgba(240,236,226,0.55)';cx.lineWidth=1.5;cx.stroke();
+  ps.forEach((p,i)=>{cx.fillStyle=i===ps.length-1?'rgba(240,236,226,0.85)':'rgba(240,236,226,0.3)';cx.beginPath();cx.arc(p.x,p.y,2.6,0,Math.PI*2);cx.fill();});
+  cx.fillStyle='rgba(196,122,138,0.7)';cx.font='400 9px DM Sans';cx.textAlign='left';cx.fillText(`μ_pop ${pop.mean}`,pad+2,yScale(pop.mean)-4);
+  if(muUser!=null){cx.fillStyle='rgba(91,196,168,0.8)';cx.fillText(`μ_user ${muUser}`,pad+2,yScale(muUser)-4);}
+}
+
+function injectBaselineComparisonStrip(currentScore,sentimentBaseline,personalDelta,populationDelta){
+  const el=document.getElementById('baselineComparisonStrip');if(!el)return;
+  const fmt=(n,z)=>{const color=z>1?'var(--teal)':z<-1?'var(--rose)':'var(--text3)';const sign=n>0?'+':'';return`<span style="color:${color}">${sign}${n} (z=${z>0?'+':''}${z})</span>`;};
+  const personalHtml=personalDelta?`<div><div style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Δ personal</div><div style="font-size:0.85rem">${fmt(personalDelta.delta,personalDelta.zScore)} vs your average ${sentimentBaseline.muUser}</div></div>`:`<div><div style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Δ personal</div><div style="font-size:0.85rem;color:var(--text3)">Needs 3+ entries</div></div>`;
+  const populationHtml=`<div><div style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Δ population</div><div style="font-size:0.85rem">${fmt(populationDelta.delta,populationDelta.zScore)} vs illustrative reference ${populationDelta.populationMean}</div></div>`;
+  el.innerHTML=`<div style="display:flex;gap:32px;flex-wrap:wrap;margin-bottom:12px">${populationHtml}${personalHtml}</div><div style="font-size:0.72rem;color:var(--text3);line-height:1.7">These can diverge because your personal baseline reflects your own typical range, while the population reference is a fixed illustrative midpoint — a reserved person's mildly positive entry and an exuberant person's entry can land at the same raw score yet mean very different things relative to each of them.</div>`;
 }
 
 function buildWeekData(entries){
@@ -580,6 +633,14 @@ async function initDashboard(){
         }
       }catch(e){}
     }
+  }
+  drawBaselineComparisonChart(allEntries,window.MindNookBaseline?window.MindNookBaseline.computeSentimentBaseline(allEntries):null);
+  {
+    const latestScore=window.MindNookBaseline?window.MindNookBaseline.computeNumericSentimentScore(allEntries[0]):50;
+    const sentimentBaseline=allEntries.length>=3&&window.MindNookBaseline?window.MindNookBaseline.computeSentimentBaseline(allEntries):null;
+    const personalDelta=sentimentBaseline&&window.MindNookBaseline?window.MindNookBaseline.computePersonalBaselineDelta(latestScore,sentimentBaseline):null;
+    const populationDelta=window.MindNookBaseline?window.MindNookBaseline.computePopulationDelta(latestScore):{delta:0,zScore:0,populationMean:50};
+    injectBaselineComparisonStrip(latestScore,sentimentBaseline,personalDelta,populationDelta);
   }
   fetchAIInsights(allEntries);
 }

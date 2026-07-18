@@ -1,0 +1,12 @@
+{
+  "US": { "name": "988 Suicide & Crisis Lifeline", "number": "988", "url": "https://988lifeline.org" },
+  "GB": { "name": "Samaritans", "number": "116 123", "url": "https://www.samaritans.org" },
+  "CA": { "name": "Talk Suicide Canada", "number": "1-833-456-4566", "url": "https://talksuicide.ca" },
+  "AU": { "name": "Lifeline Australia", "number": "13 11 14", "url": "https://www.lifeline.org.au" },
+  "IE": { "name": "Samaritans Ireland", "number": "116 123", "url": "https://www.samaritans.org" },
+  "NZ": { "name": "Lifeline Aotearoa", "number": "0800 543 354", "url": "https://www.lifeline.org.nz" },
+  "IN": { "name": "iCall / Vandrevala Foundation Helpline", "number": "1860-2662-345", "url": "https://icallhelpline.org" },
+  "SG": { "name": "Samaritans of Singapore", "number": "1767", "url": "https://www.sos.org.sg" },
+  "NL": { "name": "113 Zelfmoordpreventie", "number": "0800-0113", "url": "https://www.113.nl" },
+  "international": { "name": "International Association for Suicide Prevention — Crisis Centre Directory", "number": "", "url": "https://www.iasp.info/resources/Crisis_Centres/" }
+}

@@ -248,6 +248,19 @@ window.MindNookBaseline = (function () {
     };
   }
 
+  function computePopulationDelta(currentScore) {
+    const constants = window.MindNookBaselineConstants;
+    const pop = (constants && constants.POPULATION_BASELINE) || { mean: 50, stdDev: 15 };
+    const delta = currentScore - pop.mean;
+    const normalizedDelta = delta / (pop.stdDev || 1);
+    return {
+      delta: +delta.toFixed(2),
+      zScore: +normalizedDelta.toFixed(2),
+      populationMean: pop.mean,
+      populationStdDev: pop.stdDev
+    };
+  }
+
   function buildUtilityScore(l1, l2, l3, l4, userPreferences, entryHistory) {
     const weights = {
       w_task: userPreferences?.w_task ?? 0.4,
@@ -484,6 +497,7 @@ Rules:
     computeBaselineDelta,
     computeSentimentBaseline,
     computePersonalBaselineDelta,
+    computePopulationDelta,
     computeNumericSentimentScore,
     detectHyperbole,
     isTraumaProcessingGoal,

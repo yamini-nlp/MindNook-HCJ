@@ -10,12 +10,15 @@
 <script src="env.js"></script>
 <script src="auth.js"></script>
 <script src="hyperbole_lexicon.js"></script>
+<script src="baseline_constants.js"></script>
 <script src="personal_baseline.js"></script>
 <script src="utility_decomposition.js"></script>
 <script src="lstm_temporal.js"></script>
 <script src="ethical_guardrail.js"></script>
 <script src="explanation_panel.js"></script>
 <script src="goal_clarification.js"></script>
+<script src="crisis_screen.js"></script>
+<script src="crisis_banner.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -352,11 +355,48 @@ function buildSidebar(entries){
   tagsEl.innerHTML=topThemes.map(w=>{const cls=posWords.has(w)?'pos':negWords.has(w)?'neg':'neu';return`<span class="theme-tag ${cls}">${w}</span>`;}).join('');
 }
 
+async function handleAcuteRisk(acuteResult){
+  const countryCode=localStorage.getItem('mindnook_country')||'international';
+  const resource=window.MindNookCrisisBanner?await window.MindNookCrisisBanner.loadResource(countryCode):{name:'International Association for Suicide Prevention',number:'',url:'https://www.iasp.info/resources/Crisis_Centres/'};
+  if(window.MindNookCrisisBanner){
+    window.MindNookCrisisBanner.renderAcuteBanner(resource,async()=>{
+      if(session&&sb){
+        try{await sb.from('escalation_events').update({acknowledged:true}).eq('user_id',session.user.id).eq('type','acute').eq('acknowledged',false);}catch(e){}
+      }
+    });
+  }
+  if(session&&sb){
+    try{await sb.from('escalation_events').insert([{user_id:session.user.id,type:'acute',confidence:acuteResult.confidence,acknowledged:false}]);}catch(e){}
+  }
+}
+
+async function checkUnacknowledgedEscalation(){
+  if(!session||!sb)return;
+  try{
+    const{data}=await sb.from('escalation_events').select('id').eq('user_id',session.user.id).eq('type','acute').eq('acknowledged',false).limit(1);
+    if(data&&data.length&&window.MindNookCrisisBanner){
+      const countryCode=localStorage.getItem('mindnook_country')||'international';
+      const resource=await window.MindNookCrisisBanner.loadResource(countryCode);
+      window.MindNookCrisisBanner.renderAcuteBanner(resource,async()=>{
+        try{await sb.from('escalation_events').update({acknowledged:true}).eq('user_id',session.user.id).eq('type','acute').eq('acknowledged',false);}catch(e){}
+      });
+    }
+  }catch(e){}
+}
+
 async function sendMessage(){
   const input=document.getElementById('chatInput');
   const sendBtn=document.getElementById('sendBtn');
   const msg=input.value.trim();
   if(!msg)return;
+
+  if(window.MindNookCrisisScreen){
+    const acuteResult=window.MindNookCrisisScreen.screenForAcuteRisk(msg);
+    if(acuteResult.triggered){
+      handleAcuteRisk(acuteResult);
+    }
+  }
+
   addMessage('user',msg);
   conversationHistory.push({role:'user',content:msg});
   input.value='';input.style.height='auto';
@@ -493,6 +533,7 @@ async function init(){
   const user=window.mnRequireUser();
   if(!user)return;
   session=window.__session;
+  await checkUnacknowledgedEscalation();
   if(window.MindNookBaseline){
     await window.MindNookBaseline.syncGoalsFromSupabase(sb,user.id);
   }

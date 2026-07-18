@@ -10,10 +10,13 @@
     <script src="env.js"></script>
     <script src="auth.js"></script>
     <script src="hyperbole_lexicon.js"></script>
+    <script src="baseline_constants.js"></script>
     <script src="personal_baseline.js"></script>
     <script src="utility_decomposition.js"></script>
     <script src="lstm_temporal.js"></script>
     <script src="goal_clarification.js"></script>
+    <script src="crisis_screen.js"></script>
+    <script src="crisis_banner.js"></script>
     <title>MindNook | Canvas Editor</title>
     <style>
         html.mn-auth-pending body{visibility:hidden}
@@ -295,6 +298,14 @@
             saveBtn.onclick=async()=>{
                 const textContent=quill.getText().trim();
                 if(textContent.length<20){alert('Please write at least a few sentences before saving.');return;}
+
+                if(window.MindNookCrisisScreen){
+                    const acuteResult=window.MindNookCrisisScreen.screenForAcuteRisk(textContent);
+                    if(acuteResult.triggered){
+                        handleAcuteRisk(acuteResult);
+                    }
+                }
+
                 saveBtn.innerText='Analyzing…';
                 saveBtn.disabled=true;
                 saveBtn.style.opacity='0.6';
@@ -393,6 +404,7 @@
                             );
                             const filteredAction=window.MindNookBaseline.applyEthicalFilter(utilityScore.action,entries,analysis);
                             utilityScore.action=filteredAction;
+                            await checkPatternEscalation(temporalTrend,utilityScore,session);
                         }
                     }
                 }catch(layerErr){
@@ -493,6 +505,50 @@
             };
         }
 
+        async function handleAcuteRisk(acuteResult){
+            const session=window.__session;
+            const countryCode=localStorage.getItem('mindnook_country')||'international';
+            const resource=window.MindNookCrisisBanner?await window.MindNookCrisisBanner.loadResource(countryCode):{name:'International Association for Suicide Prevention',number:'',url:'https://www.iasp.info/resources/Crisis_Centres/'};
+            if(window.MindNookCrisisBanner){
+                window.MindNookCrisisBanner.renderAcuteBanner(resource,async()=>{
+                    if(session&&supabaseClient){
+                        try{await supabaseClient.from('escalation_events').update({acknowledged:true}).eq('user_id',session.user.id).eq('type','acute').eq('acknowledged',false);}catch(e){}
+                    }
+                });
+            }
+            if(session&&supabaseClient){
+                try{await supabaseClient.from('escalation_events').insert([{user_id:session.user.id,type:'acute',confidence:acuteResult.confidence,acknowledged:false}]);}catch(e){}
+            }
+        }
+
+        async function checkUnacknowledgedEscalation(session){
+            if(!session||!supabaseClient)return;
+            try{
+                const{data}=await supabaseClient.from('escalation_events').select('id').eq('user_id',session.user.id).eq('type','acute').eq('acknowledged',false).limit(1);
+                if(data&&data.length&&window.MindNookCrisisBanner){
+                    const countryCode=localStorage.getItem('mindnook_country')||'international';
+                    const resource=await window.MindNookCrisisBanner.loadResource(countryCode);
+                    window.MindNookCrisisBanner.renderAcuteBanner(resource,async()=>{
+                        try{await supabaseClient.from('escalation_events').update({acknowledged:true}).eq('user_id',session.user.id).eq('type','acute').eq('acknowledged',false);}catch(e){}
+                    });
+                }
+            }catch(e){}
+        }
+
+        async function checkPatternEscalation(l3,l5,session){
+            if(!l3||!l5||!session||!supabaseClient)return;
+            const decliningPattern=l3.label==='declining';
+            const safetyLow=l5.breakdown&&l5.breakdown.safety!=null&&l5.breakdown.safety<0.4;
+            if(!decliningPattern||!safetyLow)return;
+            const throttleKey=`mindnook_pattern_escalation_${session.user.id}`;
+            const last=parseInt(localStorage.getItem(throttleKey)||'0');
+            const now=Date.now();
+            if(now-last<14*86400000)return;
+            localStorage.setItem(throttleKey,String(now));
+            try{await supabaseClient.from('escalation_events').insert([{user_id:session.user.id,type:'pattern',confidence:null,acknowledged:false}]);}catch(e){}
+            if(window.MindNookCrisisBanner)window.MindNookCrisisBanner.renderPatternCard('editor-view',()=>{});
+        }
+
         async function checkAuthAndInit(){
             const{data:{session}}=await supabaseClient.auth.getSession();
             if(!session){window.location.href='login.html';return;}
@@ -500,6 +556,7 @@
             if(window.MindNookBaseline){
                 try{await window.MindNookBaseline.syncGoalsFromSupabase(supabaseClient,session.user.id);}catch(e){}
             }
+            await checkUnacknowledgedEscalation(session);
             initCanvas();
         }
 

@@ -167,7 +167,24 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
         <input type="range" class="stress-slider" min="0" max="10" value="4" id="stressSlider" oninput="updateStress(this.value)">
         <div class="slider-value" id="stressVal">4</div>
       </div>
-      <div class="privacy-note">This information is used only to personalise your reflective insights and is never shared.</div>
+      <div class="slider-section">
+        <div class="slider-label">Country</div>
+        <select id="countrySelect" class="stress-slider" style="-webkit-appearance:auto;appearance:auto;height:auto;padding:10px;background:var(--card,#1f3430);color:var(--text,#f0ece2);border:1px solid var(--border,rgba(217,197,178,0.15));border-radius:8px;">
+          <option value="" disabled selected>Select your country</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="CA">Canada</option>
+          <option value="AU">Australia</option>
+          <option value="IE">Ireland</option>
+          <option value="NZ">New Zealand</option>
+          <option value="IN">India</option>
+          <option value="SG">Singapore</option>
+          <option value="NL">Netherlands</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
+        <div id="countryError" style="display:none;color:var(--rose,#c47a8a);font-size:0.72rem;margin-top:8px;">Please select a country, or "Prefer not to say".</div>
+      </div>
+      <div class="privacy-note">This information is used only to personalise your reflective insights and, if needed, to show region-appropriate crisis support resources. It is never shared.</div>
     </div>
     <div class="step" id="step4">
       <div class="eyebrow"><div class="eyebrow-line"></div>Writing Habits</div>
@@ -295,6 +312,14 @@ function selectIntervention(el,value){
 }
 
 async function enterMindNook(){
+  const countryVal=document.getElementById('countrySelect')?.value||'';
+  if(!countryVal){
+    document.getElementById('countryError').style.display='block';
+    goTo(3);
+    return;
+  }
+  document.getElementById('countryError').style.display='none';
+
   const btn=document.getElementById('enterBtn');
   btn.disabled=true;
   btn.textContent='Saving…';
@@ -317,6 +342,7 @@ async function enterMindNook(){
   localStorage.setItem('mindnook_stress',String(stressVal));
   localStorage.setItem('mindnook_cfp',String(weights.cfp));
   localStorage.setItem('mindnook_cfn',String(weights.cfn));
+  localStorage.setItem('mindnook_country',countryVal);
 
   try{
     await sb.from('user_preferences').upsert({
@@ -328,7 +354,8 @@ async function enterMindNook(){
       preferred_time:preferredTime,
       cfp_weight:weights.cfp,
       cfn_weight:weights.cfn,
-      intervention_preference:selectedIntervention
+      intervention_preference:selectedIntervention,
+      country:countryVal
     },{onConflict:'user_id'});
   }catch(e){
     console.warn('Could not save preferences to Supabase (non-fatal):',e);
