@@ -96,6 +96,67 @@ serve(async (req) => {
     const body = await req.json();
     const { type, content, sentiment, user_goal, pragmatic_category, tone_type, goals, entry_id, sentiment_score } = body;
 
+    if (type === "goal_clarification_response") {
+      const { goal_id, answer, custom_text } = body;
+      if (!goal_id || !answer) {
+        return new Response(JSON.stringify({ error: "Missing required fields: goal_id and answer" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      if (!["yes", "not_quite", "custom"].includes(answer)) {
+        return new Response(JSON.stringify({ error: "Invalid answer. Must be yes, not_quite, or custom." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      const { data: goalRow, error: goalFetchError } = await supabase
+        .from("user_goals")
+        .select("id,text,confirmation_count,rejection_count")
+        .eq("id", goal_id)
+        .eq("user_id", user.id)
+        .single();
+      if (goalFetchError || !goalRow) {
+        return new Response(JSON.stringify({ error: "Goal not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (answer === "yes") {
+        const newConfirmCount = (goalRow.confirmation_count || 0) + 1;
+        const recalibratedConfidence = clamp(0.6 + newConfirmCount * 0.1, 0, 1);
+        await supabase.from("user_goals").update({
+          status: "active",
+          confidence: recalibratedConfidence,
+          confirmation_count: newConfirmCount,
+          updated_at: new Date().toISOString(),
+        }).eq("id", goal_id).eq("user_id", user.id);
+      } else if (answer === "not_quite") {
+        const newRejectCount = (goalRow.rejection_count || 0) + 1;
+        await supabase.from("user_goals").update({
+          status: "rejected",
+          rejection_count: newRejectCount,
+          updated_at: new Date().toISOString(),
+        }).eq("id", goal_id).eq("user_id", user.id);
+      } else {
+        const trimmedCustom = String(custom_text || "").trim().slice(0, 200);
+        if (!trimmedCustom) {
+          return new Response(JSON.stringify({ error: "Missing custom_text for custom answer" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        await supabase.from("user_goals").update({
+          status: "rejected",
+          rejection_count: (goalRow.rejection_count || 0) + 1,
+          updated_at: new Date().toISOString(),
+        }).eq("id", goal_id).eq("user_id", user.id);
+        await supabase.from("user_goals").insert([{
+          user_id: user.id, text: trimmedCustom, type: "explicit", confidence: 1.0, source: "onboarding", status: "active",
+        }]);
+      }
+
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (!type || !content || typeof content !== "string" || !content.trim()) {
       return new Response(JSON.stringify({ error: "Missing required fields: type and content" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -132,6 +193,7 @@ Return ONLY valid JSON, no markdown, no extra text:
   "goal": {
     "inferred_goal": "brief description of what the user is doing in this entry",
     "goal_confidence": 0.82,
+    "goal_type": "explicit",
     "alignment": "aligned",
     "alignment_score": 0.78,
     "goal_context": "one sentence explaining why this entry aligns or misaligns with their goals"
@@ -141,6 +203,7 @@ Return ONLY valid JSON, no markdown, no extra text:
 Rules for pragmatic.category: assertion|question|expression|request|catharsis|help_seeking
 Rules for pragmatic.tone_type: cathartic|venting|reflective|distressed|neutral
 Rules for goal.alignment: aligned|misaligned|ambiguous
+Rules for goal.goal_type: use "explicit" if the entry clearly matches one of the user's stated goals, "implicit" if it suggests a goal the user has not stated but goal_confidence must then reflect how uncertain that inference is, "meta" if the entry is about the user's goals or journaling practice itself
 All scores and confidence values must be between 0.0 and 1.0
 distribution values must be integers that sum to 100`;
     }
@@ -225,6 +288,54 @@ goal_confidence: 0.0 to 1.0`;
       const l3 = { direction: l3Direction, label: body.trend_label || 'stable', slope: body.trend_slope || 0 };
       const goalScore = goalData.alignment_score != null ? Math.round(goalData.alignment_score * 100) : 50;
       const l4 = { score: goalScore, label: goalData.alignment || 'ambiguous' };
+
+      const tauGoal = clamp(body.tau_goal ?? 0.6, 0, 1);
+      let lowConfidenceGoal: { id: string; text: string; confidence: number } | null = null;
+      const inferredType = goalData.goal_type === "implicit" || goalData.goal_type === "meta" ? goalData.goal_type : null;
+      if (inferredType && goalData.inferred_goal && goalData.goal_confidence != null) {
+        const inferredText = String(goalData.inferred_goal).trim().slice(0, 200);
+        if (inferredText) {
+          const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: recentRejections } = await supabase
+            .from("user_goals")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("status", "rejected")
+            .ilike("text", inferredText)
+            .gte("updated_at", fourteenDaysAgo)
+            .limit(1);
+          const recentlyRejected = !!(recentRejections && recentRejections.length > 0);
+
+          if (!recentlyRejected) {
+            const { data: existingGoal } = await supabase
+              .from("user_goals")
+              .select("id,confidence,status")
+              .eq("user_id", user.id)
+              .ilike("text", inferredText)
+              .in("status", ["active", "pending_confirmation"])
+              .limit(1);
+
+            if (existingGoal && existingGoal.length > 0) {
+              const g = existingGoal[0];
+              if (g.status === "pending_confirmation" && g.confidence < tauGoal) {
+                lowConfidenceGoal = { id: g.id, text: inferredText, confidence: g.confidence };
+              }
+            } else if (goalData.goal_confidence < tauGoal) {
+              const { data: inserted } = await supabase
+                .from("user_goals")
+                .insert([{
+                  user_id: user.id, text: inferredText, type: inferredType,
+                  confidence: goalData.goal_confidence, source: "inferred", status: "pending_confirmation",
+                }])
+                .select("id")
+                .single();
+              if (inserted) {
+                lowConfidenceGoal = { id: inserted.id, text: inferredText, confidence: goalData.goal_confidence };
+              }
+            }
+          }
+        }
+      }
       const Cfp = body.cfp_weight ?? 0.4;
       const Cfn = body.cfn_weight ?? 0.6;
       const tau = Cfp / (Cfp + Cfn);
@@ -303,6 +414,7 @@ goal_confidence: 0.0 to 1.0`;
         .eq("user_id", user.id);
 
       result.layer5_action = l5;
+      result.goal.lowConfidenceGoal = lowConfidenceGoal;
     }
 
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -334,6 +334,17 @@ async function enterMindNook(){
     console.warn('Could not save preferences to Supabase (non-fatal):',e);
   }
 
+  try{
+    await sb.from('user_goals').delete().eq('user_id',user.id).eq('source','onboarding').eq('type','explicit');
+    if(selectedGoals.length){
+      await sb.from('user_goals').insert(selectedGoals.map(text=>({
+        user_id:user.id,text,type:'explicit',confidence:1.0,source:'onboarding',status:'active'
+      })));
+    }
+  }catch(e){
+    console.warn('Could not sync typed goals (non-fatal):',e);
+  }
+
   window.location.href='dashboard.html';
 }
 

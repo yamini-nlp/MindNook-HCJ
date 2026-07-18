@@ -1,0 +1,20 @@
+.mn-explain-panel{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+.mn-explain-toggle{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:6px 16px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.25s;letter-spacing:0.3px}
+.mn-explain-toggle:hover{color:var(--gold);border-color:var(--gold)}
+.mn-explain-toggle.open .mn-explain-chevron{transform:rotate(180deg)}
+.mn-explain-chevron{display:inline-block;transition:transform 0.2s;margin-left:4px}
+.mn-explain-body{margin-top:10px;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.mn-explain-text{color:var(--text2);font-size:0.85rem;line-height:1.6;margin-bottom:12px}
+.mn-explain-table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:12px}
+.mn-explain-table td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text2)}
+.mn-explain-table td:first-child{color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-size:0.68rem;width:45%}
+.mn-explain-flag{background:transparent;border:1px solid var(--border2);color:var(--rose);padding:6px 14px;border-radius:50px;font-size:0.76rem;cursor:pointer;transition:all 0.25s}
+.mn-explain-flag:hover{background:rgba(196,122,138,0.1);border-color:var(--rose)}
+.mn-explain-form{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.mn-explain-form label{font-size:0.72rem;color:var(--text3);letter-spacing:0.4px;text-transform:uppercase}
+.mn-explain-layer-select,.mn-explain-comment{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:0.82rem}
+.mn-explain-form-actions{display:flex;align-items:center;gap:10px}
+.mn-explain-submit{background:var(--gold);color:var(--bg3);border:none;padding:7px 18px;border-radius:50px;font-size:0.8rem;font-weight:500;cursor:pointer}
+.mn-explain-submit:hover{background:var(--gold3)}
+.mn-explain-submit:disabled{opacity:0.6;cursor:not-allowed}
+.mn-explain-status{font-size:0.75rem;color:var(--text3)}

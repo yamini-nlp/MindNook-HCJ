@@ -5,6 +5,7 @@
 <title>Nook AI — MindNook</title>
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="explanation_panel.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
@@ -12,6 +13,8 @@
 <script src="utility_decomposition.js"></script>
 <script src="lstm_temporal.js"></script>
 <script src="ethical_guardrail.js"></script>
+<script src="explanation_panel.js"></script>
+<script src="goal_clarification.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -360,6 +363,7 @@ async function sendMessage(){
   showTyping();
 
   let systemPrompt;
+  let currentLayers=null;
   if(window.MindNookBaseline&&userEntries.length>0){
     const lastAnalysisRaw=localStorage.getItem('latestAnalysis');
     const lastAnalysis=lastAnalysisRaw?JSON.parse(lastAnalysisRaw):{};
@@ -373,9 +377,15 @@ async function sendMessage(){
     const l2=lastAnalysis.pragmatic||window.MindNookBaseline.classifyPragmatic(lastText||msg);
     const l3=await window.MindNookBaseline.classifyTemporalTrend(userEntries,{supabaseUrl:SUPABASE_URL,accessToken:session?.access_token||ANON_KEY,userId:session?.user?.id,mode:'read'});
     const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
+    const typedGoals=session?.user?.id?await window.MindNookBaseline.fetchTypedGoals(sb,session.user.id):null;
     const l4=storedGoals.length>0
-      ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries)
+      ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries,typedGoals)
       :{score:null,label:'No goals set',detail:'',goals:[]};
+    if(l4.lowConfidenceGoal&&window.MindNookGoalClarification&&session?.access_token){
+      window.MindNookGoalClarification.renderClarificationPrompt(l4.lowConfidenceGoal,{
+        supabaseUrl:SUPABASE_URL,accessToken:session.access_token
+      });
+    }
     const cfpW=parseFloat(localStorage.getItem('mindnook_cfp')||'0.4');
     const cfnW=parseFloat(localStorage.getItem('mindnook_cfn')||'0.6');
     const wTask=parseFloat(localStorage.getItem('mindnook_w_task')||'0.4');
@@ -387,6 +397,7 @@ async function sendMessage(){
     const l5Action=window.MindNookBaseline.applyEthicalFilter(l5Raw.action,userEntries,{sentiment:l1.sentiment});
     const l5={...l5Raw,action:l5Action};
 
+    currentLayers={l1,l2,l3,l4,l5};
     systemPrompt=window.MindNookBaseline.buildDynamicSystemPrompt(l1,l2,l3,l4,l5,journalContext);
   }else{
     systemPrompt=`You are Nook AI, an emotionally intelligent reflective companion for MindNook.\n\nYour personality:\n- Deeply empathetic, observant, and psychologically safe\n- Analytical but warmly human, never clinical or robotic\n- Keep responses 2-4 paragraphs\n- Never give medical or clinical advice. Never diagnose.\n\nUSER JOURNAL CONTEXT:\n${journalContext}`;
@@ -425,6 +436,18 @@ async function sendMessage(){
     }
     addMessage('ai',reply);
     conversationHistory.push({role:'assistant',content:reply});
+    if(window.MindNookExplanation){
+      const lastBubble=document.querySelector('#messagesWrap .msg.ai:last-child .msg-bubble');
+      if(lastBubble){
+        const explainContainer=document.createElement('div');
+        lastBubble.appendChild(explainContainer);
+        window.MindNookExplanation.renderExplanationPanel(explainContainer,currentLayers||{},{
+          supabaseClient:sb,
+          userId:session?.user?.id,
+          entryId:localStorage.getItem('mindnook_last_entry_id'),
+        });
+      }
+    }
   }catch(err){
     console.warn('AI call failed, using local response:',err);
     hideTyping();

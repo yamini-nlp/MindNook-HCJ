@@ -12,6 +12,7 @@
     <script src="personal_baseline.js"></script>
     <script src="utility_decomposition.js"></script>
     <script src="lstm_temporal.js"></script>
+    <script src="goal_clarification.js"></script>
     <title>MindNook | Canvas Editor</title>
     <style>
         html.mn-auth-pending body{visibility:hidden}
@@ -364,6 +365,8 @@
                         const entries=recentEntries||[];
                         temporalTrend=await window.MindNookBaseline.classifyTemporalTrend(entries,{supabaseUrl:SUPABASE_URL,accessToken:session.access_token,userId:session.user.id,mode:'read'});
                         goalAlignment=window.MindNookBaseline.computeGoalAlignment(analysis,entries);
+                        analysis.temporalTrend=temporalTrend;
+                        analysis.goalAlignment=goalAlignment;
 
                         const sentimentBaseline=window.MindNookBaseline.computeSentimentBaseline(entries);
                         if(sentimentBaseline){
@@ -436,38 +439,47 @@
                         try{
                             const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
                             const muUser=analysis.sentimentBaseline?.muUser||null;
-                            fetch(`${SUPABASE_URL}/functions/v1/pragmatic-analysis`,{
+                            const tauGoal=window.MindNookBaseline?window.MindNookBaseline.getTauGoal():0.6;
+                            fetch(`${SUPABASE_URL}/functions/v1/temporal-lstm`,{
                                 method:'POST',
                                 headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
-                                body:JSON.stringify({
-                                    type:'combined',content:textContent,sentiment:analysis.sentiment,
-                                    sentiment_score:analysis.sentimentScore||50,goals:storedGoals,
-                                    entry_id:savedEntryId,trend_direction:temporalTrend?.direction||'neutral',
-                                    trend_label:temporalTrend?.label||'stable',trend_slope:temporalTrend?.slope||0,
-                                    cfp_weight:parseFloat(localStorage.getItem('mindnook_cfp')||'0.4'),
-                                    cfn_weight:parseFloat(localStorage.getItem('mindnook_cfn')||'0.6'),
-                                    w_task:parseFloat(localStorage.getItem('mindnook_w_task')||'0.4'),
-                                    w_safety:parseFloat(localStorage.getItem('mindnook_w_safety')||'0.35'),
-                                    lambda_privacy:parseFloat(localStorage.getItem('mindnook_lambda_privacy')||'0.15'),
-                                    lambda_autonomy:parseFloat(localStorage.getItem('mindnook_lambda_autonomy')||'0.10'),
-                                    autonomy_preference:parseFloat(localStorage.getItem('mindnook_autonomy_pref')||'0.5'),
-                                    positive_word_count:analysis.positiveWordCount||0,
-                                    negative_word_count:analysis.negativeWordCount||0,mu_user:muUser
-                                })
-                            }).then(async r=>{
+                                body:JSON.stringify({mode:'update',sentiment_score:analysis.sentimentScore||50,entry_id:savedEntryId})
+                            }).catch(()=>{});
+                            try{
+                                const r=await fetch(`${SUPABASE_URL}/functions/v1/pragmatic-analysis`,{
+                                    method:'POST',
+                                    headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+                                    body:JSON.stringify({
+                                        type:'combined',content:textContent,sentiment:analysis.sentiment,
+                                        sentiment_score:analysis.sentimentScore||50,goals:storedGoals,
+                                        entry_id:savedEntryId,trend_direction:temporalTrend?.direction||'neutral',
+                                        trend_label:temporalTrend?.label||'stable',trend_slope:temporalTrend?.slope||0,
+                                        cfp_weight:parseFloat(localStorage.getItem('mindnook_cfp')||'0.4'),
+                                        cfn_weight:parseFloat(localStorage.getItem('mindnook_cfn')||'0.6'),
+                                        w_task:parseFloat(localStorage.getItem('mindnook_w_task')||'0.4'),
+                                        w_safety:parseFloat(localStorage.getItem('mindnook_w_safety')||'0.35'),
+                                        lambda_privacy:parseFloat(localStorage.getItem('mindnook_lambda_privacy')||'0.15'),
+                                        lambda_autonomy:parseFloat(localStorage.getItem('mindnook_lambda_autonomy')||'0.10'),
+                                        autonomy_preference:parseFloat(localStorage.getItem('mindnook_autonomy_pref')||'0.5'),
+                                        positive_word_count:analysis.positiveWordCount||0,
+                                        negative_word_count:analysis.negativeWordCount||0,mu_user:muUser,
+                                        tau_goal:tauGoal
+                                    })
+                                });
                                 if(r.ok){
                                     const enriched=await r.json();
                                     if(enriched.pragmatic)analysis.pragmatic=enriched.pragmatic;
                                     if(enriched.layer5_action)analysis.utilityScore=enriched.layer5_action;
                                     if(enriched.layer5_action?.breakdown)analysis.utilityScoreBreakdown=enriched.layer5_action.breakdown;
                                     localStorage.setItem('latestAnalysis',JSON.stringify(analysis));
+                                    const lowConfidenceGoal=enriched.goal?.lowConfidenceGoal;
+                                    if(lowConfidenceGoal&&window.MindNookGoalClarification){
+                                        await window.MindNookGoalClarification.renderClarificationPrompt(lowConfidenceGoal,{
+                                            supabaseUrl:SUPABASE_URL,accessToken:session.access_token
+                                        });
+                                    }
                                 }
-                            }).catch(()=>{});
-                            fetch(`${SUPABASE_URL}/functions/v1/temporal-lstm`,{
-                                method:'POST',
-                                headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
-                                body:JSON.stringify({mode:'update',sentiment_score:analysis.sentimentScore||50,entry_id:savedEntryId})
-                            }).catch(()=>{});
+                            }catch(e){}
                         }catch(e){}
                     }
                 }catch(dbErr){

@@ -121,11 +121,33 @@ window.MindNookBaseline = (function () {
     }
   }
 
-  function computeGoalAlignment(analysisResult, entries) {
-    const storedGoals = JSON.parse(localStorage.getItem('mindnook_goals') || '[]');
+  function getTauGoal() {
+    const stored = parseFloat(localStorage.getItem('mindnook_tau_goal'));
+    return Number.isFinite(stored) ? Math.max(0, Math.min(1, stored)) : 0.6;
+  }
+
+  function pickLowConfidenceGoal(typedGoals) {
+    if (!Array.isArray(typedGoals) || !typedGoals.length) return null;
+    const tauGoal = getTauGoal();
+    const pending = typedGoals.filter(g => g && g.status === 'pending_confirmation' && g.confidence != null && g.confidence < tauGoal);
+    if (!pending.length) return null;
+    const lowest = pending.reduce((a, b) => (b.confidence < a.confidence ? b : a));
+    return { id: lowest.id, text: lowest.text, confidence: lowest.confidence };
+  }
+
+  function computeGoalAlignment(analysisResult, entries, typedGoals) {
+    const hasTypedGoals = Array.isArray(typedGoals);
+    const activeTypedGoals = hasTypedGoals ? typedGoals.filter(g => g && g.status === 'active') : null;
+    const storedGoals = hasTypedGoals
+      ? activeTypedGoals.map(g => g.text)
+      : JSON.parse(localStorage.getItem('mindnook_goals') || '[]');
+    const lowConfidenceGoal = hasTypedGoals ? pickLowConfidenceGoal(typedGoals) : null;
     const storedEmotions = JSON.parse(localStorage.getItem('mindnook_emotions') || '[]');
     const stressLevel = parseInt(localStorage.getItem('mindnook_stress') || '5');
-    if (!storedGoals.length) return { score: null, label: 'No goals set', detail: 'Complete onboarding to enable goal alignment.' };
+    if (!storedGoals.length) {
+      const base = { score: null, label: 'No goals set', detail: 'Complete onboarding to enable goal alignment.' };
+      return lowConfidenceGoal ? { ...base, lowConfidenceGoal } : base;
+    }
     let score = 50;
     const sentiment = (analysisResult && analysisResult.sentiment) || 'Neutral';
     const ld = (analysisResult && analysisResult.lexicalDiversity) || 0;
@@ -168,7 +190,24 @@ window.MindNookBaseline = (function () {
     else if (score >= 50) { label = 'Partially aligned'; detail = 'Some elements of this entry support your goals.'; }
     else if (score >= 25) { label = 'Loosely aligned'; detail = 'This entry diverges somewhat from your stated goals.'; }
     else { label = 'Misaligned'; detail = 'This entry may reflect unresolved tension with your goals.'; }
-    return { score, label, detail, goals: storedGoals };
+    const result = { score, label, detail, goals: storedGoals };
+    return lowConfidenceGoal ? { ...result, lowConfidenceGoal } : result;
+  }
+
+  async function fetchTypedGoals(supabaseClient, userId) {
+    if (!supabaseClient || !userId) return null;
+    try {
+      const { data, error } = await supabaseClient
+        .from('user_goals')
+        .select('id,text,type,confidence,source,status')
+        .eq('user_id', userId)
+        .in('status', ['active', 'pending_confirmation']);
+      if (error || !data) return null;
+      return data;
+    } catch (e) {
+      console.warn('Could not fetch typed goals:', e);
+      return null;
+    }
   }
 
   function computeBaselineDelta(currentAnalysis, entries) {
@@ -313,11 +352,71 @@ Rules:
     return [];
   }
 
+  const PRAGMATIC_PHRASE_MAP = {
+    assertion: 'sharing a straightforward reflection',
+    expression: 'expressing how you feel',
+    'help-seeking': 'looking for support or guidance',
+    help_seeking: 'looking for support or guidance',
+    question: 'asking a question',
+    catharsis: 'processing something difficult',
+    request: 'making a request',
+  };
+
+  const TREND_PHRASE_MAP = {
+    stable: 'holding fairly steady',
+    declining: 'trending downward recently',
+    improving: 'trending upward recently',
+    cyclical: 'moving in ups and downs',
+    stabilizing: 'settling after some ups and downs',
+  };
+
+  const ACTION_PHRASE_MAP = {
+    affirm: 'affirm what seems to be going well',
+    encourage: 'gently encourage you',
+    reflect: 'reflect back what you shared',
+    support: 'offer some steady support',
+    intervene: 'gently check in more directly',
+  };
+
+  function buildExplanation(l1, l2, l3, l4, l5) {
+    if (!l1 && !l2 && !l3 && !l4 && !l5) return 'Not enough analysis data for this entry yet.';
+    const sentences = [];
+
+    const pragPhrase = (l2 && l2.dominant) ? (PRAGMATIC_PHRASE_MAP[l2.dominant] || 'sharing your thoughts') : null;
+    if (l1 && l1.sentiment) {
+      const sentimentPhrase = l1.sentiment === 'Positive' ? 'an uplifting tone' : l1.sentiment === 'Negative' ? 'some difficult feelings' : 'a fairly neutral tone';
+      const confidencePart = l1.sentimentConfidence != null ? ` (confidence: ${Math.round(l1.sentimentConfidence * 100)}%)` : '';
+      sentences.push(`I noticed your message carried ${sentimentPhrase}${confidencePart}${pragPhrase ? `, and it read like you were ${pragPhrase}` : ''}.`);
+    } else if (pragPhrase) {
+      sentences.push(`This reads like you were ${pragPhrase}.`);
+    }
+
+    if (l3 && l3.label && l3.label !== 'insufficient data' && TREND_PHRASE_MAP[l3.label]) {
+      const attentionPhrase = (l3.attentionContributors && l3.attentionContributors.length) ? ' A few earlier entries weighed most heavily in that read.' : '';
+      sentences.push(`Looking at your recent entries, things seem to be ${TREND_PHRASE_MAP[l3.label]}.${attentionPhrase}`);
+    }
+
+    if (l4 && l4.label && l4.label !== 'No goals set') {
+      sentences.push(`This entry seems ${l4.label.toLowerCase()} with the goals you've set.`);
+    }
+
+    if (l5 && l5.action) {
+      const actionPhrase = ACTION_PHRASE_MAP[l5.action] || 'respond thoughtfully';
+      const b = l5.breakdown;
+      const utilityPhrase = b ? ` This weighed appropriateness (${b.appropriateness}), safety (${b.safety}), privacy cost (${b.privacyCost}), and autonomy cost (${b.autonomyCost}).` : '';
+      sentences.push(`Based on all of this, I chose to ${actionPhrase}.${utilityPhrase}`);
+    }
+
+    return sentences.length ? sentences.join(' ') : 'Not enough analysis data for this entry yet.';
+  }
+
   return {
     classifyPragmatic,
     classifyTemporalTrend,
     classifyTemporalTrendFallback,
     computeGoalAlignment,
+    fetchTypedGoals,
+    getTauGoal,
     computeBaselineDelta,
     computeSentimentBaseline,
     computePersonalBaselineDelta,
@@ -325,6 +424,7 @@ Rules:
     buildUtilityScore,
     applyEthicalFilter,
     buildDynamicSystemPrompt,
+    buildExplanation,
     syncGoalsFromSupabase,
   };
 })();

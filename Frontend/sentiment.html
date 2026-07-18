@@ -6,7 +6,9 @@
 <title>MindNook | Sentiment Analysis</title>
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="explanation_panel.css" rel="stylesheet">
 <script src="personal_baseline.js"></script>
+<script src="explanation_panel.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -257,6 +259,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
         </div>
         <div class="goal-tags" id="goal-tags"></div>
       </div>
+      <div id="explanation-panel-container" style="grid-column:1 / -1"></div>
     </div>
     <div class="action rise d5">
       <div class="btn-row">
@@ -468,6 +471,8 @@ async function init(){
                 if(dbEntry.layer4_goal)a.goalAlignment=dbEntry.layer4_goal;
                 if(dbEntry.layer5_action)a.utilityScore=dbEntry.layer5_action;
                 if(dbEntry.layer5_breakdown)a.utilityScoreBreakdown=dbEntry.layer5_breakdown;
+                if(dbEntry.layer3_temporal)a.temporalTrend={...dbEntry.layer3_temporal,attentionContributors:dbEntry.layer3_attention||[]};
+                if(dbEntry.layer3_probabilities)a.temporalProbabilities=dbEntry.layer3_probabilities;
                 if(dbEntry.sentiment)a.sentiment=dbEntry.sentiment;
                 if(dbEntry.word_count)a.wordCount=dbEntry.word_count;
                 if(dbEntry.sentence_count)a.sentenceCount=dbEntry.sentence_count;
@@ -533,6 +538,16 @@ async function init(){
         }
 
         await renderGoalAlignment(a,jtext);
+        if(window.MindNookExplanation){
+            const explainContainer=document.getElementById('explanation-panel-container');
+            const l1={sentiment:a.sentiment,positiveWordCount:a.positiveWordCount,negativeWordCount:a.negativeWordCount,sentimentConfidence:a.sentimentConfidence};
+            const l5=a.utilityScore?{...a.utilityScore,breakdown:a.utilityScoreBreakdown||a.utilityScore.breakdown}:null;
+            window.MindNookExplanation.renderExplanationPanel(explainContainer,{l1,l2:a.pragmatic||null,l3:a.temporalTrend||null,l4:a.goalAlignment||null,l5},{
+                supabaseClient:window.__sb,
+                userId:window.__user?.id,
+                entryId:localStorage.getItem('mindnook_last_entry_id'),
+            });
+        }
         fetchContent(a,jtext);
     }catch(err){
         console.error('init error',err);
