@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS moderation_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id),
-  entry_id UUID REFERENCES journal_entries(id),
+  entry_id BIGINT REFERENCES journal_entries(id),
   category TEXT,
   confidence FLOAT,
   action_taken TEXT,

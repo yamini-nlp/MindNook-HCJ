@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS user_temporal_state (
   user_id UUID REFERENCES auth.users(id) PRIMARY KEY,
   hidden_state JSONB,
   cell_state JSONB,
-  last_entry_id UUID,
+  last_entry_id BIGINT REFERENCES journal_entries(id),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ALTER TABLE user_temporal_state ENABLE ROW LEVEL SECURITY;

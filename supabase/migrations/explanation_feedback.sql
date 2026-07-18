@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS explanation_feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id),
-  entry_id UUID,
+  entry_id BIGINT REFERENCES journal_entries(id),
   disagreed_layer TEXT,
   comment TEXT,
   created_at TIMESTAMPTZ DEFAULT now()

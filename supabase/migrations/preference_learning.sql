@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS action_feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  entry_id UUID,
+  entry_id BIGINT REFERENCES journal_entries(id),
   action TEXT,
   rating TEXT CHECK (rating IN ('up', 'down')),
   created_at TIMESTAMPTZ DEFAULT now()
