@@ -285,15 +285,74 @@ window.MindNookBaseline = (function () {
     };
   }
 
-  function applyEthicalFilter(action, entries, analysisResult) {
+  const HYPERBOLE_THRESHOLD = 0.55;
+
+  function detectHyperbole(text) {
+    const lexicon = window.MindNookHyperbole;
+    if (!lexicon || typeof lexicon.scoreHyperbole !== 'function') {
+      return { score: 0, markers: [], markerCount: 0, exclamationDensity: 0, conclusionOriented: false };
+    }
+    return lexicon.scoreHyperbole(text || '');
+  }
+
+  function isTraumaProcessingGoal(typedGoals) {
+    if (!Array.isArray(typedGoals)) return false;
+    const markers = ['process difficult memories', 'process my memories', 'processing memories', 'trauma', 'therapeutic writing', 'process my grief', 'processing grief', 'process the past'];
+    return typedGoals.some(g => g && g.status === 'active' && typeof g.text === 'string' && markers.some(m => g.text.toLowerCase().includes(m)));
+  }
+
+  function contextCollapseGuard(l1, l3, hyperboleScore) {
+    const score = (hyperboleScore && typeof hyperboleScore.score === 'number') ? hyperboleScore.score : (typeof hyperboleScore === 'number' ? hyperboleScore : 0);
+    const sentimentConfidence = (l1 && l1.sentimentConfidence != null) ? l1.sentimentConfidence : null;
+    const negWordCount = (l1 && l1.negativeWordCount) || 0;
+    const posWordCount = (l1 && l1.positiveWordCount) || 0;
+    const strongNegative = !!(l1 && l1.sentiment === 'Negative' && (sentimentConfidence != null ? sentimentConfidence >= 0.6 : negWordCount > posWordCount));
+    const trendLabel = (l3 && l3.label) || 'insufficient data';
+    const trendStableOrInsufficient = trendLabel === 'stable' || trendLabel === 'insufficient data';
+    const trendDeclining = trendLabel === 'declining';
+    const collapseDetected = !!(strongNegative && trendStableOrInsufficient && !trendDeclining && score >= HYPERBOLE_THRESHOLD);
+    return {
+      collapseDetected,
+      possibleHyperbole: collapseDetected,
+      downgradeTo: collapseDetected ? 'support' : null,
+      hyperboleScore: score,
+      trendLabel,
+      strongNegative
+    };
+  }
+
+  function applyEthicalFilter(action, entries, analysisResult, layerContext) {
     const harmful = new Set(['clinical_diagnosis', 'medical_advice']);
-    if (harmful.has(action)) return 'reflect';
+    const wantsDetails = !!(layerContext && layerContext.returnDetails);
+    function finalize(finalAction, guardInfo) {
+      if (wantsDetails) {
+        return {
+          action: finalAction,
+          hyperboleScore: guardInfo ? guardInfo.hyperboleScore : null,
+          contextCollapseGuard: guardInfo || null
+        };
+      }
+      return finalAction;
+    }
+    if (harmful.has(action)) return finalize('reflect', null);
     if (!entries || entries.length < 3) {
-      if (action === 'intervene') return 'support';
+      if (action === 'intervene') return finalize('support', null);
     }
     const sentiment = (analysisResult && analysisResult.sentiment) || 'Neutral';
-    if (action === 'intervene' && sentiment !== 'Negative') return 'support';
-    return action;
+    if (action === 'intervene' && sentiment !== 'Negative') return finalize('support', null);
+    if (action === 'intervene' && layerContext && layerContext.l3 && layerContext.rawText) {
+      const traumaGoal = isTraumaProcessingGoal(layerContext.typedGoals);
+      if (!traumaGoal) {
+        const hyperboleScore = detectHyperbole(layerContext.rawText);
+        const guard = contextCollapseGuard(analysisResult, layerContext.l3, hyperboleScore);
+        if (guard.collapseDetected) {
+          return finalize(guard.downgradeTo || 'support', guard);
+        }
+        return finalize(action, guard);
+      }
+      return finalize(action, null);
+    }
+    return finalize(action, null);
   }
 
   function buildDynamicSystemPrompt(l1, l2, l3, l4, l5, journalContext) {
@@ -313,6 +372,7 @@ CURRENT STATE ANALYSIS:
 - Trend: ${l3.label} (slope: ${l3.slope}, direction: ${l3.direction}, method: ${l3.method || 'regression'})
 - Goal state: ${l4.label} (score: ${l4.score}/100) — Goals: ${(l4.goals || []).join(', ')}
 - Recommended response: ${safeAction} (utility: ${l5.utility})
+- Context-collapse guard: ${(l5.contextCollapseGuard && l5.contextCollapseGuard.possibleHyperbole) ? 'possible_hyperbole detected, response downgraded from intervene' : 'none'}
 
 RESPONSE DIRECTIVE: ${toneMap[safeAction] || toneMap.reflect}
 
@@ -407,6 +467,10 @@ Rules:
       sentences.push(`Based on all of this, I chose to ${actionPhrase}.${utilityPhrase}`);
     }
 
+    if (l5 && l5.contextCollapseGuard && l5.contextCollapseGuard.possibleHyperbole) {
+      sentences.push('This entry used some strong, absolute language, so I flagged it as possible_hyperbole and chose a steadier response rather than escalating.');
+    }
+
     return sentences.length ? sentences.join(' ') : 'Not enough analysis data for this entry yet.';
   }
 
@@ -421,6 +485,9 @@ Rules:
     computeSentimentBaseline,
     computePersonalBaselineDelta,
     computeNumericSentimentScore,
+    detectHyperbole,
+    isTraumaProcessingGoal,
+    contextCollapseGuard,
     buildUtilityScore,
     applyEthicalFilter,
     buildDynamicSystemPrompt,

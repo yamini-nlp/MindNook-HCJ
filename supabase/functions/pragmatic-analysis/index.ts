@@ -51,6 +51,88 @@ function computeAutonomyCost(action: string, userAutonomyPreference: number): nu
 
 interface UtilityWeights { w_task: number; w_safety: number; lambda_privacy: number; lambda_autonomy: number; }
 
+const SUPERLATIVE_MARKERS = [
+  "worst", "best", "always", "never", "completely", "totally", "literally",
+  "absolutely", "entirely", "forever", "impossible", "everyone", "everything",
+  "nothing", "nobody", "no one", "ruined", "destroyed", "perfect", "disaster",
+  "hopeless", "unbearable", "catastrophe", "catastrophic"
+];
+
+const HYPERBOLE_THRESHOLD = 0.55;
+
+interface HyperboleScore { score: number; markers: string[]; markerCount: number; exclamationDensity: number; conclusionOriented: boolean; }
+
+function escapeRegex(str: string): string {
+  return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
+
+function computeExclamationDensity(text: string): number {
+  const sentenceCount = Math.max(1, (text.match(/[.!?]+/g) || []).length);
+  const exclCount = (text.match(/!/g) || []).length;
+  return +(exclCount / sentenceCount).toFixed(3);
+}
+
+function computeConclusionOriented(text: string): boolean {
+  const sentences = text.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
+  if (!sentences.length) return false;
+  const avgLen = sentences.reduce((a, s) => a + s.split(/\s+/).length, 0) / sentences.length;
+  const shortDeclarative = sentences.filter((s) => s.split(/\s+/).length <= 8 && !/[,;:]/.test(s)).length;
+  return (shortDeclarative / sentences.length) >= 0.5 && avgLen <= 10;
+}
+
+function scoreHyperbole(text: string): HyperboleScore {
+  if (!text || typeof text !== "string" || !text.trim()) {
+    return { score: 0, markers: [], markerCount: 0, exclamationDensity: 0, conclusionOriented: false };
+  }
+  const textLower = text.toLowerCase();
+  const hits: string[] = [];
+  SUPERLATIVE_MARKERS.forEach((m) => {
+    const re = new RegExp("\\b" + escapeRegex(m) + "\\b", "g");
+    const matches = textLower.match(re);
+    if (matches) hits.push(...matches.map(() => m));
+  });
+  const wordCount = Math.max(1, text.trim().split(/\s+/).length);
+  const markerDensity = Math.min(1, hits.length / Math.max(4, wordCount / 6));
+  const exclamationDensity = computeExclamationDensity(text);
+  const conclusionOriented = computeConclusionOriented(text);
+  const score = Math.max(0, Math.min(1, markerDensity * 0.55 + Math.min(1, exclamationDensity) * 0.25 + (conclusionOriented ? 0.2 : 0)));
+  return { score: +score.toFixed(3), markers: [...new Set(hits)], markerCount: hits.length, exclamationDensity, conclusionOriented };
+}
+
+function isTraumaProcessingGoal(goalTexts: unknown): boolean {
+  if (!Array.isArray(goalTexts)) return false;
+  const markers = ["process difficult memories", "process my memories", "processing memories", "trauma", "therapeutic writing", "process my grief", "processing grief", "process the past"];
+  return goalTexts.some((g) => typeof g === "string" && markers.some((m) => g.toLowerCase().includes(m)));
+}
+
+interface ContextCollapseGuardResult {
+  collapseDetected: boolean;
+  possibleHyperbole: boolean;
+  downgradeTo: string | null;
+  hyperboleScore: number;
+  trendLabel: string;
+  strongNegative: boolean;
+}
+
+function contextCollapseGuard(l1: L1, l3: L3, hyperboleScore: HyperboleScore): ContextCollapseGuardResult {
+  const score = hyperboleScore?.score ?? 0;
+  const negWordCount = l1.negativeWordCount || 0;
+  const posWordCount = l1.positiveWordCount || 0;
+  const strongNegative = l1.sentiment === "Negative" && negWordCount > posWordCount;
+  const trendLabel = l3.label || "insufficient data";
+  const trendStableOrInsufficient = trendLabel === "stable" || trendLabel === "insufficient data";
+  const trendDeclining = trendLabel === "declining";
+  const collapseDetected = !!(strongNegative && trendStableOrInsufficient && !trendDeclining && score >= HYPERBOLE_THRESHOLD);
+  return {
+    collapseDetected,
+    possibleHyperbole: collapseDetected,
+    downgradeTo: collapseDetected ? "support" : null,
+    hyperboleScore: score,
+    trendLabel,
+    strongNegative
+  };
+}
+
 function computeDecomposedUtility(action: string, l1: L1, l2: L2, l3: L3, l4: L4, entryHistory: number[], inferenceDepth: number, autonomyPreference: number, weights: UtilityWeights) {
   const appropriateness = computeAppropriateness(action, l1, l2, l3, l4);
   const safety = computeSafety(action, l1, l3, entryHistory);
@@ -384,7 +466,25 @@ goal_confidence: 0.0 to 1.0`;
         action,
         ...computeDecomposedUtility(action, l1, l2, l3, l4, entryHistoryScores, 0, autonomyPreference, weights),
       }));
-      const best = results.reduce((a, b) => (b.utility > a.utility ? b : a));
+      let best = results.reduce((a, b) => (b.utility > a.utility ? b : a));
+
+      const hyperboleScoreResult = scoreHyperbole(content);
+      let collapseGuard: ContextCollapseGuardResult | null = null;
+      if (best.action === "intervene") {
+        const traumaGoal = isTraumaProcessingGoal(goals);
+        if (!traumaGoal) {
+          collapseGuard = contextCollapseGuard(l1, l3, hyperboleScoreResult);
+          if (collapseGuard.collapseDetected) {
+            const downgraded = results.find((r) => r.action === collapseGuard!.downgradeTo);
+            if (downgraded) {
+              best = downgraded;
+            } else {
+              best = { action: collapseGuard.downgradeTo as string, utility: best.utility, breakdown: best.breakdown };
+            }
+          }
+        }
+      }
+
       const l5 = {
         utility: best.utility,
         action: best.action,
@@ -393,6 +493,8 @@ goal_confidence: 0.0 to 1.0`;
         tau: +tau.toFixed(2),
         pIntervention: +pIntervention.toFixed(3),
         shouldIntervene,
+        hyperboleScore: hyperboleScoreResult.score,
+        contextCollapseGuard: collapseGuard,
       };
 
       const updatePayload: Record<string, unknown> = {
@@ -401,6 +503,8 @@ goal_confidence: 0.0 to 1.0`;
         layer5_action: l5,
         layer5_breakdown: l5.breakdown,
         layer_enrichment_status: 'complete',
+        hyperbole_flag: !!(collapseGuard && collapseGuard.collapseDetected),
+        hyperbole_score: hyperboleScoreResult.score,
       };
       if (sentimentNumeric != null) updatePayload.sentiment_score = sentimentNumeric;
       if (body.mu_user != null && sentimentNumeric != null) {

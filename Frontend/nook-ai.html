@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="hyperbole_lexicon.js"></script>
 <script src="personal_baseline.js"></script>
 <script src="utility_decomposition.js"></script>
 <script src="lstm_temporal.js"></script>
@@ -394,8 +395,8 @@ async function sendMessage(){
     const lambdaAutonomy=parseFloat(localStorage.getItem('mindnook_lambda_autonomy')||'0.10');
     const autonomyPref=parseFloat(localStorage.getItem('mindnook_autonomy_pref')||'0.5');
     const l5Raw=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4,{cfp_weight:cfpW,cfn_weight:cfnW,w_task:wTask,w_safety:wSafety,lambda_privacy:lambdaPrivacy,lambda_autonomy:lambdaAutonomy,autonomy_preference:autonomyPref},userEntries);
-    const l5Action=window.MindNookBaseline.applyEthicalFilter(l5Raw.action,userEntries,{sentiment:l1.sentiment});
-    const l5={...l5Raw,action:l5Action};
+    const l5Detail=window.MindNookBaseline.applyEthicalFilter(l5Raw.action,userEntries,l1,{l3,rawText:lastText||msg,typedGoals,returnDetails:true});
+    const l5={...l5Raw,action:l5Detail.action,hyperboleScore:l5Detail.hyperboleScore,contextCollapseGuard:l5Detail.contextCollapseGuard};
 
     currentLayers={l1,l2,l3,l4,l5};
     systemPrompt=window.MindNookBaseline.buildDynamicSystemPrompt(l1,l2,l3,l4,l5,journalContext);
