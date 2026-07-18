@@ -1,0 +1,7 @@
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS w_task FLOAT DEFAULT 0.4;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS w_safety FLOAT DEFAULT 0.35;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS lambda_privacy FLOAT DEFAULT 0.15;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS lambda_autonomy FLOAT DEFAULT 0.10;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS autonomy_preference FLOAT DEFAULT 0.5;
+
+ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS layer5_breakdown JSONB;

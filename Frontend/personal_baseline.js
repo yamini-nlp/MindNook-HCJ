@@ -65,7 +65,7 @@ window.MindNookBaseline = (function () {
     return arr.reduce((acc, s) => acc + (s - mean) ** 2, 0) / arr.length;
   }
 
-  function classifyTemporalTrend(entries) {
+  function classifyTemporalTrendFallback(entries) {
     if (!entries || entries.length < 3) return { label: 'insufficient data', direction: 'neutral', slope: 0, variance: 0, scores: [], attentionWeights: [], method: 'multi-window-regression' };
     const scores = entries.slice(0, 20).reverse().map(e => computeNumericSentimentScore(e));
     const slope = computeOLSSlope(scores);
@@ -108,6 +108,17 @@ window.MindNookBaseline = (function () {
       longMean: +longMean.toFixed(1),
       method: 'multi-window-regression'
     };
+  }
+
+  async function classifyTemporalTrend(entries, ctx) {
+    if (!entries || entries.length < 3) return classifyTemporalTrendFallback(entries);
+    if (!ctx || !window.MindNookLSTM) return classifyTemporalTrendFallback(entries);
+    try {
+      return await window.MindNookLSTM.callTemporalLSTM(ctx, entries);
+    } catch (e) {
+      console.warn('LSTM temporal classification failed, using fallback:', e.message);
+      return classifyTemporalTrendFallback(entries);
+    }
   }
 
   function computeGoalAlignment(analysisResult, entries) {
@@ -198,25 +209,41 @@ window.MindNookBaseline = (function () {
     };
   }
 
-  function buildUtilityScore(l1, l2, l3, l4, userPreferences) {
+  function buildUtilityScore(l1, l2, l3, l4, userPreferences, entryHistory) {
+    const weights = {
+      w_task: userPreferences?.w_task ?? 0.4,
+      w_safety: userPreferences?.w_safety ?? 0.35,
+      lambda_privacy: userPreferences?.lambda_privacy ?? 0.15,
+      lambda_autonomy: userPreferences?.lambda_autonomy ?? 0.10,
+    };
     const Cfp = userPreferences?.cfp_weight ?? parseFloat(localStorage.getItem('mindnook_cfp') || '0.4');
     const Cfn = userPreferences?.cfn_weight ?? parseFloat(localStorage.getItem('mindnook_cfn') || '0.6');
     const tau = Cfp / (Cfp + Cfn);
+    const autonomyPreference = userPreferences?.autonomy_preference ?? parseFloat(localStorage.getItem('mindnook_autonomy_pref') || '0.5');
     const sentimentScore = l1.sentiment === 'Positive' ? 1 : l1.sentiment === 'Negative' ? -1 : 0;
     const trendScore = l3.direction === 'up' ? 1 : l3.direction === 'down' ? -1 : 0;
     const goalScore = l4.score != null ? (l4.score - 50) / 50 : 0;
-    const pragScore = l2.dominant === 'help-seeking' ? 1 : l2.dominant === 'question' ? 0.5 : 0;
     const pIntervention = Math.max(0, Math.min(1, 0.5 - (sentimentScore * 0.3) - (trendScore * 0.2) - (goalScore * 0.1)));
-    const rawUtility = (sentimentScore * Cfn) + (trendScore * 0.3) + (goalScore * 0.2) + (pragScore * Cfp);
-    const utility = Math.max(-1, Math.min(1, rawUtility));
     const shouldIntervene = pIntervention > tau;
-    let action;
-    if (utility >= 0.5) action = 'affirm';
-    else if (utility >= 0.1) action = 'encourage';
-    else if (utility >= -0.1) action = 'reflect';
-    else if (utility >= -0.5 && !shouldIntervene) action = 'support';
-    else action = 'intervene';
-    return { utility: +utility.toFixed(3), action, tau: +tau.toFixed(2), pIntervention: +pIntervention.toFixed(3), shouldIntervene };
+    const z = { l1, l2, l3, l4, entryHistory, inferenceDepth: 0, autonomyPreference };
+    const utilityModule = window.MindNookUtility;
+    const actions = utilityModule ? utilityModule.ACTIONS : ['affirm', 'encourage', 'reflect', 'support', 'intervene'];
+    const results = actions.map(action => ({
+      action,
+      ...(utilityModule ? utilityModule.computeDecomposedUtility(action, z, weights) : { utility: 0, breakdown: { appropriateness: 0, safety: 0, privacyCost: 0, autonomyCost: 0 }, weights })
+    }));
+    const candidates = shouldIntervene ? results : results.filter(r => r.action !== 'intervene');
+    const best = candidates.reduce((a, b) => (b.utility > a.utility ? b : a));
+    return {
+      utility: best.utility,
+      action: best.action,
+      breakdown: best.breakdown,
+      weights,
+      tau: +tau.toFixed(2),
+      pIntervention: +pIntervention.toFixed(3),
+      shouldIntervene,
+      allActions: results
+    };
   }
 
   function applyEthicalFilter(action, entries, analysisResult) {
@@ -268,13 +295,18 @@ Rules:
     try {
       const { data, error } = await supabaseClient
         .from('user_preferences')
-        .select('goals, cfp_weight, cfn_weight')
+        .select('goals, cfp_weight, cfn_weight, w_task, w_safety, lambda_privacy, lambda_autonomy, autonomy_preference')
         .eq('user_id', userId)
         .single();
       if (!error && data?.goals) {
         localStorage.setItem('mindnook_goals', JSON.stringify(data.goals));
         if (data.cfp_weight != null) localStorage.setItem('mindnook_cfp', String(data.cfp_weight));
         if (data.cfn_weight != null) localStorage.setItem('mindnook_cfn', String(data.cfn_weight));
+        if (data.w_task != null) localStorage.setItem('mindnook_w_task', String(data.w_task));
+        if (data.w_safety != null) localStorage.setItem('mindnook_w_safety', String(data.w_safety));
+        if (data.lambda_privacy != null) localStorage.setItem('mindnook_lambda_privacy', String(data.lambda_privacy));
+        if (data.lambda_autonomy != null) localStorage.setItem('mindnook_lambda_autonomy', String(data.lambda_autonomy));
+        if (data.autonomy_preference != null) localStorage.setItem('mindnook_autonomy_pref', String(data.autonomy_preference));
         return data.goals;
       }
     } catch (e) { console.warn('Goal sync failed:', e); }
@@ -284,6 +316,7 @@ Rules:
   return {
     classifyPragmatic,
     classifyTemporalTrend,
+    classifyTemporalTrendFallback,
     computeGoalAlignment,
     computeBaselineDelta,
     computeSentimentBaseline,

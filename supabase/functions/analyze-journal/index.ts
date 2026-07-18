@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { MODERATION_CATEGORIES, MODERATION_PROMPT_TEMPLATE } from "./moderation_prompt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +23,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "").trim();
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    let authedUserId: string | null = null;
 
     if (token && token !== ANON_KEY) {
       const supabase = createClient(
@@ -29,13 +31,14 @@ serve(async (req) => {
         ANON_KEY,
         { global: { headers: { Authorization: authHeader } } }
       );
-      const { error: userError } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      authedUserId = user?.id ?? null;
     }
 
     const body = await req.json();
@@ -46,6 +49,89 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (mode === "moderate") {
+      const entryId = body.entry_id ?? null;
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      );
+
+      try {
+        const prompt = MODERATION_PROMPT_TEMPLATE.replace("{{REPLY_TEXT}}", text.replace(/"/g, "'").slice(0, 3000));
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            max_tokens: 400,
+            temperature: 0,
+            messages: [
+              { role: "system", content: "You are a precise safety classifier. You ONLY return valid JSON. No markdown, no backticks, no explanations." },
+              { role: "user", content: prompt },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          if (authedUserId) {
+            await serviceClient.from("moderation_events").insert({
+              user_id: authedUserId, entry_id: entryId, category: "classifier_unavailable",
+              confidence: 0, action_taken: "allowed",
+            });
+          }
+          return new Response(JSON.stringify({ violations: [], safe: true, classifierUnavailable: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const raw = data.choices?.[0]?.message?.content?.replace(/```json|```/g, "").trim() || "{}";
+        let parsed: { violations: { category: string; confidence: number }[]; safe: boolean };
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          if (authedUserId) {
+            await serviceClient.from("moderation_events").insert({
+              user_id: authedUserId, entry_id: entryId, category: "classifier_unavailable",
+              confidence: 0, action_taken: "allowed",
+            });
+          }
+          return new Response(JSON.stringify({ violations: [], safe: true, classifierUnavailable: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const violations = (parsed.violations || []).filter((v) =>
+          (MODERATION_CATEGORIES as readonly string[]).includes(v.category)
+        );
+        const safe = violations.every((v) => v.confidence < 0.5) && !!parsed.safe;
+
+        if (authedUserId && violations.length > 0) {
+          for (const v of violations) {
+            await serviceClient.from("moderation_events").insert({
+              user_id: authedUserId, entry_id: entryId, category: v.category,
+              confidence: v.confidence, action_taken: safe ? "allowed" : "regenerated",
+            });
+          }
+        }
+
+        return new Response(JSON.stringify({ violations, safe }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (moderationErr) {
+        if (authedUserId) {
+          await serviceClient.from("moderation_events").insert({
+            user_id: authedUserId, entry_id: entryId, category: "classifier_unavailable",
+            confidence: 0, action_taken: "allowed",
+          });
+        }
+        return new Response(JSON.stringify({ violations: [], safe: true, classifierUnavailable: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (mode === "chat") {

@@ -9,6 +9,9 @@
 <script src="env.js"></script>
 <script src="auth.js"></script>
 <script src="personal_baseline.js"></script>
+<script src="utility_decomposition.js"></script>
+<script src="lstm_temporal.js"></script>
+<script src="ethical_guardrail.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -368,14 +371,19 @@ async function sendMessage(){
       negativeWordCount:lastAnalysis.negativeWordCount||0,
     };
     const l2=lastAnalysis.pragmatic||window.MindNookBaseline.classifyPragmatic(lastText||msg);
-    const l3=window.MindNookBaseline.classifyTemporalTrend(userEntries);
+    const l3=await window.MindNookBaseline.classifyTemporalTrend(userEntries,{supabaseUrl:SUPABASE_URL,accessToken:session?.access_token||ANON_KEY,userId:session?.user?.id,mode:'read'});
     const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
     const l4=storedGoals.length>0
       ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries)
       :{score:null,label:'No goals set',detail:'',goals:[]};
     const cfpW=parseFloat(localStorage.getItem('mindnook_cfp')||'0.4');
     const cfnW=parseFloat(localStorage.getItem('mindnook_cfn')||'0.6');
-    const l5Raw=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4,{cfp_weight:cfpW,cfn_weight:cfnW});
+    const wTask=parseFloat(localStorage.getItem('mindnook_w_task')||'0.4');
+    const wSafety=parseFloat(localStorage.getItem('mindnook_w_safety')||'0.35');
+    const lambdaPrivacy=parseFloat(localStorage.getItem('mindnook_lambda_privacy')||'0.15');
+    const lambdaAutonomy=parseFloat(localStorage.getItem('mindnook_lambda_autonomy')||'0.10');
+    const autonomyPref=parseFloat(localStorage.getItem('mindnook_autonomy_pref')||'0.5');
+    const l5Raw=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4,{cfp_weight:cfpW,cfn_weight:cfnW,w_task:wTask,w_safety:wSafety,lambda_privacy:lambdaPrivacy,lambda_autonomy:lambdaAutonomy,autonomy_preference:autonomyPref},userEntries);
     const l5Action=window.MindNookBaseline.applyEthicalFilter(l5Raw.action,userEntries,{sentiment:l1.sentiment});
     const l5={...l5Raw,action:l5Action};
 
@@ -393,7 +401,28 @@ async function sendMessage(){
     if(!res.ok){const errText=await res.text();console.warn('Edge function error:',res.status,errText);throw new Error('edge_fn_error');}
     const data=await res.json();
     hideTyping();
-    const reply=data.reply||data.response||data.message||data.content||data.text||Object.values(data).find(v=>typeof v==='string'&&v.length>20)||generateLocalReply(msg);
+    let reply=data.reply||data.response||data.message||data.content||data.text||Object.values(data).find(v=>typeof v==='string'&&v.length>20)||generateLocalReply(msg);
+    if(window.MindNookGuardrail){
+      try{
+        const guardResult=await window.MindNookGuardrail.checkAndRegenerate(reply,{
+          supabaseUrl:SUPABASE_URL,
+          accessToken:session?.access_token||ANON_KEY,
+          entryId:localStorage.getItem('mindnook_last_entry_id'),
+          regenerate:async()=>{
+            const correctivePrompt=`${systemPrompt}\n\nIMPORTANT CORRECTION: Your previous reply may have included a clinical diagnosis, a medication or medical-treatment suggestion, a dismissal of a persistent negative pattern, an overgeneralization from a single entry, or a privacy-violating inference stated as fact. Rewrite your response to avoid all of these while staying warm, tentative, and appropriately scoped.`;
+            const retryRes=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
+              method:'POST',
+              headers:{'Content-Type':'application/json','Authorization':`Bearer ${session?.access_token||ANON_KEY}`},
+              body:JSON.stringify({text:msg,mode:'chat',systemPrompt:correctivePrompt,history:conversationHistory.slice(-8)})
+            });
+            if(!retryRes.ok)throw new Error('guardrail_retry_failed');
+            const retryData=await retryRes.json();
+            return retryData.reply||retryData.response||retryData.message||retryData.content||retryData.text||reply;
+          }
+        });
+        reply=guardResult.finalReply;
+      }catch(guardErr){console.warn('Guardrail check failed, using original reply:',guardErr.message);}
+    }
     addMessage('ai',reply);
     conversationHistory.push({role:'assistant',content:reply});
   }catch(err){
