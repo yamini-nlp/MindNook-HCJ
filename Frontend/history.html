@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="app.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -179,12 +180,9 @@ y:{display:false,min:-0.3,max:2.3},
 async function load(){
 const user=window.mnRequireUser();
 if(!user)return;
-const{data:entries,error}=await sb
-.from('journal_entries').select('id,created_at,sentiment')
-.eq('user_id',user.id)
-.order('created_at',{ascending:false});
+const entries=await window.MindNookHistory.getHistory(user.id,1000);
 document.getElementById('loading').style.display='none';
-if(error||!entries||!entries.length){
+if(!entries||!entries.length){
 document.getElementById('empty').style.display='block';
 return;
 }

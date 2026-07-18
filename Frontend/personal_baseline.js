@@ -1,5 +1,47 @@
 window.MindNookBaseline = (function () {
-  function classifyPragmatic(text) {
+  const DEFAULT_CONSENT_SCOPES = {
+    sentiment: true,
+    pragmatic: true,
+    temporal: true,
+    goal_inference: true,
+    ai_full_history: true,
+  };
+
+  function getConsentScopes(consent) {
+    const source = consent || (typeof window !== 'undefined' ? window.MindNookConsentScopes : null) || {};
+    return {
+      sentiment: source.sentiment !== false,
+      pragmatic: source.pragmatic !== false,
+      temporal: source.temporal !== false,
+      goal_inference: source.goal_inference !== false,
+      ai_full_history: source.ai_full_history !== false,
+    };
+  }
+
+  async function loadConsentScopes(supabaseClient, userId) {
+    if (!supabaseClient || !userId) {
+      window.MindNookConsentScopes = { ...DEFAULT_CONSENT_SCOPES };
+      return window.MindNookConsentScopes;
+    }
+    try {
+      const { data, error } = await supabaseClient
+        .from('user_consent_scopes')
+        .select('sentiment,pragmatic,temporal,goal_inference,ai_full_history')
+        .eq('user_id', userId)
+        .maybeSingle();
+      window.MindNookConsentScopes = (!error && data) ? getConsentScopes(data) : { ...DEFAULT_CONSENT_SCOPES };
+    } catch (e) {
+      console.warn('Could not load consent scopes, defaulting to all-on:', e);
+      window.MindNookConsentScopes = { ...DEFAULT_CONSENT_SCOPES };
+    }
+    return window.MindNookConsentScopes;
+  }
+
+  function classifyPragmatic(text, consent) {
+    const scopes = getConsentScopes(consent);
+    if (!scopes.pragmatic) {
+      return { disabled: true, dominant: 'neutral', distribution: { assertion: 0, expression: 0, helpSeeking: 0, question: 0 } };
+    }
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 4);
     let questionCount = 0, helpCount = 0, assertCount = 0, expressCount = 0;
     const helpPhrases = ['i need', 'i want', 'help me', 'how do i', 'what should', 'i wish', 'i hope', 'please', 'can i', 'should i'];
@@ -111,6 +153,10 @@ window.MindNookBaseline = (function () {
   }
 
   async function classifyTemporalTrend(entries, ctx) {
+    const scopes = getConsentScopes(ctx && ctx.consent);
+    if (!scopes.temporal) {
+      return { disabled: true, label: 'disabled', direction: 'neutral', slope: 0, variance: 0, scores: [], attentionWeights: [], method: 'consent-disabled' };
+    }
     if (!entries || entries.length < 3) return classifyTemporalTrendFallback(entries);
     if (!ctx || !window.MindNookLSTM) return classifyTemporalTrendFallback(entries);
     try {
@@ -135,7 +181,11 @@ window.MindNookBaseline = (function () {
     return { id: lowest.id, text: lowest.text, confidence: lowest.confidence };
   }
 
-  function computeGoalAlignment(analysisResult, entries, typedGoals) {
+  function computeGoalAlignment(analysisResult, entries, typedGoals, consent) {
+    const scopes = getConsentScopes(consent);
+    if (!scopes.goal_inference) {
+      return { disabled: true, score: null, label: 'Goal inference disabled', detail: 'You have turned off goal inference in your privacy settings.', goals: [] };
+    }
     const hasTypedGoals = Array.isArray(typedGoals);
     const activeTypedGoals = hasTypedGoals ? typedGoals.filter(g => g && g.status === 'active') : null;
     const storedGoals = hasTypedGoals
@@ -261,7 +311,12 @@ window.MindNookBaseline = (function () {
     };
   }
 
-  function buildUtilityScore(l1, l2, l3, l4, userPreferences, entryHistory) {
+  function buildUtilityScore(l1, l2, l3, l4, userPreferences, entryHistory, consent) {
+    const scopes = getConsentScopes(consent);
+    const effectiveL1 = scopes.sentiment ? l1 : { sentiment: 'Neutral', positiveWordCount: 0, negativeWordCount: 0, disabled: true };
+    const effectiveL2 = scopes.pragmatic ? l2 : { dominant: 'neutral', distribution: {}, disabled: true };
+    const effectiveL3 = scopes.temporal ? l3 : { direction: 'neutral', label: 'disabled', slope: 0, disabled: true };
+    const effectiveL4 = scopes.goal_inference ? l4 : { score: null, label: 'Goal inference disabled', disabled: true };
     const weights = {
       w_task: userPreferences?.w_task ?? 0.4,
       w_safety: userPreferences?.w_safety ?? 0.35,
@@ -272,12 +327,12 @@ window.MindNookBaseline = (function () {
     const Cfn = userPreferences?.cfn_weight ?? parseFloat(localStorage.getItem('mindnook_cfn') || '0.6');
     const tau = Cfp / (Cfp + Cfn);
     const autonomyPreference = userPreferences?.autonomy_preference ?? parseFloat(localStorage.getItem('mindnook_autonomy_pref') || '0.5');
-    const sentimentScore = l1.sentiment === 'Positive' ? 1 : l1.sentiment === 'Negative' ? -1 : 0;
-    const trendScore = l3.direction === 'up' ? 1 : l3.direction === 'down' ? -1 : 0;
-    const goalScore = l4.score != null ? (l4.score - 50) / 50 : 0;
+    const sentimentScore = effectiveL1.sentiment === 'Positive' ? 1 : effectiveL1.sentiment === 'Negative' ? -1 : 0;
+    const trendScore = effectiveL3.direction === 'up' ? 1 : effectiveL3.direction === 'down' ? -1 : 0;
+    const goalScore = effectiveL4.score != null ? (effectiveL4.score - 50) / 50 : 0;
     const pIntervention = Math.max(0, Math.min(1, 0.5 - (sentimentScore * 0.3) - (trendScore * 0.2) - (goalScore * 0.1)));
     const shouldIntervene = pIntervention > tau;
-    const z = { l1, l2, l3, l4, entryHistory, inferenceDepth: 0, autonomyPreference };
+    const z = { l1: effectiveL1, l2: effectiveL2, l3: effectiveL3, l4: effectiveL4, entryHistory, inferenceDepth: 0, autonomyPreference };
     const utilityModule = window.MindNookUtility;
     const actions = utilityModule ? utilityModule.ACTIONS : ['affirm', 'encourage', 'reflect', 'support', 'intervene'];
     const results = actions.map(action => ({
@@ -368,7 +423,8 @@ window.MindNookBaseline = (function () {
     return finalize(action, null);
   }
 
-  function buildDynamicSystemPrompt(l1, l2, l3, l4, l5, journalContext) {
+  function buildDynamicSystemPrompt(l1, l2, l3, l4, l5, journalContext, consent) {
+    const scopes = getConsentScopes(consent);
     const toneMap = {
       affirm: 'Be warm and celebratory. Reinforce what the user is doing well.',
       encourage: 'Be gently encouraging. Acknowledge progress while staying grounded.',
@@ -376,25 +432,46 @@ window.MindNookBaseline = (function () {
       support: 'Be empathetic and careful. Acknowledge difficulty without amplifying it.',
       intervene: 'Be compassionate and grounding. Gently help the user reframe toward possibility. Never provide clinical diagnoses or medical advice. If persistent distress is detected over multiple entries, gently encourage seeking appropriate support.',
     };
-    const safeAction = applyEthicalFilter(l5.action, null, { sentiment: l1.sentiment });
+    const safeAction = applyEthicalFilter(l5.action, null, { sentiment: scopes.sentiment ? l1.sentiment : 'Neutral' });
+    const sentimentLine = scopes.sentiment
+      ? `- Sentiment: ${l1.sentiment || 'Neutral'} (positive words: ${l1.positiveWordCount || 0}, negative: ${l1.negativeWordCount || 0})`
+      : '- Sentiment: disabled by user consent settings';
+    const styleLine = scopes.pragmatic
+      ? `- Communication style: ${l2.dominant} (${JSON.stringify(l2.distribution)})`
+      : '- Communication style: disabled by user consent settings';
+    const trendLine = scopes.temporal
+      ? `- Trend: ${l3.label} (slope: ${l3.slope}, direction: ${l3.direction}, method: ${l3.method || 'regression'})`
+      : '- Trend: disabled by user consent settings';
+    const goalLine = scopes.goal_inference
+      ? `- Goal state: ${l4.label} (score: ${l4.score}/100) — Goals: ${(l4.goals || []).join(', ')}`
+      : '- Goal state: disabled by user consent settings';
+    const historyHeader = scopes.ai_full_history
+      ? 'USER JOURNAL CONTEXT:'
+      : 'USER JOURNAL CONTEXT (session-only — full history access is disabled by the user):';
+    const styleRule = scopes.pragmatic
+      ? `- Respond specifically to the user's communication style (${l2.dominant}): ${l2.dominant === 'question' ? 'answer their question directly' : l2.dominant === 'help-seeking' ? 'offer concrete support' : l2.dominant === 'expression' ? 'validate and reflect' : 'engage thoughtfully with their assertion'}`
+      : '- Communication-style analysis is disabled; respond naturally to what the user wrote without inferring a category';
+    const trendRule = scopes.temporal
+      ? `- Reference the trend (${l3.label}) where relevant`
+      : '- Trend analysis is disabled; do not reference longitudinal patterns';
     return `You are Nook AI, an emotionally intelligent reflective companion.
 
 CURRENT STATE ANALYSIS:
-- Sentiment: ${l1.sentiment || 'Neutral'} (positive words: ${l1.positiveWordCount || 0}, negative: ${l1.negativeWordCount || 0})
-- Communication style: ${l2.dominant} (${JSON.stringify(l2.distribution)})
-- Trend: ${l3.label} (slope: ${l3.slope}, direction: ${l3.direction}, method: ${l3.method || 'regression'})
-- Goal state: ${l4.label} (score: ${l4.score}/100) — Goals: ${(l4.goals || []).join(', ')}
+${sentimentLine}
+${styleLine}
+${trendLine}
+${goalLine}
 - Recommended response: ${safeAction} (utility: ${l5.utility})
 - Context-collapse guard: ${(l5.contextCollapseGuard && l5.contextCollapseGuard.possibleHyperbole) ? 'possible_hyperbole detected, response downgraded from intervene' : 'none'}
 
 RESPONSE DIRECTIVE: ${toneMap[safeAction] || toneMap.reflect}
 
-USER JOURNAL CONTEXT:
+${historyHeader}
 ${journalContext}
 
 Rules:
-- Respond specifically to the user's communication style (${l2.dominant}): ${l2.dominant === 'question' ? 'answer their question directly' : l2.dominant === 'help-seeking' ? 'offer concrete support' : l2.dominant === 'expression' ? 'validate and reflect' : 'engage thoughtfully with their assertion'}
-- Reference the trend (${l3.label}) where relevant
+${styleRule}
+${trendRule}
 - Keep responses 2–4 paragraphs unless the question genuinely requires more
 - Never give medical or clinical advice. Never diagnose.
 - Sound like you have read every entry carefully
@@ -488,6 +565,8 @@ Rules:
   }
 
   return {
+    getConsentScopes,
+    loadConsentScopes,
     classifyPragmatic,
     classifyTemporalTrend,
     classifyTemporalTrendFallback,

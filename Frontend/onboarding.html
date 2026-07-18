@@ -119,7 +119,7 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
   <div class="card">
     <div class="card-header" id="cardHeader" style="display:none;">
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
-      <div class="step-label" id="stepLabel">Step 1 of 6</div>
+      <div class="step-label" id="stepLabel">Step 1 of 7</div>
     </div>
     <div class="step active" id="step1">
       <div class="journal-visual">
@@ -226,6 +226,19 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
       </div>
     </div>
     <div class="step" id="step6">
+      <div class="eyebrow"><div class="eyebrow-line"></div>Privacy &amp; Consent</div>
+      <h1>Choose what MindNook <em>can infer.</em></h1>
+      <p class="sub">Each of these can be turned off at any time from Privacy settings. Turning one off means MindNook fully stops computing that analysis — it won't just be hidden.</p>
+      <div class="toggle-list">
+        <div class="toggle-row"><span class="toggle-label">Sentiment analysis</span><div class="toggle-switch on" id="consent-sentiment" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Pragmatic analysis (communication style)</span><div class="toggle-switch on" id="consent-pragmatic" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Temporal trend tracking</span><div class="toggle-switch on" id="consent-temporal" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Goal inference</span><div class="toggle-switch on" id="consent-goal_inference" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+        <div class="toggle-row"><span class="toggle-label">Nook AI chat may reference full journal history</span><div class="toggle-switch on" id="consent-ai_full_history" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="privacy-note">All scopes default to on and are fully reversible any time in Privacy settings, including exporting or deleting your data.</div>
+    </div>
+    <div class="step" id="step7">
       <div class="pulse-ring"><div class="pulse-inner">✦</div></div>
       <div class="eyebrow" style="justify-content:center;"><div class="eyebrow-line"></div>Your Space is Ready</div>
       <h1 style="text-align:center;">Your reflective space <em>is ready.</em></h1>
@@ -261,7 +274,7 @@ const SUPABASE_ANON_KEY=window._env.SUPABASE_ANON_KEY;
 const sb=window.__sb;
 
 let current=1;
-const total=6;
+const total=7;
 let selectedIntervention='minimal';
 
 const interventionWeights={
@@ -277,7 +290,7 @@ function updateUI(){
   document.getElementById('stepLabel').textContent='Step '+current+' of '+total;
   document.getElementById('backBtn').disabled=current<=1;
   const navRow=document.getElementById('navRow');
-  navRow.style.display=current===1||current===6?'none':'flex';
+  navRow.style.display=current===1||current===7?'none':'flex';
 }
 
 function goTo(n){
@@ -370,6 +383,19 @@ async function enterMindNook(){
     }
   }catch(e){
     console.warn('Could not sync typed goals (non-fatal):',e);
+  }
+
+  const consentScopes={
+    sentiment:document.getElementById('consent-sentiment').classList.contains('on'),
+    pragmatic:document.getElementById('consent-pragmatic').classList.contains('on'),
+    temporal:document.getElementById('consent-temporal').classList.contains('on'),
+    goal_inference:document.getElementById('consent-goal_inference').classList.contains('on'),
+    ai_full_history:document.getElementById('consent-ai_full_history').classList.contains('on'),
+  };
+  try{
+    await sb.from('user_consent_scopes').upsert({user_id:user.id,...consentScopes},{onConflict:'user_id'});
+  }catch(e){
+    console.warn('Could not save consent scopes (non-fatal):',e);
   }
 
   window.location.href='dashboard.html';

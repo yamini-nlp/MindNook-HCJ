@@ -459,6 +459,9 @@ async function init(){
     if(initDone)return;
     initDone=true;
     try{
+        if(window.MindNookBaseline&&window.__sb&&window.__user){
+            await window.MindNookBaseline.loadConsentScopes(window.__sb,window.__user.id);
+        }
         const raw=localStorage.getItem('latestAnalysis');
         const jtext=localStorage.getItem('latestJournalText')||'';
         if(!raw){window.location.href='canvas.html';return;}

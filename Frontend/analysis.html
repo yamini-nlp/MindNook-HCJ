@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="hyperbole_lexicon.js"></script>
 <script src="personal_baseline.js"></script>
@@ -673,11 +674,12 @@ async function init(){
     if(!user)return;
     try{
         if(window.MindNookBaseline){
+            await window.MindNookBaseline.loadConsentScopes(sb,user.id);
             await window.MindNookBaseline.syncGoalsFromSupabase(sb,user.id);
         }
-        const{data:rows,error}=await sb.from('journal_entries').select('*').eq('user_id',user.id).order('created_at',{ascending:true});
-        if(!error&&rows&&rows.length>0){
-            entries=rows;
+        const rows=await window.MindNookHistory.getHistory(user.id,1000);
+        if(rows&&rows.length>0){
+            entries=rows.slice().sort((a,b)=>new Date(a.t||a.created_at)-new Date(b.t||b.created_at));
         }
     }catch(e){console.warn('Could not load entries:',e);}
 

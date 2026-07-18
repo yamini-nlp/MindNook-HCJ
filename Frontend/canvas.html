@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="env.js"></script>
     <script src="auth.js"></script>
+    <script src="app.js"></script>
     <script src="hyperbole_lexicon.js"></script>
     <script src="baseline_constants.js"></script>
     <script src="personal_baseline.js"></script>
@@ -367,14 +368,7 @@
                         pragmatic=window.MindNookBaseline.classifyPragmatic(textContent);
                         analysis.pragmatic=pragmatic;
 
-                        const{data:recentEntries}=await supabaseClient
-                            .from('journal_entries')
-                            .select('*')
-                            .eq('user_id',session.user.id)
-                            .order('created_at',{ascending:false})
-                            .limit(20);
-
-                        const entries=recentEntries||[];
+                        const entries=await window.MindNookHistory.getHistory(session.user.id,20);
                         temporalTrend=await window.MindNookBaseline.classifyTemporalTrend(entries,{supabaseUrl:SUPABASE_URL,accessToken:session.access_token,userId:session.user.id,mode:'read'});
                         goalAlignment=window.MindNookBaseline.computeGoalAlignment(analysis,entries);
                         analysis.temporalTrend=temporalTrend;
@@ -416,6 +410,7 @@
                 try{
                     const insertPayload={
                         user_id:session.user.id,
+                        metadata:window.MindNookHistory.buildEntryMetadata({mode:'journal',wordCount:analysis.wordCount||0}),
                         content:htmlContent,
                         sentiment:analysis.sentiment,
                         mood_lifter_content:analysis.moodLifter||'',
@@ -554,6 +549,7 @@
             if(!session){window.location.href='login.html';return;}
             window.__session=session;
             if(window.MindNookBaseline){
+                try{await window.MindNookBaseline.loadConsentScopes(supabaseClient,session.user.id);}catch(e){}
                 try{await window.MindNookBaseline.syncGoalsFromSupabase(supabaseClient,session.user.id);}catch(e){}
             }
             await checkUnacknowledgedEscalation(session);

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" class="mn-auth-pending">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindNook — Privacy Center</title>
+<link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+<script src="auth.js"></script>
+<script src="personal_baseline.js"></script>
+<style>
+html.mn-auth-pending body{visibility:hidden}
+html.mn-auth-ready body{visibility:visible}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+--bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+--border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+--gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+--text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+--sage:#7aad8f;--sage2:#4e8a68;--teal:#5bc4a8;--teal2:#2e8c70;
+--rose:#c47a8a;--rose2:#9e4e60;--amber:#c4963a;--amber2:#a87828;--neutral:#9b8ea0;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;}
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:68px;background:rgba(11,22,20,0.88);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--gold);letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.nav-logo-dot{width:6px;height:6px;border-radius:50%;background:rgba(217,197,178,0.5);}
+.nav-links{display:flex;align-items:center;gap:2px;}
+.nav-link{font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:7px 18px;border-radius:30px;cursor:pointer;text-decoration:none;transition:all 0.22s;position:relative;}
+.nav-link:hover{color:var(--text2);background:rgba(217,197,178,0.05);}
+.nav-link.active{color:var(--text);font-weight:500;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-icon{padding:0 14px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50px;border:1px solid var(--border);cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:0.65rem;letter-spacing:1px;font-weight:500;transition:all 0.22s;background:rgba(255,255,255,0.02);}
+.nav-icon:hover{border-color:var(--border2);color:var(--text2);}
+.page{max-width:840px;margin:0 auto;padding:56px 24px 100px;}
+.page-eyebrow{font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;color:var(--teal);opacity:0.85;margin-bottom:14px;font-weight:500;}
+.page h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,2.8rem);font-weight:400;line-height:1.15;margin-bottom:12px;}
+.page h1 em{font-style:italic;color:var(--gold2);}
+.page-sub{color:var(--text2);font-size:0.9rem;line-height:1.8;max-width:600px;margin-bottom:40px;}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 30px;margin-bottom:24px;}
+.pcard h2{font-family:'Playfair Display',serif;font-weight:400;font-size:1.3rem;margin-bottom:6px;}
+.pcard .pcard-sub{color:var(--text3);font-size:0.8rem;line-height:1.7;margin-bottom:20px;}
+.toggle-list{display:flex;flex-direction:column;gap:12px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:14px;border:1px solid var(--border);background:var(--card2);transition:border-color 0.25s;}
+.toggle-row:hover{border-color:var(--border2);}
+.toggle-label{font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:300;color:var(--text2);}
+.toggle-desc{font-size:0.72rem;color:var(--text3);margin-top:3px;}
+.toggle-switch{width:44px;height:24px;border-radius:50px;background:rgba(217,197,178,0.08);position:relative;cursor:pointer;border:1px solid var(--border);transition:background 0.3s,border-color 0.3s;flex-shrink:0;}
+.toggle-switch.on{background:rgba(91,196,168,0.2);border-color:rgba(91,196,168,0.35);}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:rgba(240,236,226,0.35);transition:transform 0.3s,background 0.3s;}
+.toggle-switch.on .toggle-knob{transform:translateX(20px);background:var(--teal);}
+.toggle-switch.saving{opacity:0.6;pointer-events:none;}
+.pbtn{display:inline-flex;align-items:center;gap:10px;padding:12px 26px;border-radius:50px;border:1px solid var(--border2);background:transparent;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.25s;}
+.pbtn:hover{border-color:var(--gold);color:var(--gold);}
+.pbtn.filled{background:var(--gold);color:var(--bg3);border:none;}
+.pbtn.filled:hover{background:var(--gold3);}
+.pbtn.danger{border-color:rgba(196,122,138,0.4);color:var(--rose);}
+.pbtn.danger:hover{border-color:var(--rose);background:rgba(196,122,138,0.08);}
+.pbtn:disabled{opacity:0.5;cursor:not-allowed;}
+.status-line{font-size:0.78rem;color:var(--text3);margin-top:14px;min-height:1.2em;}
+.status-line.success{color:var(--teal);}
+.status-line.error{color:var(--rose);}
+.delete-confirm{margin-top:18px;border-top:1px solid var(--border);padding-top:18px;display:none;}
+.delete-confirm.open{display:block;}
+.delete-confirm label{display:block;font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.delete-confirm input{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:0.88rem;margin-bottom:14px;}
+.delete-actions{display:flex;gap:12px;}
+.export-summary{font-size:0.78rem;color:var(--text3);margin-top:10px;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><div class="nav-logo-dot"></div>MindNook</div>
+  <div class="nav-links">
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="canvas.html">Journal</a>
+    <a class="nav-link" href="history.html">History</a>
+    <a class="nav-link" href="vocab.html">Insights</a>
+    <a class="nav-link" href="nook-ai.html">Nook AI</a>
+    <a class="nav-link active" href="privacy_center.html">Privacy</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-icon" title="Sign out" onclick="signOut()">SIGN OUT</div>
+  </div>
+</nav>
+<div class="page">
+  <div class="page-eyebrow">Privacy, Consent &amp; Data</div>
+  <h1>Your data, <em>your rules.</em></h1>
+  <p class="page-sub">Control exactly what MindNook is allowed to infer from your entries, export a complete copy of your data at any time, or permanently remove your journal content while keeping your account.</p>
+
+  <div class="pcard">
+    <h2>Inference scopes</h2>
+    <p class="pcard-sub">Turning a scope off fully stops that computation going forward — Nook AI and your dashboard will no longer generate or reference it. This does not retroactively delete anything already stored; use data deletion below for that.</p>
+    <div class="toggle-list" id="scopeList">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Sentiment analysis</div><div class="toggle-desc">Positive / negative / neutral tone detection on your entries.</div></div>
+        <div class="toggle-switch on" id="scope-sentiment" onclick="toggleScope(this,'sentiment')"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Pragmatic analysis</div><div class="toggle-desc">Detecting whether you're asking, asserting, expressing, or seeking help.</div></div>
+        <div class="toggle-switch on" id="scope-pragmatic" onclick="toggleScope(this,'pragmatic')"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Temporal trend tracking</div><div class="toggle-desc">Longitudinal mood trend analysis across your entry history.</div></div>
+        <div class="toggle-switch on" id="scope-temporal" onclick="toggleScope(this,'temporal')"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Goal inference</div><div class="toggle-desc">Alignment scoring between entries and your stated goals.</div></div>
+        <div class="toggle-switch on" id="scope-goal_inference" onclick="toggleScope(this,'goal_inference')"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Nook AI full history access</div><div class="toggle-desc">When off, Nook AI chat only sees the current conversation, not your journal history.</div></div>
+        <div class="toggle-switch on" id="scope-ai_full_history" onclick="toggleScope(this,'ai_full_history')"><div class="toggle-knob"></div></div>
+      </div>
+    </div>
+    <div class="status-line" id="scopeStatus"></div>
+  </div>
+
+  <div class="pcard">
+    <h2>Export your data</h2>
+    <p class="pcard-sub">Download a JSON copy of your journal entries, goals, preferences, and every layer of analysis MindNook has generated for you.</p>
+    <button class="pbtn filled" id="exportBtn" onclick="exportData()">Download my data</button>
+    <div class="status-line" id="exportStatus"></div>
+  </div>
+
+  <div class="pcard">
+    <h2>Delete my data</h2>
+    <p class="pcard-sub">Permanently removes your journal entries, goals, temporal state, escalation events, moderation events, and feedback history. Your account and login stay active — this only clears content.</p>
+    <button class="pbtn danger" id="deleteOpenBtn" onclick="openDeleteConfirm()">Delete my journal data</button>
+    <div class="delete-confirm" id="deleteConfirm">
+      <label for="deletePhrase">Type <strong>DELETE MY DATA</strong> to confirm</label>
+      <input type="text" id="deletePhrase" placeholder="DELETE MY DATA" autocomplete="off">
+      <div class="delete-actions">
+        <button class="pbtn danger" id="deleteConfirmBtn" onclick="confirmDelete()">Permanently delete</button>
+        <button class="pbtn" onclick="closeDeleteConfirm()">Cancel</button>
+      </div>
+      <div class="status-line" id="deleteStatus"></div>
+    </div>
+  </div>
+</div>
+<script>
+const SUPABASE_URL=window._env.SUPABASE_URL;
+const sb=window.__sb;
+let session=null;
+let scopes={sentiment:true,pragmatic:true,temporal:true,goal_inference:true,ai_full_history:true};
+
+function setStatus(el,text,type){
+  el.textContent=text;
+  el.className='status-line'+(type?' '+type:'');
+}
+
+async function loadScopes(){
+  if(!session)return;
+  scopes=await window.MindNookBaseline.loadConsentScopes(sb,session.user.id);
+  Object.keys(scopes).forEach(key=>{
+    const el=document.getElementById('scope-'+key);
+    if(!el)return;
+    el.classList.toggle('on',!!scopes[key]);
+  });
+}
+
+async function toggleScope(el,key){
+  el.classList.add('saving');
+  const nextValue=!el.classList.contains('on');
+  const statusEl=document.getElementById('scopeStatus');
+  setStatus(statusEl,'Saving…');
+  try{
+    const update={[key]:nextValue,updated_at:new Date().toISOString()};
+    const{error}=await sb.from('user_consent_scopes').upsert({user_id:session.user.id,...scopes,...update},{onConflict:'user_id'});
+    if(error)throw error;
+    scopes={...scopes,[key]:nextValue};
+    window.MindNookConsentScopes=scopes;
+    el.classList.toggle('on',nextValue);
+    setStatus(statusEl,'Saved.','success');
+  }catch(e){
+    setStatus(statusEl,'Could not save — please try again.','error');
+  }finally{
+    el.classList.remove('saving');
+  }
+}
+
+async function exportData(){
+  const btn=document.getElementById('exportBtn');
+  const statusEl=document.getElementById('exportStatus');
+  btn.disabled=true;
+  setStatus(statusEl,'Preparing your export…');
+  try{
+    const res=await fetch(`${SUPABASE_URL}/functions/v1/privacy-export`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+    });
+    if(!res.ok)throw new Error('export_failed');
+    const data=await res.json();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`mindnook-export-${session.user.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus(statusEl,`Export complete — ${data.journal_entries?.length||0} entries included.`,'success');
+  }catch(e){
+    setStatus(statusEl,'Export failed — please try again.','error');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+function openDeleteConfirm(){
+  document.getElementById('deleteConfirm').classList.add('open');
+}
+function closeDeleteConfirm(){
+  document.getElementById('deleteConfirm').classList.remove('open');
+  document.getElementById('deletePhrase').value='';
+  setStatus(document.getElementById('deleteStatus'),'');
+}
+
+async function confirmDelete(){
+  const phrase=document.getElementById('deletePhrase').value.trim();
+  const statusEl=document.getElementById('deleteStatus');
+  const btn=document.getElementById('deleteConfirmBtn');
+  if(phrase!=='DELETE MY DATA'){
+    setStatus(statusEl,'Please type the phrase exactly as shown.','error');
+    return;
+  }
+  btn.disabled=true;
+  setStatus(statusEl,'Deleting…');
+  try{
+    const res=await fetch(`${SUPABASE_URL}/functions/v1/privacy-delete`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+      body:JSON.stringify({confirmationPhrase:phrase})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.message||data.error||'delete_failed');
+    setStatus(statusEl,'Your journal data has been deleted. Your account remains active.','success');
+    try{localStorage.removeItem('mindnook_last_entry_id');localStorage.removeItem('latestAnalysis');localStorage.removeItem('latestJournalText');}catch(e){}
+    setTimeout(closeDeleteConfirm,3000);
+  }catch(e){
+    setStatus(statusEl,e.message||'Deletion failed — please try again.','error');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+async function init(){
+  const user=window.mnRequireUser();
+  if(!user)return;
+  session=window.__session;
+  await loadScopes();
+}
+
+if(window.__authReady){init();}
+window.addEventListener('auth-ready',init);
+</script>
+</body>
+</html>

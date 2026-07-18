@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" class="mn-auth-pending">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindNook — Research View</title>
+<link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env.js"></script>
+<script src="auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+html.mn-auth-pending body{visibility:hidden}
+html.mn-auth-ready body{visibility:visible}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+--bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--card:#1f3430;--card2:#243b37;
+--border:rgba(217,197,178,0.12);--border2:rgba(217,197,178,0.22);
+--gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
+--text:#f0ece2;--text2:rgba(240,236,226,0.65);--text3:rgba(240,236,226,0.38);
+--sage:#7aad8f;--sage2:#4e8a68;--teal:#5bc4a8;--teal2:#2e8c70;
+--rose:#c47a8a;--rose2:#9e4e60;--amber:#c4963a;--amber2:#a87828;--neutral:#9b8ea0;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;}
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:68px;background:rgba(11,22,20,0.88);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--gold);letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.nav-logo-dot{width:6px;height:6px;border-radius:50%;background:rgba(217,197,178,0.5);}
+.nav-links{display:flex;align-items:center;gap:2px;}
+.nav-link{font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:7px 18px;border-radius:30px;cursor:pointer;text-decoration:none;transition:all 0.22s;position:relative;}
+.nav-link:hover{color:var(--text2);background:rgba(217,197,178,0.05);}
+.nav-link.active{color:var(--text);font-weight:500;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-icon{padding:0 14px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50px;border:1px solid var(--border);cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:0.65rem;letter-spacing:1px;font-weight:500;transition:all 0.22s;background:rgba(255,255,255,0.02);}
+.nav-icon:hover{border-color:var(--border2);color:var(--text2);}
+.page{max-width:1000px;margin:0 auto;padding:56px 24px 100px;}
+.page-eyebrow{font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;color:var(--teal);opacity:0.85;margin-bottom:14px;font-weight:500;}
+.page h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,2.8rem);font-weight:400;line-height:1.15;margin-bottom:12px;}
+.page h1 em{font-style:italic;color:var(--gold2);}
+.page-sub{color:var(--text2);font-size:0.9rem;line-height:1.8;max-width:680px;margin-bottom:24px;}
+.disclaimer{background:rgba(196,150,58,0.08);border:1px solid rgba(196,150,58,0.28);color:var(--amber);font-size:0.78rem;line-height:1.7;border-radius:14px;padding:14px 18px;margin-bottom:36px;}
+.controls-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin-bottom:32px;}
+.control-group{display:flex;flex-direction:column;gap:6px;}
+.control-group label{font-size:0.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);}
+.control-group input[type="date"]{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:0.82rem;}
+.preset-row{display:flex;gap:8px;}
+.preset-btn{padding:8px 16px;border-radius:50px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:0.72rem;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;}
+.preset-btn:hover,.preset-btn.active{border-color:var(--gold);color:var(--gold);}
+.pbtn{display:inline-flex;align-items:center;gap:10px;padding:10px 22px;border-radius:50px;border:1px solid var(--border2);background:transparent;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.25s;}
+.pbtn:hover{border-color:var(--gold);color:var(--gold);}
+.pbtn.filled{background:var(--gold);color:var(--bg3);border:none;}
+.pbtn.filled:hover{background:var(--gold3);}
+.pbtn:disabled{opacity:0.5;cursor:not-allowed;}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:32px;}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 22px;}
+.metric-label{font-size:0.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.metric-value{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold2);}
+.metric-value.empty{font-size:1rem;color:var(--text3);font-family:'DM Sans',sans-serif;}
+.metric-sub{font-size:0.72rem;color:var(--text3);margin-top:8px;line-height:1.6;}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 30px;margin-bottom:24px;}
+.pcard h2{font-family:'Playfair Display',serif;font-weight:400;font-size:1.3rem;margin-bottom:6px;}
+.pcard .pcard-sub{color:var(--text3);font-size:0.8rem;line-height:1.7;margin-bottom:20px;}
+.chart-wrap{position:relative;height:280px;}
+.status-line{font-size:0.78rem;color:var(--text3);margin-top:14px;min-height:1.2em;}
+.status-line.error{color:var(--rose);}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:0.85rem;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><div class="nav-logo-dot"></div>MindNook</div>
+  <div class="nav-links">
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="canvas.html">Journal</a>
+    <a class="nav-link" href="history.html">History</a>
+    <a class="nav-link" href="vocab.html">Insights</a>
+    <a class="nav-link active" href="research_insights.html">Research</a>
+    <a class="nav-link" href="nook-ai.html">Nook AI</a>
+    <a class="nav-link" href="privacy_center.html">Privacy</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-icon" title="Sign out" onclick="signOut()">SIGN OUT</div>
+  </div>
+</nav>
+<div class="page">
+  <div class="page-eyebrow">Insights &middot; Research View</div>
+  <h1>Your evaluation <em>evidence.</em></h1>
+  <p class="page-sub">A self-evaluation view of the metrics proposed in Sections 9.5 and 9.9: false-intervention rate, missed-support rate, user-perceived appropriateness, and an autonomy-preservation proxy, computed over your own entries.</p>
+  <div class="disclaimer">These are self-reported, single-user descriptive statistics drawn only from your account. They are not a substitute for the controlled N&asymp;100 validation study described in Section 9.9, and small sample sizes will make individual rates noisy.</div>
+
+  <div class="controls-row">
+    <div class="control-group">
+      <label for="fromDate">From</label>
+      <input type="date" id="fromDate">
+    </div>
+    <div class="control-group">
+      <label for="toDate">To</label>
+      <input type="date" id="toDate">
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <div class="preset-row">
+        <button class="preset-btn" data-days="7">7D</button>
+        <button class="preset-btn active" data-days="30">30D</button>
+        <button class="preset-btn" data-days="90">90D</button>
+        <button class="preset-btn" data-days="3650">All</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="pbtn filled" id="refreshBtn" onclick="loadMetrics()">Refresh</button>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="pbtn" id="exportBtn" onclick="exportCsv()" disabled>Export CSV</button>
+    </div>
+  </div>
+
+  <div id="statusLine" class="status-line"></div>
+
+  <div id="resultsWrap" style="display:none;">
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">False Intervention Rate</div>
+        <div class="metric-value" id="metricFalseIntervention">—</div>
+        <div class="metric-sub">Thumbs-down rate on intervene / support actions</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Missed-Support Rate</div>
+        <div class="metric-value" id="metricMissedSupport">—</div>
+        <div class="metric-sub">Action corrections on non-intervene entries followed by an acute flag within 48h</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Perceived Appropriateness</div>
+        <div class="metric-value" id="metricAppropriateness">—</div>
+        <div class="metric-sub">Thumbs-up rate across all actions</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Autonomy Preservation Proxy</div>
+        <div class="metric-value" id="metricAutonomy">—</div>
+        <div class="metric-sub">Share of intervene-eligible entries downgraded by the context-collapse guard or ethical filter</div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <h2>Action distribution</h2>
+      <p class="pcard-sub">Count of affirm / encourage / reflect / support / intervene actions across entries in this range.</p>
+      <div class="chart-wrap"><canvas id="actionChart"></canvas></div>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-state" style="display:none;">Not enough data yet for this date range — write a few more entries and give some feedback to see your metrics here.</div>
+</div>
+<script>
+const SUPABASE_URL=window._env.SUPABASE_URL;
+const sb=window.__sb;
+let session=null;
+let latestMetrics=null;
+let actionChartInstance=null;
+
+function formatPct(v){
+  if(v===null||v===undefined)return null;
+  return (v*100).toFixed(1)+'%';
+}
+
+function setMetric(elId,value){
+  const el=document.getElementById(elId);
+  const pct=formatPct(value);
+  if(pct===null){
+    el.textContent='No data';
+    el.classList.add('empty');
+  }else{
+    el.textContent=pct;
+    el.classList.remove('empty');
+  }
+}
+
+function renderActionChart(distribution){
+  const ctx=document.getElementById('actionChart').getContext('2d');
+  const labels=Object.keys(distribution);
+  const data=labels.map(k=>distribution[k]);
+  if(actionChartInstance)actionChartInstance.destroy();
+  actionChartInstance=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Entries',
+        data,
+        backgroundColor:'rgba(217,197,178,0.55)',
+        borderRadius:8
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,ticks:{precision:0,color:'rgba(240,236,226,0.5)'},grid:{color:'rgba(217,197,178,0.08)'}},
+        x:{ticks:{color:'rgba(240,236,226,0.5)'},grid:{display:false}}
+      }
+    }
+  });
+}
+
+function setPreset(days){
+  const to=new Date();
+  const from=new Date(to.getTime()-days*24*60*60*1000);
+  document.getElementById('toDate').value=to.toISOString().slice(0,10);
+  document.getElementById('fromDate').value=from.toISOString().slice(0,10);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.days===String(days)));
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    setPreset(parseInt(btn.dataset.days,10));
+    loadMetrics();
+  });
+});
+
+async function loadMetrics(){
+  if(!session)return;
+  const statusEl=document.getElementById('statusLine');
+  const refreshBtn=document.getElementById('refreshBtn');
+  const exportBtn=document.getElementById('exportBtn');
+  const resultsWrap=document.getElementById('resultsWrap');
+  const emptyState=document.getElementById('emptyState');
+  refreshBtn.disabled=true;
+  exportBtn.disabled=true;
+  statusEl.className='status-line';
+  statusEl.textContent='Computing metrics…';
+  resultsWrap.style.display='none';
+  emptyState.style.display='none';
+
+  const fromVal=document.getElementById('fromDate').value;
+  const toVal=document.getElementById('toDate').value;
+  const from=fromVal?new Date(fromVal+'T00:00:00Z').toISOString():null;
+  const to=toVal?new Date(toVal+'T23:59:59Z').toISOString():null;
+
+  try{
+    const res=await fetch(`${SUPABASE_URL}/functions/v1/research-metrics`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+      body:JSON.stringify({from,to})
+    });
+    if(!res.ok)throw new Error('metrics_failed');
+    const data=await res.json();
+    latestMetrics=data;
+
+    if(!data.entry_count){
+      emptyState.style.display='block';
+      statusEl.textContent='';
+      return;
+    }
+
+    setMetric('metricFalseIntervention',data.false_intervention_rate);
+    setMetric('metricMissedSupport',data.missed_support_rate);
+    setMetric('metricAppropriateness',data.user_perceived_appropriateness);
+    setMetric('metricAutonomy',data.autonomy_preservation_proxy);
+    renderActionChart(data.action_distribution);
+    resultsWrap.style.display='block';
+    statusEl.textContent=`${data.entry_count} entries in range.`;
+    exportBtn.disabled=false;
+  }catch(e){
+    statusEl.className='status-line error';
+    statusEl.textContent='Could not compute metrics — please try again.';
+  }finally{
+    refreshBtn.disabled=false;
+  }
+}
+
+function exportCsv(){
+  if(!latestMetrics)return;
+  const rows=[
+    ['metric','value'],
+    ['range_from',latestMetrics.range.from],
+    ['range_to',latestMetrics.range.to],
+    ['entry_count',latestMetrics.entry_count],
+    ['false_intervention_rate',latestMetrics.false_intervention_rate],
+    ['missed_support_rate',latestMetrics.missed_support_rate],
+    ['user_perceived_appropriateness',latestMetrics.user_perceived_appropriateness],
+    ['autonomy_preservation_proxy',latestMetrics.autonomy_preservation_proxy],
+  ];
+  Object.keys(latestMetrics.action_distribution).forEach(k=>{
+    rows.push([`action_distribution_${k}`,latestMetrics.action_distribution[k]]);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v===null||v===undefined?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`mindnook-research-metrics-${session.user.id}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function init(){
+  const user=window.mnRequireUser();
+  if(!user)return;
+  session=window.__session;
+  setPreset(30);
+  await loadMetrics();
+}
+
+if(window.__authReady){init();}
+window.addEventListener('auth-ready',init);
+</script>
+</body>
+</html>

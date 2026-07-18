@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="app.js"></script>
 <script src="hyperbole_lexicon.js"></script>
 <script src="baseline_constants.js"></script>
 <script src="personal_baseline.js"></script>
@@ -16,6 +17,7 @@
 <script src="lstm_temporal.js"></script>
 <script src="ethical_guardrail.js"></script>
 <script src="explanation_panel.js"></script>
+<script src="feedback_controls.js"></script>
 <script src="goal_clarification.js"></script>
 <script src="crisis_screen.js"></script>
 <script src="crisis_banner.js"></script>
@@ -142,6 +144,7 @@ nav{position:relative;z-index:100;display:flex;align-items:center;justify-conten
     <a href="history.html" class="nav-link">History</a>
     <a href="dashboard.html" class="nav-link">Dashboard</a>
     <a href="vocab.html" class="nav-link">Insights</a>
+    <a href="privacy_center.html" class="nav-link">Privacy</a>
     <button onclick="signOut()" class="nav-btn">Sign Out</button>
   </div>
 </nav>
@@ -214,6 +217,7 @@ let session=null;
 let journalContext='';
 let conversationHistory=[];
 let userEntries=[];
+let consentScopes={sentiment:true,pragmatic:true,temporal:true,goal_inference:true,ai_full_history:true};
 
 const canvas=document.getElementById('particles');
 const ctx2=canvas.getContext('2d');
@@ -268,11 +272,15 @@ function hideTyping(){const t=document.getElementById('typingIndicator');if(t)t.
 async function loadUserData(){
   if(!session)return;
   try{
-    const{data:entries,error}=await sb.from('journal_entries').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(20);
-    if(error||!entries||!entries.length){setEmptySidebar();return;}
+    const entries=await window.MindNookHistory.getHistory(session.user.id,20);
+    if(!entries||!entries.length){setEmptySidebar();return;}
     userEntries=entries;
-    buildContext(entries);
     buildSidebar(entries);
+    if(consentScopes.ai_full_history){
+      buildContext(entries);
+    }else{
+      journalContext='Full journal history access is disabled in this user\'s privacy settings. Respond using only the current conversation, without referencing past entries.';
+    }
   }catch(e){console.warn('Failed to load user data:',e);setEmptySidebar();}
 }
 
@@ -410,17 +418,18 @@ async function sendMessage(){
     const lastAnalysis=lastAnalysisRaw?JSON.parse(lastAnalysisRaw):{};
     const lastText=localStorage.getItem('latestJournalText')||'';
 
-    const l1={
+    const l1Raw={
       sentiment:lastAnalysis.sentiment||(userEntries[0]?.sentiment)||'Neutral',
       positiveWordCount:lastAnalysis.positiveWordCount||0,
       negativeWordCount:lastAnalysis.negativeWordCount||0,
     };
-    const l2=lastAnalysis.pragmatic||window.MindNookBaseline.classifyPragmatic(lastText||msg);
-    const l3=await window.MindNookBaseline.classifyTemporalTrend(userEntries,{supabaseUrl:SUPABASE_URL,accessToken:session?.access_token||ANON_KEY,userId:session?.user?.id,mode:'read'});
+    const l1=consentScopes.sentiment?l1Raw:{sentiment:'Neutral',positiveWordCount:0,negativeWordCount:0,disabled:true};
+    const l2=lastAnalysis.pragmatic&&consentScopes.pragmatic?lastAnalysis.pragmatic:window.MindNookBaseline.classifyPragmatic(lastText||msg,consentScopes);
+    const l3=await window.MindNookBaseline.classifyTemporalTrend(userEntries,{supabaseUrl:SUPABASE_URL,accessToken:session?.access_token||ANON_KEY,userId:session?.user?.id,mode:'read',consent:consentScopes});
     const storedGoals=JSON.parse(localStorage.getItem('mindnook_goals')||'[]');
     const typedGoals=session?.user?.id?await window.MindNookBaseline.fetchTypedGoals(sb,session.user.id):null;
     const l4=storedGoals.length>0
-      ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries,typedGoals)
+      ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries,typedGoals,consentScopes)
       :{score:null,label:'No goals set',detail:'',goals:[]};
     if(l4.lowConfidenceGoal&&window.MindNookGoalClarification&&session?.access_token){
       window.MindNookGoalClarification.renderClarificationPrompt(l4.lowConfidenceGoal,{
@@ -434,12 +443,12 @@ async function sendMessage(){
     const lambdaPrivacy=parseFloat(localStorage.getItem('mindnook_lambda_privacy')||'0.15');
     const lambdaAutonomy=parseFloat(localStorage.getItem('mindnook_lambda_autonomy')||'0.10');
     const autonomyPref=parseFloat(localStorage.getItem('mindnook_autonomy_pref')||'0.5');
-    const l5Raw=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4,{cfp_weight:cfpW,cfn_weight:cfnW,w_task:wTask,w_safety:wSafety,lambda_privacy:lambdaPrivacy,lambda_autonomy:lambdaAutonomy,autonomy_preference:autonomyPref},userEntries);
+    const l5Raw=window.MindNookBaseline.buildUtilityScore(l1,l2,l3,l4,{cfp_weight:cfpW,cfn_weight:cfnW,w_task:wTask,w_safety:wSafety,lambda_privacy:lambdaPrivacy,lambda_autonomy:lambdaAutonomy,autonomy_preference:autonomyPref},userEntries,consentScopes);
     const l5Detail=window.MindNookBaseline.applyEthicalFilter(l5Raw.action,userEntries,l1,{l3,rawText:lastText||msg,typedGoals,returnDetails:true});
     const l5={...l5Raw,action:l5Detail.action,hyperboleScore:l5Detail.hyperboleScore,contextCollapseGuard:l5Detail.contextCollapseGuard};
 
     currentLayers={l1,l2,l3,l4,l5};
-    systemPrompt=window.MindNookBaseline.buildDynamicSystemPrompt(l1,l2,l3,l4,l5,journalContext);
+    systemPrompt=window.MindNookBaseline.buildDynamicSystemPrompt(l1,l2,l3,l4,l5,journalContext,consentScopes);
   }else{
     systemPrompt=`You are Nook AI, an emotionally intelligent reflective companion for MindNook.\n\nYour personality:\n- Deeply empathetic, observant, and psychologically safe\n- Analytical but warmly human, never clinical or robotic\n- Keep responses 2-4 paragraphs\n- Never give medical or clinical advice. Never diagnose.\n\nUSER JOURNAL CONTEXT:\n${journalContext}`;
   }
@@ -489,6 +498,19 @@ async function sendMessage(){
         });
       }
     }
+    if(window.MindNookFeedbackControls){
+      const lastBubble=document.querySelector('#messagesWrap .msg.ai:last-child .msg-bubble');
+      if(lastBubble){
+        const feedbackContainer=document.createElement('div');
+        lastBubble.appendChild(feedbackContainer);
+        window.MindNookFeedbackControls.renderFeedbackControls(feedbackContainer,{
+          supabaseClient:sb,
+          userId:session?.user?.id,
+          entryId:localStorage.getItem('mindnook_last_entry_id'),
+          action:currentLayers&&currentLayers.l5?currentLayers.l5.action:null,
+        });
+      }
+    }
   }catch(err){
     console.warn('AI call failed, using local response:',err);
     hideTyping();
@@ -529,11 +551,40 @@ function usePrompt(el){
 async function signOut(){await window.signOut();}
 window.signOut=signOut;
 
+async function checkWeightAdjustmentNotice(){
+  if(!session||!sb)return;
+  try{
+    const{data,error}=await sb.from('user_preferences').select('weights_last_adjusted_at,w_task,w_safety,lambda_privacy,lambda_autonomy,cfp_weight,cfn_weight').eq('user_id',session.user.id).maybeSingle();
+    if(error||!data||!data.weights_last_adjusted_at)return;
+    const lastSeen=localStorage.getItem('mindnook_last_seen_adjustment');
+    if(lastSeen===data.weights_last_adjusted_at)return;
+    localStorage.setItem('mindnook_last_seen_adjustment',data.weights_last_adjusted_at);
+    if(window.MindNookFeedbackControls){
+      const wrap=document.getElementById('messagesWrap');
+      window.MindNookFeedbackControls.renderAdjustmentNotice(wrap,{
+        onRevert:async()=>{
+          const res=await fetch(`${SUPABASE_URL}/functions/v1/preference-learning`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+            body:JSON.stringify({revert:true})
+          });
+          if(!res.ok)throw new Error('revert_failed');
+          localStorage.removeItem('mindnook_last_seen_adjustment');
+        }
+      });
+    }
+  }catch(e){console.warn('Could not check weight adjustment notice:',e);}
+}
+
 async function init(){
   const user=window.mnRequireUser();
   if(!user)return;
   session=window.__session;
+  if(window.MindNookBaseline){
+    consentScopes=await window.MindNookBaseline.loadConsentScopes(sb,user.id);
+  }
   await checkUnacknowledgedEscalation();
+  await checkWeightAdjustmentNotice();
   if(window.MindNookBaseline){
     await window.MindNookBaseline.syncGoalsFromSupabase(sb,user.id);
   }
