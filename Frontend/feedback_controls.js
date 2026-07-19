@@ -4,10 +4,10 @@ window.MindNookFeedbackControls = (function () {
     const wrap = document.createElement('div');
     wrap.className = 'mn-feedback-controls';
     wrap.innerHTML = `
-      <span class="mn-feedback-label">Was this response helpful?</span>
-      <button type="button" class="mn-feedback-btn mn-feedback-up" aria-label="Thumbs up" title="This felt right">👍</button>
-      <button type="button" class="mn-feedback-btn mn-feedback-down" aria-label="Thumbs down" title="This didn't feel right">👎</button>
-      <span class="mn-feedback-status"></span>`;
+      <span class="mn-feedback-label" id="mnFeedbackLabel">Was this response helpful?</span>
+      <button type="button" class="mn-feedback-btn mn-feedback-up" aria-label="Thumbs up, this felt right" aria-pressed="false" title="This felt right">👍</button>
+      <button type="button" class="mn-feedback-btn mn-feedback-down" aria-label="Thumbs down, this didn't feel right" aria-pressed="false" title="This didn't feel right">👎</button>
+      <span class="mn-feedback-status" role="status" aria-live="polite"></span>`;
     containerEl.appendChild(wrap);
 
     const upBtn = wrap.querySelector('.mn-feedback-up');
@@ -19,6 +19,7 @@ window.MindNookFeedbackControls = (function () {
       upBtn.disabled = true;
       downBtn.disabled = true;
       btn.classList.add('selected');
+      btn.setAttribute('aria-pressed', 'true');
       statusEl.textContent = 'Sending…';
       try {
         if (!ctx || !ctx.supabaseClient) throw new Error('no_client');
@@ -36,11 +37,17 @@ window.MindNookFeedbackControls = (function () {
         upBtn.disabled = false;
         downBtn.disabled = false;
         btn.classList.remove('selected');
+        btn.setAttribute('aria-pressed', 'false');
       }
     }
 
-    upBtn.addEventListener('click', () => submit('up', upBtn));
-    downBtn.addEventListener('click', () => submit('down', downBtn));
+    if (window.MindNookA11y) {
+      window.MindNookA11y.bindActivation(upBtn, () => submit('up', upBtn));
+      window.MindNookA11y.bindActivation(downBtn, () => submit('down', downBtn));
+    } else {
+      upBtn.addEventListener('click', () => submit('up', upBtn));
+      downBtn.addEventListener('click', () => submit('down', downBtn));
+    }
 
     return wrap;
   }
@@ -49,15 +56,24 @@ window.MindNookFeedbackControls = (function () {
     if (!containerEl) return null;
     const wrap = document.createElement('div');
     wrap.className = 'mn-adjustment-notice';
+    wrap.setAttribute('role', 'status');
+    wrap.setAttribute('aria-live', 'polite');
     wrap.innerHTML = `
       <span class="mn-adjustment-text">Your AI sensitivity has adjusted based on your feedback.</span>
       <button type="button" class="mn-adjustment-revert">Revert to defaults</button>
-      <button type="button" class="mn-adjustment-dismiss" aria-label="Dismiss">✕</button>`;
+      <button type="button" class="mn-adjustment-dismiss" aria-label="Dismiss this notice">✕</button>`;
     containerEl.prepend(wrap);
 
-    wrap.querySelector('.mn-adjustment-dismiss').addEventListener('click', () => wrap.remove());
-    wrap.querySelector('.mn-adjustment-revert').addEventListener('click', async () => {
-      const revertBtn = wrap.querySelector('.mn-adjustment-revert');
+    const dismissBtn = wrap.querySelector('.mn-adjustment-dismiss');
+    const revertBtn = wrap.querySelector('.mn-adjustment-revert');
+    const dismissActivate = () => wrap.remove();
+    if (window.MindNookA11y) {
+      window.MindNookA11y.bindActivation(dismissBtn, dismissActivate);
+    } else {
+      dismissBtn.addEventListener('click', dismissActivate);
+    }
+
+    revertBtn.addEventListener('click', async () => {
       revertBtn.disabled = true;
       revertBtn.textContent = 'Reverting…';
       try {

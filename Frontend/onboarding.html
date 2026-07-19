@@ -6,9 +6,14 @@
 <title>MindNook — Setup Your Space</title>
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="calibration_wizard.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="a11y_utils.js"></script>
+<script src="utility_decomposition.js"></script>
+<script src="personal_baseline.js"></script>
+<script src="calibration_wizard.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -217,12 +222,8 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
       </div>
       <div class="intervention-section">
         <div class="slider-label">AI Insight Sensitivity</div>
-        <div style="font-size:0.78rem;color:var(--text2);margin-bottom:12px;">How proactively should your AI companion respond to emotional patterns?</div>
-        <div class="intervention-pills">
-          <div class="pill-select selected" id="ip-minimal" onclick="selectIntervention(this,'minimal')">Minimal</div>
-          <div class="pill-select" id="ip-balanced" onclick="selectIntervention(this,'balanced')">Balanced</div>
-          <div class="pill-select" id="ip-proactive" onclick="selectIntervention(this,'proactive')">Proactive</div>
-        </div>
+        <div style="font-size:0.78rem;color:var(--text2);margin-bottom:12px;">How proactively should your AI companion respond to emotional patterns? Adjust the sliders below to see exactly how your settings would play out.</div>
+        <div id="calibrationWizardContainer"></div>
       </div>
     </div>
     <div class="step" id="step6">
@@ -275,13 +276,16 @@ const sb=window.__sb;
 
 let current=1;
 const total=7;
-let selectedIntervention='minimal';
+let calibrationWizard=null;
 
-const interventionWeights={
-  minimal:{cfp:0.6,cfn:0.4},
-  balanced:{cfp:0.4,cfn:0.6},
-  proactive:{cfp:0.25,cfn:0.75}
-};
+function initCalibrationWizard(){
+  const container=document.getElementById('calibrationWizardContainer');
+  if(!container||calibrationWizard)return;
+  calibrationWizard=window.MindNookCalibrationWizard.renderCalibrationWizard(container,{
+    initialCfp:0.6,
+    initialCfn:0.4
+  });
+}
 
 function updateUI(){
   const header=document.getElementById('cardHeader');
@@ -318,12 +322,6 @@ function togglePill(el,group){
 function toggleSwitch(el){el.classList.toggle('on');}
 function updateStress(v){document.getElementById('stressVal').textContent=v;}
 
-function selectIntervention(el,value){
-  document.querySelectorAll('.intervention-pills .pill-select').forEach(p=>p.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedIntervention=value;
-}
-
 async function enterMindNook(){
   const countryVal=document.getElementById('countrySelect')?.value||'';
   if(!countryVal){
@@ -348,14 +346,24 @@ async function enterMindNook(){
   const journalingFrequency=freqEl?freqEl.textContent.trim():'';
   const preferredTime=timeEl?timeEl.textContent.trim():'';
 
-  const weights=interventionWeights[selectedIntervention]||interventionWeights.balanced;
+  const wizardValues=calibrationWizard?calibrationWizard.getValues():{cfp:0.6,cfn:0.4};
+  const presetNames=Object.keys(window.MindNookCalibrationWizard.PRESETS);
+  const matchedPreset=presetNames.find(name=>{
+    const p=window.MindNookCalibrationWizard.PRESETS[name];
+    return Math.abs(p.cfp-wizardValues.cfp)<0.005&&Math.abs(p.cfn-wizardValues.cfn)<0.005;
+  });
+  const interventionPreference=matchedPreset||'custom';
 
   localStorage.setItem('mindnook_goals',JSON.stringify(selectedGoals));
   localStorage.setItem('mindnook_emotions',JSON.stringify(selectedEmotions));
   localStorage.setItem('mindnook_stress',String(stressVal));
-  localStorage.setItem('mindnook_cfp',String(weights.cfp));
-  localStorage.setItem('mindnook_cfn',String(weights.cfn));
+  localStorage.setItem('mindnook_cfp',String(wizardValues.cfp));
+  localStorage.setItem('mindnook_cfn',String(wizardValues.cfn));
   localStorage.setItem('mindnook_country',countryVal);
+  if(wizardValues.w_task!=null)localStorage.setItem('mindnook_w_task',String(wizardValues.w_task));
+  if(wizardValues.w_safety!=null)localStorage.setItem('mindnook_w_safety',String(wizardValues.w_safety));
+  if(wizardValues.lambda_privacy!=null)localStorage.setItem('mindnook_lambda_privacy',String(wizardValues.lambda_privacy));
+  if(wizardValues.lambda_autonomy!=null)localStorage.setItem('mindnook_lambda_autonomy',String(wizardValues.lambda_autonomy));
 
   try{
     await sb.from('user_preferences').upsert({
@@ -365,9 +373,13 @@ async function enterMindNook(){
       stress_level:stressVal,
       journaling_frequency:journalingFrequency,
       preferred_time:preferredTime,
-      cfp_weight:weights.cfp,
-      cfn_weight:weights.cfn,
-      intervention_preference:selectedIntervention,
+      cfp_weight:wizardValues.cfp,
+      cfn_weight:wizardValues.cfn,
+      w_task:wizardValues.w_task,
+      w_safety:wizardValues.w_safety,
+      lambda_privacy:wizardValues.lambda_privacy,
+      lambda_autonomy:wizardValues.lambda_autonomy,
+      intervention_preference:interventionPreference,
       country:countryVal
     },{onConflict:'user_id'});
   }catch(e){
@@ -403,6 +415,7 @@ async function enterMindNook(){
 
 window.addEventListener('load',()=>{
   updateUI();
+  initCalibrationWizard();
   setTimeout(()=>document.getElementById('step1').classList.add('visible'),100);
 });
 

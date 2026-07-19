@@ -1,0 +1,19 @@
+{
+  "pragmatic": {
+    "category": "expression",
+    "confidence": 0.85,
+    "markers": ["exclamatory tone", "no question marks", "conclusion-oriented"],
+    "is_help_seeking": false,
+    "tone_type": "cathartic",
+    "dominant": "expression",
+    "distribution": { "assertion": 0, "expression": 100, "helpSeeking": 0, "question": 0 }
+  },
+  "goal": {
+    "inferred_goal": "processing difficult emotions",
+    "goal_confidence": 0.75,
+    "goal_type": "explicit",
+    "alignment": "aligned",
+    "alignment_score": 0.7,
+    "goal_context": "The entry reflects on feelings without asking for help."
+  }
+}

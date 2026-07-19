@@ -1,3 +1,4 @@
+if (typeof window === 'undefined') { global.window = global; }
 window.MindNookBaseline = (function () {
   const DEFAULT_CONSENT_SCOPES = {
     sentiment: true,
@@ -588,3 +589,4 @@ ${trendRule}
     syncGoalsFromSupabase,
   };
 })();
+if (typeof module !== 'undefined' && module.exports) { module.exports = window.MindNookBaseline; }

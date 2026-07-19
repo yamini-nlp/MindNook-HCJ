@@ -30,29 +30,33 @@ window.MindNookExplanation = (function () {
 
     const wrap = document.createElement('div');
     wrap.className = 'mn-explain-panel';
+    wrap.setAttribute('aria-live', 'polite');
     wrap.innerHTML = `
-      <button type="button" class="mn-explain-toggle" data-target="${panelId}">Why am I seeing this? <span class="mn-explain-chevron">▾</span></button>
-      <div class="mn-explain-body" id="${panelId}" hidden>
+      <button type="button" class="mn-explain-toggle" data-target="${panelId}" aria-expanded="false" aria-controls="${panelId}">Why am I seeing this? <span class="mn-explain-chevron" aria-hidden="true">▾</span></button>
+      <div class="mn-explain-body" id="${panelId}" hidden role="region" aria-label="Explanation details">
         <p class="mn-explain-text">${explanation}</p>
         <table class="mn-explain-table">
+          <caption class="mn-sr-only">Analysis breakdown for this entry</caption>
+          <thead class="mn-sr-only"><tr><th scope="col">Factor</th><th scope="col">Value</th></tr></thead>
           <tbody>
-            ${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}
+            ${rows.map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td></tr>`).join('')}
           </tbody>
         </table>
-        <button type="button" class="mn-explain-flag">This doesn't seem right</button>
-        <form class="mn-explain-form" hidden>
-          <label>Which part seems off?</label>
-          <select class="mn-explain-layer-select">
+        <button type="button" class="mn-explain-flag" aria-expanded="false" aria-controls="${panelId}-form">This doesn't seem right</button>
+        <form class="mn-explain-form" id="${panelId}-form" hidden aria-label="Report an inaccurate analysis">
+          <label for="${panelId}-select">Which part seems off?</label>
+          <select class="mn-explain-layer-select" id="${panelId}-select">
             <option value="sentiment">Sentiment</option>
             <option value="pragmatic">Communication style</option>
             <option value="trend">Trend</option>
             <option value="goal">Goal alignment</option>
             <option value="action">Chosen response</option>
           </select>
-          <textarea class="mn-explain-comment" placeholder="Optional details" rows="2"></textarea>
+          <label for="${panelId}-comment">Optional details</label>
+          <textarea class="mn-explain-comment" id="${panelId}-comment" placeholder="Optional details" rows="2"></textarea>
           <div class="mn-explain-form-actions">
             <button type="submit" class="mn-explain-submit">Send feedback</button>
-            <span class="mn-explain-status"></span>
+            <span class="mn-explain-status" role="status" aria-live="polite"></span>
           </div>
         </form>
       </div>`;
@@ -60,17 +64,40 @@ window.MindNookExplanation = (function () {
 
     const toggleBtn = wrap.querySelector('.mn-explain-toggle');
     const body = wrap.querySelector('.mn-explain-body');
-    toggleBtn.addEventListener('click', () => {
+    const toggleOpen = () => {
       const isHidden = body.hasAttribute('hidden');
-      if (isHidden) { body.removeAttribute('hidden'); toggleBtn.classList.add('open'); }
-      else { body.setAttribute('hidden', ''); toggleBtn.classList.remove('open'); }
-    });
+      if (isHidden) {
+        body.removeAttribute('hidden');
+        toggleBtn.classList.add('open');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+        if (window.MindNookA11y) window.MindNookA11y.announce('Explanation expanded.', 'polite');
+      } else {
+        body.setAttribute('hidden', '');
+        toggleBtn.classList.remove('open');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    };
+    if (window.MindNookA11y) {
+      window.MindNookA11y.bindActivation(toggleBtn, toggleOpen);
+    } else {
+      toggleBtn.addEventListener('click', toggleOpen);
+    }
 
     const flagBtn = wrap.querySelector('.mn-explain-flag');
     const form = wrap.querySelector('.mn-explain-form');
-    flagBtn.addEventListener('click', () => {
+    const toggleFlag = () => {
       form.hidden = !form.hidden;
-    });
+      flagBtn.setAttribute('aria-expanded', form.hidden ? 'false' : 'true');
+      if (!form.hidden) {
+        const select = form.querySelector('select');
+        if (select) select.focus();
+      }
+    };
+    if (window.MindNookA11y) {
+      window.MindNookA11y.bindActivation(flagBtn, toggleFlag);
+    } else {
+      flagBtn.addEventListener('click', toggleFlag);
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

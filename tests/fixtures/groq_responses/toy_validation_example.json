@@ -1,0 +1,19 @@
+{
+  "pragmatic": {
+    "category": "expression",
+    "confidence": 0.75,
+    "markers": ["reflective tone"],
+    "is_help_seeking": false,
+    "tone_type": "reflective",
+    "dominant": "expression",
+    "distribution": { "assertion": 10, "expression": 80, "helpSeeking": 0, "question": 10 }
+  },
+  "goal": {
+    "inferred_goal": "self-reflection on emotional state",
+    "goal_confidence": 0.85,
+    "goal_type": "explicit",
+    "alignment": "aligned",
+    "alignment_score": 0.8,
+    "goal_context": "The entry aligns with the user's stated emotional-awareness goal."
+  }
+}

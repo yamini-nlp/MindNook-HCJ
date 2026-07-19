@@ -1,0 +1,19 @@
+{
+  "pragmatic": {
+    "category": "expression",
+    "confidence": 0.8,
+    "markers": ["absolutist language", "exclamatory tone"],
+    "is_help_seeking": false,
+    "tone_type": "venting",
+    "dominant": "expression",
+    "distribution": { "assertion": 0, "expression": 100, "helpSeeking": 0, "question": 0 }
+  },
+  "goal": {
+    "inferred_goal": "venting about a minor inconvenience",
+    "goal_confidence": 0.7,
+    "goal_type": "implicit",
+    "alignment": "misaligned",
+    "alignment_score": 0,
+    "goal_context": "The entry uses strong language about a small daily frustration."
+  }
+}

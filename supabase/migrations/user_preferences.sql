@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage own prefs" ON user_preferences;
 CREATE POLICY "Users manage own prefs" ON user_preferences
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);

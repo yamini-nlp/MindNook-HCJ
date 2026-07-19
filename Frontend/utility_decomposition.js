@@ -1,3 +1,4 @@
+if (typeof window === 'undefined') { global.window = global; }
 window.MindNookUtility = (function () {
   const ACTIONS = ['affirm', 'encourage', 'reflect', 'support', 'intervene'];
 
@@ -80,3 +81,4 @@ window.MindNookUtility = (function () {
     computeDecomposedUtility,
   };
 })();
+if (typeof module !== 'undefined' && module.exports) { module.exports = window.MindNookUtility; }

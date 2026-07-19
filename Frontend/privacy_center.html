@@ -9,7 +9,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="a11y_utils.js"></script>
+<script src="utility_decomposition.js"></script>
 <script src="personal_baseline.js"></script>
+<script src="calibration_wizard.js"></script>
+<link rel="stylesheet" href="calibration_wizard.css">
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -67,6 +71,11 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .delete-confirm input{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:0.88rem;margin-bottom:14px;}
 .delete-actions{display:flex;gap:12px;}
 .export-summary{font-size:0.78rem;color:var(--text3);margin-top:10px;}
+.mn-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.nav-link:focus-visible,.nav-icon:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.toggle-switch:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+.pbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.delete-confirm input:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 </style>
 </head>
 <body>
@@ -94,27 +103,43 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
     <p class="pcard-sub">Turning a scope off fully stops that computation going forward — Nook AI and your dashboard will no longer generate or reference it. This does not retroactively delete anything already stored; use data deletion below for that.</p>
     <div class="toggle-list" id="scopeList">
       <div class="toggle-row">
-        <div><div class="toggle-label">Sentiment analysis</div><div class="toggle-desc">Positive / negative / neutral tone detection on your entries.</div></div>
-        <div class="toggle-switch on" id="scope-sentiment" onclick="toggleScope(this,'sentiment')"><div class="toggle-knob"></div></div>
+        <div><div class="toggle-label" id="label-sentiment">Sentiment analysis</div><div class="toggle-desc">Positive / negative / neutral tone detection on your entries.</div></div>
+        <div class="toggle-switch on" id="scope-sentiment" role="switch" aria-checked="true" aria-labelledby="label-sentiment" tabindex="0">
+          <div class="toggle-knob"></div>
+        </div>
       </div>
       <div class="toggle-row">
-        <div><div class="toggle-label">Pragmatic analysis</div><div class="toggle-desc">Detecting whether you're asking, asserting, expressing, or seeking help.</div></div>
-        <div class="toggle-switch on" id="scope-pragmatic" onclick="toggleScope(this,'pragmatic')"><div class="toggle-knob"></div></div>
+        <div><div class="toggle-label" id="label-pragmatic">Pragmatic analysis</div><div class="toggle-desc">Detecting whether you're asking, asserting, expressing, or seeking help.</div></div>
+        <div class="toggle-switch on" id="scope-pragmatic" role="switch" aria-checked="true" aria-labelledby="label-pragmatic" tabindex="0">
+          <div class="toggle-knob"></div>
+        </div>
       </div>
       <div class="toggle-row">
-        <div><div class="toggle-label">Temporal trend tracking</div><div class="toggle-desc">Longitudinal mood trend analysis across your entry history.</div></div>
-        <div class="toggle-switch on" id="scope-temporal" onclick="toggleScope(this,'temporal')"><div class="toggle-knob"></div></div>
+        <div><div class="toggle-label" id="label-temporal">Temporal trend tracking</div><div class="toggle-desc">Longitudinal mood trend analysis across your entry history.</div></div>
+        <div class="toggle-switch on" id="scope-temporal" role="switch" aria-checked="true" aria-labelledby="label-temporal" tabindex="0">
+          <div class="toggle-knob"></div>
+        </div>
       </div>
       <div class="toggle-row">
-        <div><div class="toggle-label">Goal inference</div><div class="toggle-desc">Alignment scoring between entries and your stated goals.</div></div>
-        <div class="toggle-switch on" id="scope-goal_inference" onclick="toggleScope(this,'goal_inference')"><div class="toggle-knob"></div></div>
+        <div><div class="toggle-label" id="label-goal_inference">Goal inference</div><div class="toggle-desc">Alignment scoring between entries and your stated goals.</div></div>
+        <div class="toggle-switch on" id="scope-goal_inference" role="switch" aria-checked="true" aria-labelledby="label-goal_inference" tabindex="0">
+          <div class="toggle-knob"></div>
+        </div>
       </div>
       <div class="toggle-row">
-        <div><div class="toggle-label">Nook AI full history access</div><div class="toggle-desc">When off, Nook AI chat only sees the current conversation, not your journal history.</div></div>
-        <div class="toggle-switch on" id="scope-ai_full_history" onclick="toggleScope(this,'ai_full_history')"><div class="toggle-knob"></div></div>
+        <div><div class="toggle-label" id="label-ai_full_history">Nook AI full history access</div><div class="toggle-desc">When off, Nook AI chat only sees the current conversation, not your journal history.</div></div>
+        <div class="toggle-switch on" id="scope-ai_full_history" role="switch" aria-checked="true" aria-labelledby="label-ai_full_history" tabindex="0">
+          <div class="toggle-knob"></div>
+        </div>
       </div>
     </div>
-    <div class="status-line" id="scopeStatus"></div>
+    <div class="status-line" id="scopeStatus" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="pcard">
+    <h2>AI response calibration</h2>
+    <p class="pcard-sub">Adjust how proactively MindNook responds to emotional patterns. Changes here apply to future entries only.</p>
+    <div id="calibrationWizardContainer"></div>
   </div>
 
   <div class="pcard">
@@ -157,6 +182,7 @@ async function loadScopes(){
     const el=document.getElementById('scope-'+key);
     if(!el)return;
     el.classList.toggle('on',!!scopes[key]);
+    el.setAttribute('aria-checked',!!scopes[key]?'true':'false');
   });
 }
 
@@ -172,12 +198,77 @@ async function toggleScope(el,key){
     scopes={...scopes,[key]:nextValue};
     window.MindNookConsentScopes=scopes;
     el.classList.toggle('on',nextValue);
+    el.setAttribute('aria-checked',nextValue?'true':'false');
     setStatus(statusEl,'Saved.','success');
   }catch(e){
     setStatus(statusEl,'Could not save — please try again.','error');
   }finally{
     el.classList.remove('saving');
   }
+}
+
+function bindToggleSwitches(){
+  document.querySelectorAll('#scopeList .toggle-switch').forEach(el=>{
+    const key=el.id.replace('scope-','');
+    const activate=()=>toggleScope(el,key);
+    if(window.MindNookA11y){
+      window.MindNookA11y.bindActivation(el,activate);
+    }else{
+      el.addEventListener('click',activate);
+    }
+  });
+}
+
+let calibrationWizard=null;
+
+async function loadCalibrationWizard(){
+  const container=document.getElementById('calibrationWizardContainer');
+  if(!container||!session)return;
+  let prefs=null;
+  try{
+    const{data,error}=await sb.from('user_preferences')
+      .select('cfp_weight,cfn_weight,w_task,w_safety,lambda_privacy,lambda_autonomy')
+      .eq('user_id',session.user.id)
+      .maybeSingle();
+    if(!error)prefs=data;
+  }catch(e){
+    console.warn('Could not load calibration preferences:',e);
+  }
+  calibrationWizard=window.MindNookCalibrationWizard.renderCalibrationWizard(container,{
+    initialCfp:prefs?.cfp_weight,
+    initialCfn:prefs?.cfn_weight,
+    initialWeights:{
+      w_task:prefs?.w_task,
+      w_safety:prefs?.w_safety,
+      lambda_privacy:prefs?.lambda_privacy,
+      lambda_autonomy:prefs?.lambda_autonomy,
+    },
+    showSaveButton:true,
+    onSave:async(values)=>{
+      const presetNames=Object.keys(window.MindNookCalibrationWizard.PRESETS);
+      const matchedPreset=presetNames.find(name=>{
+        const p=window.MindNookCalibrationWizard.PRESETS[name];
+        return Math.abs(p.cfp-values.cfp)<0.005&&Math.abs(p.cfn-values.cfn)<0.005;
+      });
+      const{error}=await sb.from('user_preferences').upsert({
+        user_id:session.user.id,
+        cfp_weight:values.cfp,
+        cfn_weight:values.cfn,
+        w_task:values.w_task,
+        w_safety:values.w_safety,
+        lambda_privacy:values.lambda_privacy,
+        lambda_autonomy:values.lambda_autonomy,
+        intervention_preference:matchedPreset||'custom',
+      },{onConflict:'user_id'});
+      if(error)throw error;
+      localStorage.setItem('mindnook_cfp',String(values.cfp));
+      localStorage.setItem('mindnook_cfn',String(values.cfn));
+      if(values.w_task!=null)localStorage.setItem('mindnook_w_task',String(values.w_task));
+      if(values.w_safety!=null)localStorage.setItem('mindnook_w_safety',String(values.w_safety));
+      if(values.lambda_privacy!=null)localStorage.setItem('mindnook_lambda_privacy',String(values.lambda_privacy));
+      if(values.lambda_autonomy!=null)localStorage.setItem('mindnook_lambda_autonomy',String(values.lambda_autonomy));
+    }
+  });
 }
 
 async function exportData(){
@@ -250,7 +341,9 @@ async function init(){
   const user=window.mnRequireUser();
   if(!user)return;
   session=window.__session;
+  bindToggleSwitches();
   await loadScopes();
+  await loadCalibrationWizard();
 }
 
 if(window.__authReady){init();}

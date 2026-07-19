@@ -1,0 +1,19 @@
+{
+  "pragmatic": {
+    "category": "help_seeking",
+    "confidence": 0.9,
+    "markers": ["direct request", "urgency markers"],
+    "is_help_seeking": true,
+    "tone_type": "distressed",
+    "dominant": "help-seeking",
+    "distribution": { "assertion": 0, "expression": 0, "helpSeeking": 100, "question": 0 }
+  },
+  "goal": {
+    "inferred_goal": "seeking immediate support",
+    "goal_confidence": 0.8,
+    "goal_type": "explicit",
+    "alignment": "aligned",
+    "alignment_score": 0.6,
+    "goal_context": "The entry directly asks for help."
+  }
+}

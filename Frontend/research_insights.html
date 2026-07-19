@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="a11y_utils.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
@@ -64,6 +65,10 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .status-line{font-size:0.78rem;color:var(--text3);margin-top:14px;min-height:1.2em;}
 .status-line.error{color:var(--rose);}
 .empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:0.85rem;}
+.mn-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.nav-link:focus-visible,.nav-icon:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.preset-btn:focus-visible,.pbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.control-group input[type="date"]:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 </style>
 </head>
 <body>
@@ -98,12 +103,12 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
       <input type="date" id="toDate">
     </div>
     <div class="control-group">
-      <label>&nbsp;</label>
-      <div class="preset-row">
-        <button class="preset-btn" data-days="7">7D</button>
-        <button class="preset-btn active" data-days="30">30D</button>
-        <button class="preset-btn" data-days="90">90D</button>
-        <button class="preset-btn" data-days="3650">All</button>
+      <label id="presetGroupLabel">&nbsp;</label>
+      <div class="preset-row" role="group" aria-label="Date range presets">
+        <button class="preset-btn" data-days="7" aria-pressed="false">7D</button>
+        <button class="preset-btn active" data-days="30" aria-pressed="true">30D</button>
+        <button class="preset-btn" data-days="90" aria-pressed="false">90D</button>
+        <button class="preset-btn" data-days="3650" aria-pressed="false">All</button>
       </div>
     </div>
     <div class="control-group">
@@ -116,40 +121,45 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
     </div>
   </div>
 
-  <div id="statusLine" class="status-line"></div>
+  <div id="statusLine" class="status-line" role="status" aria-live="polite"></div>
 
   <div id="resultsWrap" style="display:none;">
-    <div class="metric-grid">
+    <div class="metric-grid" aria-live="polite">
       <div class="metric-card">
-        <div class="metric-label">False Intervention Rate</div>
-        <div class="metric-value" id="metricFalseIntervention">—</div>
+        <div class="metric-label" id="labelFalseIntervention">False Intervention Rate</div>
+        <div class="metric-value" id="metricFalseIntervention" aria-labelledby="labelFalseIntervention">—</div>
         <div class="metric-sub">Thumbs-down rate on intervene / support actions</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Missed-Support Rate</div>
-        <div class="metric-value" id="metricMissedSupport">—</div>
+        <div class="metric-label" id="labelMissedSupport">Missed-Support Rate</div>
+        <div class="metric-value" id="metricMissedSupport" aria-labelledby="labelMissedSupport">—</div>
         <div class="metric-sub">Action corrections on non-intervene entries followed by an acute flag within 48h</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Perceived Appropriateness</div>
-        <div class="metric-value" id="metricAppropriateness">—</div>
+        <div class="metric-label" id="labelAppropriateness">Perceived Appropriateness</div>
+        <div class="metric-value" id="metricAppropriateness" aria-labelledby="labelAppropriateness">—</div>
         <div class="metric-sub">Thumbs-up rate across all actions</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Autonomy Preservation Proxy</div>
-        <div class="metric-value" id="metricAutonomy">—</div>
+        <div class="metric-label" id="labelAutonomy">Autonomy Preservation Proxy</div>
+        <div class="metric-value" id="metricAutonomy" aria-labelledby="labelAutonomy">—</div>
         <div class="metric-sub">Share of intervene-eligible entries downgraded by the context-collapse guard or ethical filter</div>
       </div>
     </div>
 
     <div class="pcard">
-      <h2>Action distribution</h2>
+      <h2 id="actionDistHeading">Action distribution</h2>
       <p class="pcard-sub">Count of affirm / encourage / reflect / support / intervene actions across entries in this range.</p>
-      <div class="chart-wrap"><canvas id="actionChart"></canvas></div>
+      <div class="chart-wrap"><canvas id="actionChart" role="img" aria-labelledby="actionDistHeading" aria-describedby="actionChartSummary"></canvas></div>
+      <table class="mn-sr-only" id="actionChartTable" aria-label="Action distribution data table">
+        <thead><tr><th scope="col">Action</th><th scope="col">Count</th></tr></thead>
+        <tbody id="actionChartTableBody"></tbody>
+      </table>
+      <p class="mn-sr-only" id="actionChartSummary"></p>
     </div>
   </div>
 
-  <div id="emptyState" class="empty-state" style="display:none;">Not enough data yet for this date range — write a few more entries and give some feedback to see your metrics here.</div>
+  <div id="emptyState" class="empty-state" role="status" style="display:none;">Not enough data yet for this date range — write a few more entries and give some feedback to see your metrics here.</div>
 </div>
 <script>
 const SUPABASE_URL=window._env.SUPABASE_URL;
@@ -201,6 +211,13 @@ function renderActionChart(distribution){
       }
     }
   });
+  const tbody=document.getElementById('actionChartTableBody');
+  tbody.innerHTML=labels.map((label,i)=>`<tr><th scope="row">${label}</th><td>${data[i]}</td></tr>`).join('');
+  const total=data.reduce((a,b)=>a+b,0);
+  const summaryParts=labels.map((label,i)=>`${label}: ${data[i]}`);
+  document.getElementById('actionChartSummary').textContent=total
+    ?`Action distribution, ${total} total entries. ${summaryParts.join(', ')}.`
+    :'No action distribution data for this range.';
 }
 
 function setPreset(days){
@@ -208,7 +225,11 @@ function setPreset(days){
   const from=new Date(to.getTime()-days*24*60*60*1000);
   document.getElementById('toDate').value=to.toISOString().slice(0,10);
   document.getElementById('fromDate').value=from.toISOString().slice(0,10);
-  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.days===String(days)));
+  document.querySelectorAll('.preset-btn').forEach(b=>{
+    const isActive=b.dataset.days===String(days);
+    b.classList.toggle('active',isActive);
+    b.setAttribute('aria-pressed',isActive?'true':'false');
+  });
 }
 
 document.querySelectorAll('.preset-btn').forEach(btn=>{

@@ -1,3 +1,4 @@
+if (typeof window === 'undefined') { global.window = global; }
 window.MindNookGoalClarification = (function () {
   let activePromptGoalId = null;
   const queue = [];
@@ -18,12 +19,17 @@ window.MindNookGoalClarification = (function () {
 .mn-clarify-actions{display:flex;flex-direction:column;gap:10px;}
 .mn-clarify-btn{width:100%;padding:11px 16px;border-radius:50px;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;border:1px solid var(--border2,rgba(217,197,178,0.22));background:transparent;color:var(--text,#f0ece2);}
 .mn-clarify-btn:hover{border-color:var(--gold,#d9c5b2);}
+.mn-clarify-btn:focus-visible{outline:2px solid var(--gold,#d9c5b2);outline-offset:2px;}
 .mn-clarify-btn.mn-clarify-yes{background:var(--gold,#d9c5b2);color:var(--bg3,#0d1a18);border-color:var(--gold,#d9c5b2);font-weight:600;}
 .mn-clarify-btn.mn-clarify-yes:hover{background:var(--gold3,#e8d8c8);}
 .mn-clarify-btn:disabled{opacity:0.5;cursor:not-allowed;}
 .mn-clarify-custom-row{display:flex;gap:8px;margin-top:4px;}
 .mn-clarify-custom-input{flex:1;background:var(--bg2,#152422);border:1px solid var(--border2,rgba(217,197,178,0.22));color:var(--text,#f0ece2);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:0.82rem;}
+.mn-clarify-custom-input:focus-visible{outline:2px solid var(--gold,#d9c5b2);outline-offset:2px;}
 .mn-clarify-status{font-size:0.75rem;color:var(--text3,rgba(240,236,226,0.38));margin-top:10px;min-height:16px;}
+.mn-clarify-close{position:absolute;top:14px;right:16px;background:transparent;border:none;color:var(--text3,rgba(240,236,226,0.38));font-size:0.9rem;cursor:pointer;padding:4px;}
+.mn-clarify-close:hover{color:var(--text,#f0ece2);}
+.mn-clarify-close:focus-visible{outline:2px solid var(--gold,#d9c5b2);outline-offset:2px;}
 `;
     document.head.appendChild(style);
   }
@@ -54,20 +60,24 @@ window.MindNookGoalClarification = (function () {
     injectStyles();
     const overlay = document.createElement('div');
     overlay.className = 'mn-clarify-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'mnClarifyQuestion');
     overlay.innerHTML = `
-      <div class="mn-clarify-card">
+      <div class="mn-clarify-card" aria-live="polite">
+        <button type="button" class="mn-clarify-close" aria-label="Dismiss this check-in">✕</button>
         <div class="mn-clarify-eyebrow">Quick check-in</div>
-        <div class="mn-clarify-question">Are you currently focused on: <span class="mn-clarify-goal-text"></span>?</div>
+        <div class="mn-clarify-question" id="mnClarifyQuestion">Are you currently focused on: <span class="mn-clarify-goal-text"></span>?</div>
         <div class="mn-clarify-actions">
           <button type="button" class="mn-clarify-btn mn-clarify-yes" data-answer="yes">Yes</button>
           <button type="button" class="mn-clarify-btn" data-answer="not_quite">Not quite</button>
           <button type="button" class="mn-clarify-btn" data-answer="custom">Let me set my own</button>
         </div>
         <div class="mn-clarify-custom-row" hidden>
-          <input type="text" class="mn-clarify-custom-input" placeholder="What are you focused on?" maxlength="200">
+          <input type="text" class="mn-clarify-custom-input" placeholder="What are you focused on?" maxlength="200" aria-label="What are you focused on?">
           <button type="button" class="mn-clarify-btn mn-clarify-yes mn-clarify-custom-submit">Save</button>
         </div>
-        <div class="mn-clarify-status"></div>
+        <div class="mn-clarify-status" role="status" aria-live="polite"></div>
       </div>`;
     overlay.querySelector('.mn-clarify-goal-text').textContent = lowConfidenceGoal.text;
     document.body.appendChild(overlay);
@@ -78,12 +88,34 @@ window.MindNookGoalClarification = (function () {
     const customRow = overlay.querySelector('.mn-clarify-custom-row');
     const customInput = overlay.querySelector('.mn-clarify-custom-input');
     const customSubmit = overlay.querySelector('.mn-clarify-custom-submit');
+    const closeBtn = overlay.querySelector('.mn-clarify-close');
+
+    let releaseFocus = null;
+    if (window.MindNookA11y) {
+      releaseFocus = window.MindNookA11y.trapFocus(overlay.querySelector('.mn-clarify-card'), {
+        allowEscape: true,
+        onEscape: () => dismiss(),
+      });
+      window.MindNookA11y.announce(`Quick check-in: are you currently focused on ${lowConfidenceGoal.text}?`, 'polite');
+    }
 
     function finish(outcome) {
       activePromptGoalId = null;
+      if (typeof releaseFocus === 'function') releaseFocus();
       closeOverlay(overlay);
       resolve(outcome);
       showNext();
+    }
+
+    function dismiss() {
+      finish({ answer: null, ok: false, dismissed: true });
+    }
+
+    const dismissActivate = () => dismiss();
+    if (window.MindNookA11y) {
+      window.MindNookA11y.bindActivation(closeBtn, dismissActivate);
+    } else {
+      closeBtn.addEventListener('click', dismissActivate);
     }
 
     buttons.forEach(btn => {
@@ -137,3 +169,4 @@ window.MindNookGoalClarification = (function () {
 
   return { renderClarificationPrompt };
 })();
+if (typeof module !== 'undefined' && module.exports) { module.exports = window.MindNookGoalClarification; }

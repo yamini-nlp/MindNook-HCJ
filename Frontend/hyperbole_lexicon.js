@@ -1,3 +1,4 @@
+if (typeof window === 'undefined') { global.window = global; }
 window.MindNookHyperbole = (function () {
   const SUPERLATIVE_MARKERS = [
     'worst', 'best', 'always', 'never', 'completely', 'totally', 'literally',
@@ -65,3 +66,4 @@ window.MindNookHyperbole = (function () {
     scoreHyperbole
   };
 })();
+if (typeof module !== 'undefined' && module.exports) { module.exports = window.MindNookHyperbole; }
