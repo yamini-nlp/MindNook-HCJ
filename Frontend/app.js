@@ -33,22 +33,7 @@ if (toggleBtn) {
   });
 }
 
-async function analyzeJournalEntry(journalText) {
-  const url = 'https://dowtaqgkcbppyjxknaqx.supabase.co/functions/v1/analyze-journal';
-  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvd3RhcWdrY2JwcHlqeGtuYXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODcyMTMsImV4cCI6MjA4ODU2MzIxM30.1dlwW0ZoQEEKjweXpGUcVKyd_Rlap-gC2CcwkZXwEgk';
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${anonKey}` },
-      body: JSON.stringify({ text: journalText })
-    });
-    const result = await response.json();
-    console.log("AI Analysis:", result);
-    alert("Analysis received! Check the console.");
-  } catch (error) {
-    console.error("Error calling AI:", error);
-  }
-  window.MindNookHistory = (function () {
+window.MindNookHistory = (function () {
   function timeOfDayBucket(date) {
     const h = date.getHours();
     if (h >= 5 && h < 12) return 'morning';
@@ -122,4 +107,3 @@ async function analyzeJournalEntry(journalText) {
 
   return { getHistory: getHistory, buildEntryMetadata: buildEntryMetadata };
 })();
-}

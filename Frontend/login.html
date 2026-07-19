@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
+<script src="a11y_utils.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -135,6 +136,7 @@ body::after{
 }
 .checkbox-custom.checked{background:rgba(217,197,178,0.22);border-color:rgba(217,197,178,0.5);}
 .checkbox-custom.checked::after{content:'✓';font-size:10px;color:var(--gold);font-weight:700;}
+.checkbox-custom:focus-visible{outline:2px solid rgba(217,197,178,0.5);outline-offset:2px;}
 .terms-text{font-size:0.8rem;font-weight:400;color:var(--dim);line-height:1.7;}
 .terms-text a{color:var(--gold2);text-decoration:none;opacity:0.9;font-weight:500;transition:opacity 0.2s;}
 .terms-text a:hover{opacity:1;text-decoration:underline;}
@@ -281,7 +283,7 @@ body::after{
       <div class="field-error" id="signup-confirm-err">Passwords do not match.</div>
     </div>
     <div class="terms-row">
-      <div class="checkbox-custom" id="terms-check"></div>
+      <div class="checkbox-custom" id="terms-check" role="checkbox" aria-checked="false" tabindex="0" aria-label="I agree to the Terms of Service and Privacy Policy"></div>
       <div class="terms-text">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand my data is private and never sold.</div>
     </div>
     <button class="submit-btn" id="signup-btn">Create Account</button>
@@ -334,6 +336,15 @@ const sb = createClient(
 
 let googleAuthInProgress = false;
 
+function getSafeRedirectTarget() {
+  const params = new URLSearchParams(window.location.search);
+  const target = params.get('redirect');
+  if (!target) return null;
+  if (!/^\/?[a-zA-Z0-9_-]+\.html(\?[^\s]*)?$/.test(target)) return null;
+  if (target === 'login.html' || target === '/login.html') return null;
+  return target;
+}
+
 async function redirectAfterAuth(session) {
   try {
     const { data: prefs } = await sb
@@ -341,7 +352,12 @@ async function redirectAfterAuth(session) {
       .select('user_id')
       .eq('user_id', session.user.id)
       .maybeSingle();
-    window.location.href = prefs ? 'dashboard.html' : 'onboarding.html';
+    if (!prefs) {
+      window.location.href = 'onboarding.html';
+      return;
+    }
+    const redirectTarget = getSafeRedirectTarget();
+    window.location.href = redirectTarget || 'dashboard.html';
   } catch (e) {
     window.location.href = 'onboarding.html';
   }
@@ -458,10 +474,20 @@ document.getElementById('signup-confirm').addEventListener('input', function() {
 });
 
 let termsAccepted = false;
-document.getElementById('terms-check').addEventListener('click', function() {
+const termsCheckEl = document.getElementById('terms-check');
+function toggleTerms() {
   termsAccepted = !termsAccepted;
-  this.className = 'checkbox-custom' + (termsAccepted ? ' checked' : '');
-});
+  termsCheckEl.className = 'checkbox-custom' + (termsAccepted ? ' checked' : '');
+  termsCheckEl.setAttribute('aria-checked', termsAccepted ? 'true' : 'false');
+}
+if (window.MindNookA11y) {
+  window.MindNookA11y.bindActivation(termsCheckEl, toggleTerms);
+} else {
+  termsCheckEl.addEventListener('click', toggleTerms);
+  termsCheckEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTerms(); }
+  });
+}
 
 function setupPasswordToggle(inputId, btnId) {
   document.getElementById(btnId).addEventListener('click', function() {

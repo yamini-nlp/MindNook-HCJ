@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
+<script src="a11y_utils.js"></script>
 <script src="hyperbole_lexicon.js"></script>
 <script src="baseline_constants.js"></script>
 <script src="personal_baseline.js"></script>
@@ -165,8 +166,17 @@ canvas.mini-chart{width:100%;height:100%;}
 .sb-attr{font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:300;letter-spacing:0.5px;color:var(--text3);}
 .sc-loading{font-family:'DM Sans',sans-serif;color:var(--text3);animation:blink 1.5s infinite;font-size:0.75rem;font-weight:300;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+.nav-toggle{display:none;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;border:1px solid var(--border);background:rgba(255,255,255,0.02);cursor:pointer;color:var(--text3);flex-direction:column;gap:4px;}
+.nav-toggle:hover{border-color:var(--border2);color:var(--text2);}
+.nav-toggle-bar{width:16px;height:1.5px;background:currentColor;border-radius:1px;transition:transform 0.22s,opacity 0.22s;}
+.nav-toggle.open .nav-toggle-bar:nth-child(1){transform:translateY(5.5px) rotate(45deg);}
+.nav-toggle.open .nav-toggle-bar:nth-child(2){opacity:0;}
+.nav-toggle.open .nav-toggle-bar:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);}
+.mobile-nav-panel{display:none;position:fixed;top:68px;left:0;right:0;z-index:199;background:rgba(11,22,20,0.97);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);padding:10px 22px 18px;flex-direction:column;gap:2px;}
+.mobile-nav-panel.open{display:flex;}
+.mobile-nav-panel .nav-link{width:100%;padding:12px 16px;border-radius:12px;}
 @media(max-width:1200px){.sidebar{display:none;}.stats-row{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:900px){.main{padding:0 22px 64px;}nav{padding:0 22px;}.hero{grid-template-columns:1fr;gap:26px;}.streak-card{display:none;}.analytics-grid{grid-template-columns:1fr;}.ai-cards{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}.nav-links{display:none;}}
+@media(max-width:900px){.main{padding:0 22px 64px;}nav{padding:0 22px;}.hero{grid-template-columns:1fr;gap:26px;}.streak-card{display:none;}.analytics-grid{grid-template-columns:1fr;}.ai-cards{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}.nav-links{display:none;}.nav-toggle{display:flex;}}
 @media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
@@ -179,15 +189,20 @@ canvas.mini-chart{width:100%;height:100%;}
     <a class="nav-link" href="canvas.html">Journal</a>
     <a class="nav-link" href="history.html">History</a>
     <a class="nav-link" href="vocab.html">Insights</a>
+    <a class="nav-link" href="analysis.html">Analysis</a>
     <a class="nav-link" href="research_insights.html">Research</a>
     <a class="nav-link" href="nook-ai.html">Nook AI</a>
     <a class="nav-link" href="privacy_center.html">Privacy</a>
   </div>
   <div class="nav-right">
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavPanel">
+      <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
+    </button>
     <div class="nav-icon" title="Sign out" onclick="signOut()">OUT</div>
     <div class="nav-avatar" id="navAvatar">?</div>
   </div>
 </nav>
+<div class="mobile-nav-panel" id="mobileNavPanel" role="menu" aria-label="Mobile navigation"></div>
 <div class="page">
 <div class="main">
   <section class="hero">
@@ -273,7 +288,7 @@ canvas.mini-chart{width:100%;height:100%;}
     </div>
     <div class="section-header">
       <div class="section-title">AI Insights</div>
-      <a class="section-link" href="reflect.html">Open Reflect AI →</a>
+      <a class="section-link" href="nook-ai.html">Open Nook AI →</a>
     </div>
     <div class="ai-cards" id="aiCards">
       <div class="ai-card" style="grid-column:1/-1;padding:32px;text-align:center;"><div class="sc-loading">Generating personalized insights…</div></div>
@@ -648,6 +663,48 @@ async function initDashboard(){
 }
 if(window.__authReady){initDashboard();}
 window.addEventListener('auth-ready',initDashboard);
+
+(function(){
+  const toggle=document.getElementById('navToggle');
+  const panel=document.getElementById('mobileNavPanel');
+  if(!toggle||!panel)return;
+  const sourceLinks=document.querySelectorAll('.nav-links > a, .nav-links > button');
+  sourceLinks.forEach(link=>{
+    const clone=link.cloneNode(true);
+    clone.setAttribute('role','menuitem');
+    panel.appendChild(clone);
+  });
+  let releaseFocus=null;
+  function closeMenu(){
+    panel.classList.remove('open');
+    toggle.classList.remove('open');
+    toggle.setAttribute('aria-expanded','false');
+    if(releaseFocus){releaseFocus();releaseFocus=null;}
+  }
+  function openMenu(){
+    panel.classList.add('open');
+    toggle.classList.add('open');
+    toggle.setAttribute('aria-expanded','true');
+    if(window.MindNookA11y){
+      releaseFocus=window.MindNookA11y.trapFocus(panel,{onEscape:closeMenu});
+    }
+  }
+  function toggleMenu(){
+    if(panel.classList.contains('open'))closeMenu();else openMenu();
+  }
+  if(window.MindNookA11y){
+    window.MindNookA11y.bindActivation(toggle,toggleMenu);
+  }else{
+    toggle.addEventListener('click',toggleMenu);
+  }
+  panel.addEventListener('click',e=>{
+    if(e.target.closest('a'))closeMenu();
+  });
+  document.addEventListener('click',e=>{
+    if(!panel.classList.contains('open'))return;
+    if(!panel.contains(e.target)&&!toggle.contains(e.target))closeMenu();
+  });
+})();
 </script>
 </body>
 </html>
