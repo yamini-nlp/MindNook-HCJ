@@ -327,12 +327,22 @@ body::after{
 </div>
 
 <script>
-const { createClient } = supabase;
-const sb = createClient(
-  window._env.SUPABASE_URL,
-  window._env.SUPABASE_ANON_KEY,
-  { auth: { flowType: 'implicit' } }
-);
+let sb = null;
+let configError = false;
+try {
+  if (!window._env || !window._env.SUPABASE_URL || !window._env.SUPABASE_ANON_KEY) {
+    throw new Error('env.js did not load, or SUPABASE_URL / SUPABASE_ANON_KEY are missing.');
+  }
+  const { createClient } = supabase;
+  sb = createClient(
+    window._env.SUPABASE_URL,
+    window._env.SUPABASE_ANON_KEY,
+    { auth: { flowType: 'implicit' } }
+  );
+} catch (e) {
+  configError = true;
+  console.error('MindNook: Supabase client failed to initialize —', e.message);
+}
 
 let googleAuthInProgress = false;
 
@@ -406,19 +416,22 @@ async function handleOAuthCallback() {
 }
 
 (async function init() {
+  if (!sb) { showConfigError(); return; }
   const wasCallback = await handleOAuthCallback();
   if (wasCallback) return;
   const { data: { session } } = await sb.auth.getSession();
   if (session) await redirectAfterAuth(session);
 })();
 
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session && !googleAuthInProgress) {
-    const isCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token');
-    if (isCallback) return;
-    await redirectAfterAuth(session);
-  }
-});
+if (sb) {
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session && !googleAuthInProgress) {
+      const isCallback = window.location.search.includes('code=') || window.location.hash.includes('access_token');
+      if (isCallback) return;
+      await redirectAfterAuth(session);
+    }
+  });
+}
 
 function show(id) {
   ['login-view','signup-view','forgot-view','verify-view'].forEach(v => {
@@ -436,6 +449,16 @@ function setLoading(btnId, loading, text) {
   const btn = document.getElementById(btnId);
   btn.disabled = loading;
   btn.innerHTML = loading ? '<span class="spinner"></span>' + text : text;
+}
+function showConfigError() {
+  const text = 'Unable to connect right now. Please refresh the page, or contact support if this continues.';
+  showMsg('login-msg', text, 'error');
+  showMsg('signup-msg', text, 'error');
+  showMsg('forgot-msg', text, 'error');
+  ['login-btn','signup-btn','forgot-btn','google-login-btn','google-signup-btn','resend-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
 }
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function getPasswordStrength(pw) {
@@ -508,6 +531,7 @@ document.getElementById('back-to-login').addEventListener('click', () => show('l
 document.getElementById('go-login-from-verify').addEventListener('click', () => show('login-view'));
 
 document.getElementById('login-btn').addEventListener('click', async () => {
+  if (!sb) { showConfigError(); return; }
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   hideMsg('login-msg');
@@ -535,6 +559,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('signup-btn').addEventListener('click', async () => {
+  if (!sb) { showConfigError(); return; }
   const first = document.getElementById('signup-first').value.trim();
   const last = document.getElementById('signup-last').value.trim();
   const email = document.getElementById('signup-email').value.trim();
@@ -591,6 +616,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('forgot-btn').addEventListener('click', async () => {
+  if (!sb) { showConfigError(); return; }
   const email = document.getElementById('forgot-email').value.trim();
   hideMsg('forgot-msg');
   if (!email || !isValidEmail(email)) { showMsg('forgot-msg', 'Please enter a valid email address.', 'error'); return; }
@@ -607,6 +633,7 @@ document.getElementById('forgot-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('resend-btn').addEventListener('click', async () => {
+  if (!sb) { showConfigError(); return; }
   const email = document.getElementById('verify-email-shown').textContent;
   if (!email) return;
   try {
@@ -617,6 +644,7 @@ document.getElementById('resend-btn').addEventListener('click', async () => {
 });
 
 async function signInWithGoogle() {
+  if (!sb) { showConfigError(); return; }
   if (googleAuthInProgress) return;
   googleAuthInProgress = true;
   document.querySelectorAll('.social-btn').forEach(b => { b.disabled = true; });
