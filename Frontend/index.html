@@ -10,23 +10,23 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#1b2e2b;--bg2:#152422;--bg3:#0d1a18;--bg4:#1f3430;
+  --bg:#0f1e1b;--bg2:#0a1614;--bg3:#070f0d;--bg4:#152623;
   --cream:#f0ece2;--cream2:#e8d8c8;--cream3:#d9c5b2;
   --gold:#d9c5b2;--gold2:#c9a882;--gold3:#e8d8c8;
-  --gsoft:rgba(217,197,178,0.08);--gline:rgba(217,197,178,0.12);--gline2:rgba(217,197,178,0.22);
-  --text:#f0ece2;--text2:rgba(240,236,226,0.85);
-  --dim:rgba(240,236,226,0.65);--dim2:rgba(240,236,226,0.38);--dim3:rgba(240,236,226,0.22);
-  --pos:#5bc4a8;--neg:#c47a8a;--card:#1f3430;--card2:#243b37;
+  --gsoft:rgba(217,197,178,0.08);--gline:rgba(217,197,178,0.13);--gline2:rgba(217,197,178,0.24);
+  --text:#f0ece2;--text2:rgba(240,236,226,0.9);
+  --dim:rgba(240,236,226,0.78);--dim2:rgba(240,236,226,0.5);--dim3:rgba(240,236,226,0.28);
+  --pos:#5bc4a8;--neg:#c47a8a;--card:#172925;--card2:#1c322d;
 }
 [data-theme="light"]{
-  --bg:#f0ebe2;--bg2:#e8e0d4;--bg3:#eae4d9;--bg4:#eee6d8;
-  --cream:#0f1a18;--cream2:#1b2e2b;--cream3:#2a4a3a;
-  --gold:#3e544c;--gold2:#395544;--gold3:#36533c;
-  --gsoft:rgba(122,92,58,0.08);--gline:rgba(122,92,58,0.15);--gline2:rgba(122,92,58,0.25);
-  --text:#1a120a;--text2:#2a1e10;
-  --dim:rgba(26,18,10,0.65);--dim2:rgba(26,18,10,0.4);--dim3:rgba(26,18,10,0.22);
-  --pos:#2a6a32;--neg:#8a3030;
-  --card:rgba(232,224,212,0.92);--card2:rgba(224,216,200,0.88);
+  --bg:#ece6d8;--bg2:#e3dcc9;--bg3:#e8e1cf;--bg4:#e0d8c2;
+  --cream:#16241c;--cream2:#1f3427;--cream3:#2d4a37;
+  --gold:#3d5c46;--gold2:#345040;--gold3:#456654;
+  --gsoft:rgba(61,92,70,0.08);--gline:rgba(61,92,70,0.15);--gline2:rgba(61,92,70,0.25);
+  --text:#182920;--text2:#22392b;
+  --dim:rgba(24,41,32,0.68);--dim2:rgba(24,41,32,0.42);--dim3:rgba(24,41,32,0.22);
+  --pos:#2f7a4a;--neg:#8a3030;
+  --card:rgba(255,253,248,0.6);--card2:rgba(248,244,234,0.55);
 }
 html{scroll-behavior:smooth;font-size:16px;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden;transition:background 0.4s,color 0.4s;}
@@ -63,7 +63,8 @@ main{position:relative;z-index:2;}
 .hero-title-b{opacity:0;transform:translateY(calc(-50% + 16px));}
 .hero-title-a.out{opacity:0;transform:translateY(calc(-50% - 16px));}
 .hero-title-b.in{opacity:1;transform:translateY(-50%);}
-.hero-title-mindnook{font-family:'Playfair Display',serif;font-weight:600;font-size:clamp(3.6rem,6vw,6.8rem);line-height:0.98;color:#e8d8c8;letter-spacing:2px;}
+.hero-title-mindnook{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(3.6rem,6vw,6.8rem);line-height:0.98;color:var(--gold3);letter-spacing:8px;display:inline-block;position:relative;}
+.hero-title-mindnook::after{content:'';position:absolute;left:4px;bottom:-20px;width:76px;height:2px;background:var(--gold2);opacity:0.75;}
 .hero-body{font-size:1rem;line-height:1.9;font-weight:300;color:var(--dim);max-width:480px;margin-bottom:40px;font-family:'DM Sans',sans-serif;opacity:0;animation:fadeUp 1s 0.38s cubic-bezier(0.4,0,0.2,1) forwards;}
 .hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;opacity:0;animation:fadeUp 1s 0.52s cubic-bezier(0.4,0,0.2,1) forwards;}
 .btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 36px;background:var(--gold);color:var(--bg3);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;text-decoration:none;border:none;border-radius:50px;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;}
@@ -330,24 +331,7 @@ const sunIcon=document.getElementById('theme-icon-sun');
 function updateThemeIcon(theme){if(theme==='dark'){moonIcon.style.display='';sunIcon.style.display='none';}else{moonIcon.style.display='none';sunIcon.style.display='';}}
 updateThemeIcon(saved);
 document.getElementById('theme-toggle').addEventListener('click',()=>{const current=html.getAttribute('data-theme');const next=current==='dark'?'light':'dark';html.setAttribute('data-theme',next);localStorage.setItem('mindnook_theme',next);updateThemeIcon(next);});
-const{createClient}=supabase;
-const sb=createClient(window._env.SUPABASE_URL,window._env.SUPABASE_ANON_KEY);
-(async function(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){
-    const user=session.user;
-    const name=user.user_metadata?.first_name||user.user_metadata?.full_name?.split(' ')[0]||user.email?.split('@')[0]||'';
-    const area=document.getElementById('nav-auth-area');
-    area.innerHTML=`<div class="nav-user-area"><span class="nav-user-name">Hi, ${name}</span><button class="nav-signout" onclick="signOut()">Sign Out</button></div>`;
-    const heroBtn=document.getElementById('hero-begin-btn');
-    if(heroBtn){heroBtn.href='dashboard.html';heroBtn.firstChild.textContent='Go to Dashboard ';}
-    const ctaBtn=document.getElementById('cta-begin-btn');
-    if(ctaBtn){ctaBtn.href='dashboard.html';ctaBtn.firstChild.textContent='Go to Dashboard ';}
-    const footerLogin=document.getElementById('footer-login-link');
-    if(footerLogin){footerLogin.href='dashboard.html';footerLogin.textContent='Dashboard';}
-  }
-})();
-window.signOut=async function(){await sb.auth.signOut();localStorage.clear();window.location.href='index.html';};
+
 (function(){
   const titleA=document.getElementById('hero-title-a');
   const titleB=document.getElementById('hero-title-b');
@@ -360,10 +344,42 @@ window.signOut=async function(){await sb.auth.signOut();localStorage.clear();win
   titleB.style.display='none';
   setInterval(swapTitles,15000);
 })();
+
 const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:0.07});
 document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
 const nav=document.querySelector('nav');
 window.addEventListener('scroll',()=>{nav.style.borderBottomColor=window.scrollY>40?'rgba(217,197,178,0.15)':'rgba(217,197,178,0.12)';},{passive:true});
+
+let sb=null;
+try{
+  if(!window._env||!window._env.SUPABASE_URL||!window._env.SUPABASE_ANON_KEY){
+    throw new Error('env.js did not load, or SUPABASE_URL / SUPABASE_ANON_KEY are missing.');
+  }
+  const{createClient}=supabase;
+  sb=createClient(window._env.SUPABASE_URL,window._env.SUPABASE_ANON_KEY);
+}catch(e){
+  console.error('MindNook: Supabase client failed to initialize —',e.message);
+}
+
+if(sb){
+  (async function(){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){
+      const user=session.user;
+      const name=user.user_metadata?.first_name||user.user_metadata?.full_name?.split(' ')[0]||user.email?.split('@')[0]||'';
+      const area=document.getElementById('nav-auth-area');
+      area.innerHTML=`<div class="nav-user-area"><span class="nav-user-name">Hi, ${name}</span><button class="nav-signout" onclick="signOut()">Sign Out</button></div>`;
+      const heroBtn=document.getElementById('hero-begin-btn');
+      if(heroBtn){heroBtn.href='dashboard.html';heroBtn.firstChild.textContent='Go to Dashboard ';}
+      const ctaBtn=document.getElementById('cta-begin-btn');
+      if(ctaBtn){ctaBtn.href='dashboard.html';ctaBtn.firstChild.textContent='Go to Dashboard ';}
+      const footerLogin=document.getElementById('footer-login-link');
+      if(footerLogin){footerLogin.href='dashboard.html';footerLogin.textContent='Dashboard';}
+    }
+  })();
+}
+window.signOut=async function(){if(sb){await sb.auth.signOut();}localStorage.clear();window.location.href='index.html';};
 </script>
 </body>
 </html>
