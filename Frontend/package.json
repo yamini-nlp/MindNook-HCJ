@@ -3,6 +3,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
+    "build": "node generate-env.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
