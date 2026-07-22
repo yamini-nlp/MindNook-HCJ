@@ -13,6 +13,8 @@
 <script src="hyperbole_lexicon.js"></script>
 <script src="baseline_constants.js"></script>
 <script src="personal_baseline.js"></script>
+<link rel="stylesheet" href="sidebar_nav.css">
+<script src="sidebar_nav.js" defer></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -31,19 +33,7 @@ html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(217,197,178,0.18);border-radius:2px;}
 #bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.18;}
-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:68px;background:rgba(11,22,20,0.88);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
-.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--gold);letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
-.nav-logo-dot{width:6px;height:6px;border-radius:50%;background:rgba(217,197,178,0.5);}
-.nav-links{display:flex;align-items:center;gap:2px;}
-.nav-link{font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:7px 18px;border-radius:30px;cursor:pointer;text-decoration:none;transition:all 0.22s;position:relative;}
-.nav-link:hover{color:var(--text2);background:rgba(217,197,178,0.05);}
-.nav-link.active{color:var(--text);font-weight:500;}
-.nav-link.active::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:18px;height:1px;background:rgba(217,197,178,0.45);border-radius:1px;}
-.nav-right{display:flex;align-items:center;gap:12px;}
-.nav-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--border);cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:0.6rem;letter-spacing:1px;font-weight:500;transition:all 0.22s;background:rgba(255,255,255,0.02);}
-.nav-icon:hover{border-color:var(--border2);color:var(--text2);}
-.nav-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(217,197,178,0.22),rgba(217,197,178,0.07));border:1.5px solid rgba(217,197,178,0.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;color:var(--gold);cursor:pointer;}
-.page{position:relative;z-index:1;padding-top:68px;display:flex;}
+.page{position:relative;z-index:1;display:flex;}
 .main{flex:1;min-width:0;padding:0 48px 100px;}
 .sidebar{width:288px;flex-shrink:0;padding:36px 0 80px 8px;}
 .hero{display:grid;grid-template-columns:1fr auto;align-items:center;gap:48px;padding:56px 0 48px;border-bottom:1px solid var(--border);margin-bottom:44px;}
@@ -166,43 +156,14 @@ canvas.mini-chart{width:100%;height:100%;}
 .sb-attr{font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:300;letter-spacing:0.5px;color:var(--text3);}
 .sc-loading{font-family:'DM Sans',sans-serif;color:var(--text3);animation:blink 1.5s infinite;font-size:0.75rem;font-weight:300;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
-.nav-toggle{display:none;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;border:1px solid var(--border);background:rgba(255,255,255,0.02);cursor:pointer;color:var(--text3);flex-direction:column;gap:4px;}
-.nav-toggle:hover{border-color:var(--border2);color:var(--text2);}
-.nav-toggle-bar{width:16px;height:1.5px;background:currentColor;border-radius:1px;transition:transform 0.22s,opacity 0.22s;}
-.nav-toggle.open .nav-toggle-bar:nth-child(1){transform:translateY(5.5px) rotate(45deg);}
-.nav-toggle.open .nav-toggle-bar:nth-child(2){opacity:0;}
-.nav-toggle.open .nav-toggle-bar:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);}
-.mobile-nav-panel{display:none;position:fixed;top:68px;left:0;right:0;z-index:199;background:rgba(11,22,20,0.97);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);padding:10px 22px 18px;flex-direction:column;gap:2px;}
-.mobile-nav-panel.open{display:flex;}
-.mobile-nav-panel .nav-link{width:100%;padding:12px 16px;border-radius:12px;}
 @media(max-width:1200px){.sidebar{display:none;}.stats-row{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:900px){.main{padding:0 22px 64px;}nav{padding:0 22px;}.hero{grid-template-columns:1fr;gap:26px;}.streak-card{display:none;}.analytics-grid{grid-template-columns:1fr;}.ai-cards{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}.nav-links{display:none;}.nav-toggle{display:flex;}}
+@media(max-width:900px){.main{padding:0 22px 64px;}.hero{grid-template-columns:1fr;gap:26px;}.streak-card{display:none;}.analytics-grid{grid-template-columns:1fr;}.ai-cards{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
 <body>
 <canvas id="bgCanvas"></canvas>
-<nav>
-  <div class="nav-logo"><div class="nav-logo-dot"></div>MindNook</div>
-  <div class="nav-links">
-    <a class="nav-link active" href="dashboard.html">Dashboard</a>
-    <a class="nav-link" href="canvas.html">Journal</a>
-    <a class="nav-link" href="history.html">History</a>
-    <a class="nav-link" href="vocab.html">Insights</a>
-    <a class="nav-link" href="analysis.html">Analysis</a>
-    <a class="nav-link" href="research_insights.html">Research</a>
-    <a class="nav-link" href="nook-ai.html">Nook AI</a>
-    <a class="nav-link" href="privacy_center.html">Privacy</a>
-  </div>
-  <div class="nav-right">
-    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavPanel">
-      <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
-    </button>
-    <div class="nav-icon" title="Sign out" onclick="signOut()">OUT</div>
-    <div class="nav-avatar" id="navAvatar">?</div>
-  </div>
-</nav>
-<div class="mobile-nav-panel" id="mobileNavPanel" role="menu" aria-label="Mobile navigation"></div>
+
 <div class="page">
 <div class="main">
   <section class="hero">
@@ -563,8 +524,6 @@ function injectSentimentBaselineCard(sentimentBaseline,sentimentBaselineDelta){
 
 function getTimeOfDay(){const h=new Date().getHours();if(h<12)return'morning';if(h<17)return'afternoon';return'evening';}
 function capitalize(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
-async function signOut(){await window.signOut();}
-
 async function initDashboard(){
   const user=window.mnRequireUser();
   if(!user)return;
@@ -664,47 +623,6 @@ async function initDashboard(){
 if(window.__authReady){initDashboard();}
 window.addEventListener('auth-ready',initDashboard);
 
-(function(){
-  const toggle=document.getElementById('navToggle');
-  const panel=document.getElementById('mobileNavPanel');
-  if(!toggle||!panel)return;
-  const sourceLinks=document.querySelectorAll('.nav-links > a, .nav-links > button');
-  sourceLinks.forEach(link=>{
-    const clone=link.cloneNode(true);
-    clone.setAttribute('role','menuitem');
-    panel.appendChild(clone);
-  });
-  let releaseFocus=null;
-  function closeMenu(){
-    panel.classList.remove('open');
-    toggle.classList.remove('open');
-    toggle.setAttribute('aria-expanded','false');
-    if(releaseFocus){releaseFocus();releaseFocus=null;}
-  }
-  function openMenu(){
-    panel.classList.add('open');
-    toggle.classList.add('open');
-    toggle.setAttribute('aria-expanded','true');
-    if(window.MindNookA11y){
-      releaseFocus=window.MindNookA11y.trapFocus(panel,{onEscape:closeMenu});
-    }
-  }
-  function toggleMenu(){
-    if(panel.classList.contains('open'))closeMenu();else openMenu();
-  }
-  if(window.MindNookA11y){
-    window.MindNookA11y.bindActivation(toggle,toggleMenu);
-  }else{
-    toggle.addEventListener('click',toggleMenu);
-  }
-  panel.addEventListener('click',e=>{
-    if(e.target.closest('a'))closeMenu();
-  });
-  document.addEventListener('click',e=>{
-    if(!panel.classList.contains('open'))return;
-    if(!panel.contains(e.target)&&!toggle.contains(e.target))closeMenu();
-  });
-})();
 </script>
 </body>
 </html>

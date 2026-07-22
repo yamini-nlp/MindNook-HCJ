@@ -9,6 +9,8 @@
 <link href="explanation_panel.css" rel="stylesheet">
 <script src="hyperbole_lexicon.js"></script>
 <script src="personal_baseline.js"></script>
+<link rel="stylesheet" href="sidebar_nav.css">
+<script src="sidebar_nav.js" defer></script>
 <script src="explanation_panel.js"></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
@@ -32,14 +34,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;ba
 .load-title{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold2);font-style:italic;}
 .load-sub{font-size:0.84rem;color:var(--text2);letter-spacing:0.5px;}
 .hidden{display:none!important;}
-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:18px 52px;background:rgba(21,36,34,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
-.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;color:var(--gold);}
-.nav-links{display:flex;gap:8px;align-items:center;}
-.pill{padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;cursor:pointer;transition:all 0.26s;text-decoration:none;font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;}
-.pill.ghost{border:1px solid var(--border);color:var(--text2);background:transparent;}
-.pill.ghost:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
-.pill.filled{background:var(--gold);color:var(--bg3);font-weight:600;}
-.pill.filled:hover{background:var(--gold3);transform:translateY(-1px);}
 .page{position:relative;z-index:1;}
 .hero{text-align:center;padding:72px 52px 20px;}
 .eyebrow{font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--teal);opacity:0.8;margin-bottom:14px;font-weight:500;}
@@ -147,7 +141,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 @keyframes rise{to{opacity:1;transform:translateY(0);}}
 .d0{animation-delay:.06s;}.d1{animation-delay:.16s;}.d2{animation-delay:.28s;}.d3{animation-delay:.40s;}.d4{animation-delay:.52s;}.d5{animation-delay:.64s;}
 @media(max-width:700px){
-  nav{padding:16px 20px;}
   .hero{padding:44px 20px 20px;}
   .stats{padding:28px 20px 0;}
   .sc{min-width:64px;padding:16px 10px;}
@@ -156,8 +149,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
   .story-frame{padding:28px 24px;}
   .hero-title{font-size:clamp(2rem,7vw,3.2rem);}
   .insights-grid{grid-template-columns:1fr;}
-  .nav-links{gap:4px;}
-  .pill{padding:6px 12px;font-size:0.7rem;}
   .action{padding:36px 20px 60px;}
 }
 </style>
@@ -170,16 +161,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
   <div class="load-sub">Preparing your reflection</div>
 </div>
 <div id="page" class="hidden">
-  <nav>
-    <div class="nav-logo">MINDNOOK</div>
-    <div class="nav-links">
-        <a href="canvas.html" class="pill ghost">← Write Again</a>
-        <a href="vocab.html" class="pill ghost">Vocabulary →</a>
-        <a href="history.html" class="pill ghost">History</a>
-        <a href="dashboard.html" class="pill ghost">Dashboard</a>
-        <button onclick="signOut()" class="pill ghost">Sign Out</button>
-    </div>
-  </nav>
   <div class="page">
     <div class="hero rise d0">
       <div class="eyebrow" id="entry-date">—</div>

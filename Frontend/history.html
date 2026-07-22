@@ -11,6 +11,8 @@
 <script src="env.js"></script>
 <script src="auth.js"></script>
 <script src="app.js"></script>
+<link rel="stylesheet" href="sidebar_nav.css">
+<script src="sidebar_nav.js" defer></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -25,16 +27,11 @@ html.mn-auth-ready body{visibility:visible}
 }
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");}
-.nav-row{display:flex;justify-content:space-between;align-items:center;padding:20px 60px;border-bottom:1px solid var(--border);position:relative;z-index:10;}
-.nav-logo{font-family:'Playfair Display',serif;font-weight:600;font-size:1rem;letter-spacing:4px;text-transform:uppercase;color:var(--gold);text-decoration:none;}
-.nav-links{display:flex;gap:10px;}
 .pill{padding:8px 20px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-block;font-family:'DM Sans',sans-serif;}
 .pill.ghost{border:1px solid var(--border2);color:var(--text2);background:transparent;}
 .pill.ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(217,197,178,0.06);}
 .pill.filled{background:var(--gold);color:var(--bg3);font-weight:500;border:none;}
 .pill.filled:hover{background:var(--gold2);color:var(--bg3);}
-.pill-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:8px 20px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.75rem;cursor:pointer;transition:all 0.25s;letter-spacing:0.5px;}
-.pill-btn:hover{border-color:var(--rose);color:var(--rose);}
 .ph{padding:48px 60px 0;position:relative;z-index:2;}
 .ph .ey{font-size:0.68rem;letter-spacing:4px;text-transform:uppercase;color:var(--gold2);opacity:0.8;margin-bottom:10px;font-family:'DM Sans',sans-serif;}
 .ph h1{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,4vw,3.2rem);font-weight:400;line-height:1.1;}
@@ -83,8 +80,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;ba
 @keyframes rise{to{opacity:1;transform:translateY(0)}}
 .d0{animation-delay:.04s}.d1{animation-delay:.14s}.d2{animation-delay:.24s}.d3{animation-delay:.34s}
 @media(max-width:900px){
-.nav-row{padding:18px 20px;flex-wrap:wrap;gap:10px;}
-.nav-links{gap:6px;}
 .pill{padding:6px 12px;font-size:0.7rem;}
 .ph{padding:32px 20px 0;}
 .agg-row{margin:24px 20px 0;gap:8px;}
@@ -98,15 +93,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;ba
 </style>
 </head>
 <body>
-<div class="nav-row">
-    <a href="index.html" class="nav-logo">MindNook</a>
-    <div class="nav-links">
-        <a href="canvas.html" class="pill filled">+ New Entry</a>
-        <a href="dashboard.html" class="pill ghost">Dashboard</a>
-        <a href="nook-ai.html" class="pill ghost">Nook AI</a>
-        <button onclick="signOut()" class="pill-btn">Sign Out</button>
-    </div>
-</div>
 <div class="ph rise d0">
     <div class="ey">Journal Archive</div>
     <h1>Every <em>entry,</em> remembered.</h1>

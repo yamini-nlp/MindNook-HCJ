@@ -15,6 +15,8 @@
 <script src="personal_baseline.js"></script>
 <script src="lstm_temporal.js"></script>
 <script src="explanation_panel.js"></script>
+<link rel="stylesheet" href="sidebar_nav.css">
+<script src="sidebar_nav.js" defer></script>
 <title>MindNook | Analytics</title>
 <style>
 html.mn-auth-pending body{visibility:hidden}
@@ -113,9 +115,6 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 .mdot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text2);cursor:pointer;transition:all 0.2s;border:1px solid transparent;position:relative}
 .mdot:hover{border-color:var(--border2);color:var(--text)}
 .mdot.selected{border-color:var(--gold2);color:var(--gold)}
-.nav-row{display:flex;justify-content:space-between;align-items:center;padding:20px 60px 0}
-.nav-back{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:9px 22px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.25s;text-decoration:none;display:inline-block}
-.nav-back:hover{background:rgba(217,197,178,0.08);color:var(--text)}
 .page-title-rule{width:40px;height:2px;background:var(--gold2);border-radius:2px;margin-top:10px}
 .legend-row{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text2)}
@@ -126,16 +125,11 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 .stats-strip{padding:24px 20px 0;gap:10px}
 .stat-pill{min-width:120px;padding:14px 18px}
 .stat-value{font-size:1.6rem}
-.nav-row{padding:16px 20px 0}
 .timeline-body{padding:20px}
 }
 </style>
 </head>
 <body>
-<div class="nav-row">
-    <a href="index.html" class="nav-back">← Home</a>
-    <div style="display:flex;gap:10px"><a href="canvas.html" class="nav-back">New Entry</a></div>
-</div>
 <div class="page-header">
     <div class="header-left">
         <h1>Mood &amp; <em>Growth</em> Analytics</h1>

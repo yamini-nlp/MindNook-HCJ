@@ -22,6 +22,8 @@
 <script src="goal_clarification.js"></script>
 <script src="crisis_screen.js"></script>
 <script src="crisis_banner.js"></script>
+<link rel="stylesheet" href="sidebar_nav.css">
+<script src="sidebar_nav.js" defer></script>
 <style>
 html.mn-auth-pending body{visibility:hidden}
 html.mn-auth-ready body{visibility:visible}
@@ -39,16 +41,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 55% 45% at 85% 5%,rgba(91,196,168,0.08) 0%,transparent 65%),radial-gradient(ellipse 40% 35% at 5% 85%,rgba(122,173,143,0.07) 0%,transparent 60%),radial-gradient(ellipse 30% 30% at 50% 50%,rgba(217,197,178,0.03) 0%,transparent 70%);}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");}
 canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.4;}
-nav{position:relative;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 52px;height:62px;flex-shrink:0;background:rgba(21,36,34,0.85);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
-.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--gold);letter-spacing:2px;}
-.nav-center{font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:8px;}
-.nav-center-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 2.5s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}
-.nav-links{display:flex;align-items:center;gap:4px;}
-.nav-link{font-size:0.73rem;font-weight:500;letter-spacing:0.5px;color:var(--text2);padding:7px 14px;border-radius:50px;cursor:pointer;text-decoration:none;transition:all 0.22s;}
-.nav-link:hover{color:var(--text);background:rgba(217,197,178,0.06);}
-.nav-btn{padding:7px 18px;border-radius:50px;font-size:0.75rem;font-weight:500;letter-spacing:0.5px;cursor:pointer;transition:all 0.22s;background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'DM Sans',sans-serif;}
-.nav-btn:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
 .layout{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
 .sidebar{width:268px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:rgba(21,36,34,0.5);backdrop-filter:blur(12px);overflow-y:auto;}
 .sidebar::-webkit-scrollbar{width:3px;}
@@ -132,37 +124,12 @@ nav{position:relative;z-index:100;display:flex;align-items:center;justify-conten
 .send-btn:hover{background:var(--gold3);transform:scale(1.06);}
 .send-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
 .input-hint{text-align:center;margin-top:8px;font-size:0.66rem;font-weight:400;color:var(--text3);letter-spacing:0.3px;}
-.nav-toggle{display:none;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text2);flex-direction:column;gap:4px;}
-.nav-toggle:hover{border-color:var(--border2);color:var(--text);}
-.nav-toggle-bar{width:16px;height:1.5px;background:currentColor;border-radius:1px;transition:transform 0.22s,opacity 0.22s;}
-.nav-toggle.open .nav-toggle-bar:nth-child(1){transform:translateY(5.5px) rotate(45deg);}
-.nav-toggle.open .nav-toggle-bar:nth-child(2){opacity:0;}
-.nav-toggle.open .nav-toggle-bar:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);}
-.mobile-nav-panel{display:none;position:fixed;top:62px;left:0;right:0;z-index:199;background:rgba(21,36,34,0.97);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);padding:10px 16px 18px;flex-direction:column;gap:2px;}
-.mobile-nav-panel.open{display:flex;}
-.mobile-nav-panel .nav-link{width:100%;padding:12px 14px;border-radius:12px;}
-.mobile-nav-panel .nav-btn{width:100%;text-align:center;margin-top:6px;}
 @media(max-width:1024px){.sidebar{width:220px;}.messages-wrap{padding:20px 28px;}.input-area{padding:14px 28px 18px;}.hero{padding:18px 28px 14px;}}
-@media(max-width:768px){nav{padding:0 16px;}.nav-links{display:none;}.nav-toggle{display:flex;}.sidebar{display:none;}.messages-wrap{padding:16px;}.input-area{padding:12px 16px 16px;}.hero{padding:16px 16px 14px;}.msg-bubble{max-width:85%;}.waveform{display:none;}}
+@media(max-width:768px){.sidebar{display:none;}.messages-wrap{padding:16px;}.input-area{padding:12px 16px 16px;}.hero{padding:16px 16px 14px;}.msg-bubble{max-width:85%;}.waveform{display:none;}}
 </style>
 </head>
 <body>
 <canvas id="particles"></canvas>
-<nav>
-  <div class="nav-logo">MindNook</div>
-  <div class="nav-center"><div class="nav-center-dot"></div>Nook AI</div>
-  <div class="nav-links">
-    <a href="history.html" class="nav-link">History</a>
-    <a href="dashboard.html" class="nav-link">Dashboard</a>
-    <a href="vocab.html" class="nav-link">Insights</a>
-    <a href="privacy_center.html" class="nav-link">Privacy</a>
-    <button onclick="signOut()" class="nav-btn">Sign Out</button>
-  </div>
-  <button type="button" class="nav-toggle" id="navToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavPanel">
-    <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
-  </button>
-</nav>
-<div class="mobile-nav-panel" id="mobileNavPanel" role="menu" aria-label="Mobile navigation"></div>
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -627,48 +594,6 @@ chatInput.addEventListener('keydown',function(e){
 
 if(window.__authReady){init();}
 window.addEventListener('auth-ready',init);
-
-(function(){
-  const toggle=document.getElementById('navToggle');
-  const panel=document.getElementById('mobileNavPanel');
-  if(!toggle||!panel)return;
-  const sourceLinks=document.querySelectorAll('.nav-links > a, .nav-links > button');
-  sourceLinks.forEach(link=>{
-    const clone=link.cloneNode(true);
-    clone.setAttribute('role','menuitem');
-    panel.appendChild(clone);
-  });
-  let releaseFocus=null;
-  function closeMenu(){
-    panel.classList.remove('open');
-    toggle.classList.remove('open');
-    toggle.setAttribute('aria-expanded','false');
-    if(releaseFocus){releaseFocus();releaseFocus=null;}
-  }
-  function openMenu(){
-    panel.classList.add('open');
-    toggle.classList.add('open');
-    toggle.setAttribute('aria-expanded','true');
-    if(window.MindNookA11y){
-      releaseFocus=window.MindNookA11y.trapFocus(panel,{onEscape:closeMenu});
-    }
-  }
-  function toggleMenu(){
-    if(panel.classList.contains('open'))closeMenu();else openMenu();
-  }
-  if(window.MindNookA11y){
-    window.MindNookA11y.bindActivation(toggle,toggleMenu);
-  }else{
-    toggle.addEventListener('click',toggleMenu);
-  }
-  panel.addEventListener('click',e=>{
-    if(e.target.closest('a'))closeMenu();
-  });
-  document.addEventListener('click',e=>{
-    if(!panel.classList.contains('open'))return;
-    if(!panel.contains(e.target)&&!toggle.contains(e.target))closeMenu();
-  });
-})();
 </script>
 </body>
 </html>

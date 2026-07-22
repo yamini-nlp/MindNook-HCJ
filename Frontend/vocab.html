@@ -21,14 +21,6 @@
         body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6;}
         body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");}
         .bg-mesh{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 60% 50% at 80% -10%,rgba(91,196,168,0.08) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at -10% 80%,rgba(122,173,143,0.07) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 50% 110%,rgba(196,150,58,0.05) 0%,transparent 60%);}
-        nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:18px 52px;background:rgba(21,36,34,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
-        .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;color:var(--gold);}
-        .nav-links{display:flex;gap:8px;align-items:center;}
-        .pill{padding:7px 18px;border-radius:50px;font-size:0.75rem;letter-spacing:0.8px;cursor:pointer;transition:all 0.26s;text-decoration:none;font-family:'DM Sans',sans-serif;font-weight:500;border:none;display:inline-block;}
-        .pill.ghost{border:1px solid var(--border);color:var(--text2);background:transparent;}
-        .pill.ghost:hover{border-color:var(--border2);background:rgba(217,197,178,0.06);color:var(--text);}
-        .pill.filled{background:var(--gold);color:var(--bg3);font-weight:500;}
-        .pill.filled:hover{background:var(--gold3);transform:translateY(-1px);}
         .page-header{text-align:center;padding:56px 52px 40px;position:relative;z-index:2;}
         .eyebrow{font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--teal);opacity:0.8;margin-bottom:14px;font-weight:500;}
         .page-header h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,4.5vw,3.6rem);font-weight:400;line-height:1.1;}
@@ -86,9 +78,6 @@
         @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
         .d1{animation-delay:.05s;}.d2{animation-delay:.15s;}.d3{animation-delay:.25s;}.d4{animation-delay:.35s;}.d5{animation-delay:.45s;}
         @media(max-width:800px){
-            nav{padding:16px 20px;flex-wrap:wrap;gap:10px;}
-            .nav-links{gap:5px;flex-wrap:wrap;}
-            .pill{padding:5px 11px;font-size:0.7rem;}
             .page-header{padding:36px 20px 24px;}
             .page-header h1{font-size:clamp(2rem,7vw,3.6rem);}
             .grid{grid-template-columns:1fr;padding:0 20px 40px;}
@@ -101,21 +90,11 @@
             .big-btn{padding:12px 28px;font-size:0.85rem;}
         }
     </style>
+    <link rel="stylesheet" href="sidebar_nav.css">
+    <script src="sidebar_nav.js" defer></script>
 </head>
 <body>
 <div class="bg-mesh"></div>
-<nav>
-    <div class="nav-logo">MINDNOOK</div>
-    <div class="nav-links">
-        <a href="sentiment.html" class="pill ghost">← Sentiment</a>
-        <a href="history.html" class="pill ghost">History</a>
-        <a href="dashboard.html" class="pill ghost">Dashboard</a>
-        <a href="nook-ai.html" class="pill ghost">Nook AI</a>
-        <a href="privacy_center.html" class="pill ghost">Privacy</a>
-        <button onclick="signOut()" class="pill ghost">Sign Out</button>
-        <a href="canvas.html" class="pill filled">✏️ Write Again</a>
-    </div>
-</nav>
 <div class="page-header fade-in">
     <div class="eyebrow">Vocabulary Analysis</div>
     <h1>Words, <em>dissected.</em></h1>
