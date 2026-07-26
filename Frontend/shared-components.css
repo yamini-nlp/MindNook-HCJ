@@ -1,0 +1,13 @@
+.hero-eyebrow,
+.eyebrow,
+.ey,
+.page-eyebrow{
+  font-family:'DM Sans',sans-serif;
+  font-size:0.7rem;
+  font-weight:500;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  color:var(--teal);
+  opacity:0.85;
+  margin-bottom:14px;
+}
