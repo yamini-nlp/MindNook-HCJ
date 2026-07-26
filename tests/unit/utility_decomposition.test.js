@@ -27,7 +27,7 @@ describe('utility_decomposition', () => {
     expect(result.breakdown.autonomyCost).toBeCloseTo(0.1, 3);
   });
 
-  it('Section 7.2 toy example: aligned goal, stable trend, mild negative sentiment picks validation over intervention', () => {
+  it('Toy example: aligned goal, stable trend, mild negative sentiment picks validation over intervention', () => {
     const l1 = { sentiment: 'Negative', positiveWordCount: 1, negativeWordCount: 4 };
     const l2 = { dominant: 'expression', distribution: {} };
     const l3 = { direction: 'neutral', label: 'stable', slope: 0 };

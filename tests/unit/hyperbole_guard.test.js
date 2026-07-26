@@ -17,7 +17,7 @@ describe('hyperbole_lexicon + context collapse guard', () => {
     });
   });
 
-  it('Section 5.1: hyperbole after a minor inconvenience scores high and downgrades intervene', () => {
+  it('Hyperbole after a minor inconvenience scores high and downgrades intervene', () => {
     const text = 'This is literally the worst day ever! Everything is ruined! Nothing ever goes right!';
     const hyperboleScore = hyperbole.scoreHyperbole(text);
     expect(hyperboleScore.score).toBeGreaterThanOrEqual(0.55);

@@ -65,7 +65,7 @@ describe('pragmatic-analysis edge function (mocked Supabase + Groq)', () => {
     createHandler = mod.createHandler;
   });
 
-  it('Section 6.2: catharsis and an explicit distress call with the same negative sentiment pick different actions', async () => {
+  it('Catharsis and an explicit distress call with the same negative sentiment pick different actions', async () => {
     const { deps: catharsisDeps } = makeDeps({ groqPayload: catharsisFixture, historyScores: [] });
     const catharsisRes = await createHandler(catharsisDeps)(buildRequest({
       type: 'combined',
@@ -98,7 +98,7 @@ describe('pragmatic-analysis edge function (mocked Supabase + Groq)', () => {
     expect(distressBody.layer5_action.action).toBe('support');
   });
 
-  it('Section 5.1: hyperbole about a minor inconvenience downgrades an otherwise-selected intervene', async () => {
+  it('Hyperbole about a minor inconvenience downgrades an otherwise-selected intervene', async () => {
     const { deps } = makeDeps({ groqPayload: hyperboleFixture, historyScores: [] });
     const res = await createHandler(deps)(buildRequest({
       type: 'combined',
@@ -119,7 +119,7 @@ describe('pragmatic-analysis edge function (mocked Supabase + Groq)', () => {
     expect(body.layer5_action.action).not.toBe('intervene');
   });
 
-  it('Section 7.2 toy example: aligned goal and stable trend pick validation over intervention', async () => {
+  it('Toy example: aligned goal and stable trend pick validation over intervention', async () => {
     const { deps } = makeDeps({ groqPayload: toyValidationFixture, historyScores: [] });
     const res = await createHandler(deps)(buildRequest({
       type: 'combined',

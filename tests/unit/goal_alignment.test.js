@@ -1,6 +1,6 @@
 const { loadFrontendModules } = require('../support/load_frontend.js');
 
-describe('pragmatic classification: catharsis vs distress (Section 6.2)', () => {
+describe('pragmatic classification: catharsis vs distress', () => {
   let baseline;
 
   beforeEach(() => {
@@ -58,7 +58,7 @@ describe('goal alignment scoring', () => {
   });
 });
 
-describe('goal clarification threshold (Section 6.3, tau* = 0.35)', () => {
+describe('goal clarification threshold (tau* = 0.35)', () => {
   let baseline;
 
   beforeEach(() => {
