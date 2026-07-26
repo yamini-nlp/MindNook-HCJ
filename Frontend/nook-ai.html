@@ -569,8 +569,8 @@ async function init(){
   await loadUserData();
   setTimeout(()=>{
     const greeting=userEntries.length>0
-      ?`Hello. I've been reading through your reflections — ${userEntries.length} entries that tell a genuinely evolving story. Your recent writing shows a ${userEntries[0]?.sentiment||'thoughtful'} emotional tone, and across your history, ${Math.round(userEntries.filter(e=>e.sentiment==='Positive').length/userEntries.length*100)}% of your entries carry positive sentiment.\n\nI'm here to help you understand the patterns beneath the words. What would you like to explore?`
-      :`Hello. I'm Nook AI — a reflective companion built to grow alongside your journaling practice.\n\nI draw my understanding from your actual entries, emotional patterns, and writing evolution. Right now, your history is just beginning. Write a few reflections in the Canvas, and I'll start building a genuine picture of your emotional landscape.\n\nFor now — what's on your mind?`;
+      ?`Hey, I'm Nook AI — a reflective companion woven from your own journal. I notice the patterns you might not see yourself: the moods, the words you return to, the story shape underneath it all.\n\nI've been reading through your ${userEntries.length} entries, and lately your writing carries a ${userEntries[0]?.sentiment||'thoughtful'} tone — ${Math.round(userEntries.filter(e=>e.sentiment==='Positive').length/userEntries.length*100)}% of your history leans that way, in fact.\n\nWhat would you like to explore together?`
+      :`Hey, I'm Nook AI — a reflective companion woven from your own journal. I notice the patterns you might not see yourself: the moods, the words you return to, the story shape underneath it all.\n\nRight now your journal is just beginning, so I don't have much to go on yet. Write a few reflections in the Canvas, and I'll start to notice the patterns that make your story yours.\n\nFor now — what's on your mind?`;
     addMessage('ai',greeting);
   },600);
 }
