@@ -41,15 +41,18 @@ window.MindNookBaseline = (function () {
   function classifyPragmatic(text, consent) {
     const scopes = getConsentScopes(consent);
     if (!scopes.pragmatic) {
-      return { disabled: true, dominant: 'neutral', distribution: { assertion: 0, expression: 0, helpSeeking: 0, question: 0 } };
+      return { disabled: true, dominant: 'neutral', distribution: { assertion: 0, expression: 0, helpSeeking: 0, question: 0, request: 0 } };
     }
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 4);
-    let questionCount = 0, helpCount = 0, assertCount = 0, expressCount = 0;
+    let questionCount = 0, helpCount = 0, assertCount = 0, expressCount = 0, requestCount = 0;
     const helpPhrases = ['i need', 'i want', 'help me', 'how do i', 'what should', 'i wish', 'i hope', 'please', 'can i', 'should i'];
     const expressPhrases = ['i feel', 'i felt', 'i am feeling', 'i was feeling', "i'm", "i've been", 'i was', 'i am', 'makes me', 'i love', 'i hate', 'i miss', 'i fear', 'i enjoy'];
+    const requestVerbs = /^(summarize|summarise|tell me|explain|list|describe|show me|give me|walk me|break down|analyze|analyse|outline|compare|identify|highlight|recap|elaborate|go over|review)\b/;
     sentences.forEach(s => {
       const st = s.trim().toLowerCase();
-      if (st.endsWith('?') || /^(what|why|how|when|where|who|is|are|do|did|can|could|would|should)\b/.test(st)) {
+      if (requestVerbs.test(st)) {
+        requestCount++;
+      } else if (st.endsWith('?') || /^(what|why|how|when|where|who|is|are|do|did|can|could|would|should)\b/.test(st)) {
         questionCount++;
       } else if (helpPhrases.some(p => st.includes(p))) {
         helpCount++;
@@ -61,6 +64,7 @@ window.MindNookBaseline = (function () {
     });
     const total = sentences.length || 1;
     const dominant = [
+      { type: 'request', count: requestCount },
       { type: 'question', count: questionCount },
       { type: 'help-seeking', count: helpCount },
       { type: 'expression', count: expressCount },
@@ -73,6 +77,7 @@ window.MindNookBaseline = (function () {
         expression: Math.round(expressCount / total * 100),
         helpSeeking: Math.round(helpCount / total * 100),
         question: Math.round(questionCount / total * 100),
+        request: Math.round(requestCount / total * 100),
       }
     };
   }
@@ -429,7 +434,7 @@ window.MindNookBaseline = (function () {
     const toneMap = {
       affirm: 'Be warm and celebratory. Reinforce what the user is doing well.',
       encourage: 'Be gently encouraging. Acknowledge progress while staying grounded.',
-      reflect: 'Be neutral and thoughtful. Help the user explore their own patterns.',
+      reflect: 'Be neutral and thoughtful. Answer what they asked directly using their journal data, then invite further exploration only if it fits naturally.',
       support: 'Be empathetic and careful. Acknowledge difficulty without amplifying it.',
       intervene: 'Be compassionate and grounding. Gently help the user reframe toward possibility. Never provide clinical diagnoses or medical advice. If persistent distress is detected over multiple entries, gently encourage seeking appropriate support.',
     };
@@ -450,7 +455,7 @@ window.MindNookBaseline = (function () {
       ? 'USER JOURNAL CONTEXT:'
       : 'USER JOURNAL CONTEXT (session-only — full history access is disabled by the user):';
     const styleRule = scopes.pragmatic
-      ? `- Respond specifically to the user's communication style (${l2.dominant}): ${l2.dominant === 'question' ? 'answer their question directly' : l2.dominant === 'help-seeking' ? 'offer concrete support' : l2.dominant === 'expression' ? 'validate and reflect' : 'engage thoughtfully with their assertion'}`
+      ? `- Respond specifically to the user's communication style (${l2.dominant}): ${l2.dominant === 'request' ? 'fulfill their request directly and specifically using the data above; do not ask a clarifying question first' : l2.dominant === 'question' ? 'answer their question directly' : l2.dominant === 'help-seeking' ? 'offer concrete support' : l2.dominant === 'expression' ? 'validate and reflect' : 'engage thoughtfully with their assertion'}`
       : '- Communication-style analysis is disabled; respond naturally to what the user wrote without inferring a category';
     const trendRule = scopes.temporal
       ? `- Reference the trend (${l3.label}) where relevant`
@@ -473,6 +478,8 @@ ${journalContext}
 Rules:
 ${styleRule}
 ${trendRule}
+- If the CURRENT STATE ANALYSIS and journal context above are enough to answer, answer directly and specifically; only ask a clarifying question if the request truly cannot be addressed with the available data, and never ask more than one clarifying question before attempting a substantive answer
+- State patterns and impressions tentatively (e.g. "tends to", "often", "seems to") rather than as flat, absolute facts about the user
 - Keep responses 2–4 paragraphs unless the question genuinely requires more
 - Never give medical or clinical advice. Never diagnose.
 - Sound like you have read every entry carefully

@@ -194,6 +194,7 @@ let journalContext='';
 let conversationHistory=[];
 let userEntries=[];
 let consentScopes={sentiment:true,pragmatic:true,temporal:true,goal_inference:true,ai_full_history:true};
+const shownClarificationGoals=new Set();
 
 const canvas=document.getElementById('particles');
 const ctx2=canvas.getContext('2d');
@@ -407,7 +408,8 @@ async function sendMessage(){
     const l4=storedGoals.length>0
       ?window.MindNookBaseline.computeGoalAlignment(lastAnalysis,userEntries,typedGoals,consentScopes)
       :{score:null,label:'No goals set',detail:'',goals:[]};
-    if(l4.lowConfidenceGoal&&window.MindNookGoalClarification&&session?.access_token){
+    if(l4.lowConfidenceGoal&&window.MindNookGoalClarification&&session?.access_token&&!shownClarificationGoals.has(l4.lowConfidenceGoal.id)){
+      shownClarificationGoals.add(l4.lowConfidenceGoal.id);
       window.MindNookGoalClarification.renderClarificationPrompt(l4.lowConfidenceGoal,{
         supabaseUrl:SUPABASE_URL,accessToken:session.access_token
       });
@@ -514,7 +516,7 @@ function generateLocalReply(msg){
   if(m.includes('positive')||m.includes('better')||m.includes('improv')){return`${moodPct}% of your reflections carry positive sentiment — and your most recent entries show a ${recentSentiment.toLowerCase()} emotional tone.\n\nPositive growth in journaling isn't always linear. The fact that you're here, reflecting consistently, is itself the most reliable indicator of emotional resilience.\n\nWhat feels different for you lately?`;}
   if(m.includes('burnout')||m.includes('exhausted')||m.includes('tired')){return`Burnout tends to show up in writing before we consciously name it — shorter entries, repetitive phrasing, reduced emotional range.\n\nIf you're feeling depleted right now, your mind is communicating something real. Rest isn't a retreat from reflection — sometimes it's the most honest response.\n\nWhat does a lower-demand day look like for you?`;}
   if(m.includes('summar')||m.includes('overview')){return`Here's what your journal history reveals: ${userEntries.length} total reflections, with ${moodPct}% positive sentiment overall. Your average entry is ${avgWords} words.\n\nThe most recent tone in your writing is ${recentSentiment.toLowerCase()}.\n\nYour consistency here is worth something. Most people think about journaling. You actually do it.`;}
-  return`That's a meaningful question to sit with. Looking at your ${userEntries.length} entries, what stands out is that your most reflective writing tends to unlock something real about whatever you were carrying at the time.\n\nYour current mood trend shows ${moodPct}% positive sentiment, and your most recent entry was ${recentSentiment.toLowerCase()}.\n\nCould you tell me a bit more about what's prompting this? The more specific you are, the more specifically I can reflect back.`;
+  return`Looking at your ${userEntries.length} entries, your current mood trend shows ${moodPct}% positive sentiment, and your most recent entry was ${recentSentiment.toLowerCase()}. Your most reflective writing tends to unlock something real about whatever you were carrying at the time.\n\nIf you'd like, I can go deeper on your sentiment trend, your recurring themes, or how your writing style has changed.`;
 }
 
 function usePrompt(el){
