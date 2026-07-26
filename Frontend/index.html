@@ -454,7 +454,7 @@ document.getElementById('theme-toggle').addEventListener('click',()=>{const curr
     showingA=!showingA;
   }
   titleB.style.display='none';
-  setInterval(swapTitles,10000);
+  setInterval(swapTitles,5000);
 })();
 
 const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:0.07});
