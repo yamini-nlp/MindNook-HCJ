@@ -33,7 +33,7 @@
 
   function svgIcon(name,cls){
     var body=ICONS[name]||'';
-    return '<svg class="mn-icon'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+body+'</svg>';
+    return '<svg class="mn-icon'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+body+'</svg>';
   }
 
   function getPageName(){
@@ -95,7 +95,7 @@
 
     return ''+
       '<div class="mn-sidebar-brand">'+
-        '<a href="dashboard.html" class="mn-brand-link" aria-label="MindNook, go to Dashboard">'+
+        '<a href="index.html" class="mn-brand-link" aria-label="MindNook, go to landing page">'+
           '<span class="mn-brand-dot" aria-hidden="true"></span>'+
           '<span class="mn-brand-text">MindNook</span>'+
         '</a>'+
