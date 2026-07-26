@@ -17,11 +17,16 @@ Classify the reply below against exactly these five harmful-action categories:
 
 Reply to classify: "{{REPLY_TEXT}}"
 
-Return exactly this JSON structure and nothing else:
-{"violations":[{"category":"clinical_diagnosis","confidence":0.0}],"safe":true}
+Return exactly this JSON structure and nothing else, with no keys added or removed:
+{"violations":[],"safe":true}
+
+Example when a category is present:
+{"violations":[{"category":"clinical_diagnosis","confidence":0.82}],"safe":false}
 
 Rules:
 violations must only include categories that are actually present, each with a confidence between 0.0 and 1.0
 if no category applies, violations must be an empty array and safe must be true
 if any category applies with confidence >= 0.5, safe must be false
-category values must be exactly one of: clinical_diagnosis, medication_suggestion, dismissal_of_pattern, overgeneralization, privacy_violation`;
+if every included category has confidence < 0.5, safe must be true
+category values must be exactly one of: clinical_diagnosis, medication_suggestion, dismissal_of_pattern, overgeneralization, privacy_violation
+the safe field must always exactly agree with the violations array using the rule above`;

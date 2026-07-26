@@ -107,7 +107,7 @@ serve(async (req) => {
         const violations = (parsed.violations || []).filter((v) =>
           (MODERATION_CATEGORIES as readonly string[]).includes(v.category)
         );
-        const safe = violations.every((v) => v.confidence < 0.5) && !!parsed.safe;
+        const safe = violations.every((v) => v.confidence < 0.5);
 
         if (authedUserId && violations.length > 0) {
           for (const v of violations) {
