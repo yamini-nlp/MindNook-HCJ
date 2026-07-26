@@ -111,7 +111,7 @@ section{position:relative;z-index:2;}
 .prob-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(196,118,138,0.045),transparent 60%);opacity:0;transition:opacity 0.3s;}
 .prob-card:hover::before{opacity:1;}
 .prob-card:hover{border-color:rgba(196,118,138,0.22);transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,0.2);}
-.pc-num{font-family:'Playfair Display',serif;font-size:0.72rem;letter-spacing:2.5px;color:var(--dim3);margin-bottom:12px;text-transform:uppercase;}
+.pc-num{font-family:'Playfair Display',serif;font-size:0.72rem;letter-spacing:2.5px;color:var(--gold2);margin-bottom:12px;text-transform:uppercase;opacity:0.75;}
 .pc-title{font-size:0.95rem;font-weight:500;color:var(--text);margin-bottom:8px;letter-spacing:0.2px;font-family:'DM Sans',sans-serif;}
 .pc-text{font-size:0.82rem;font-weight:300;color:var(--dim2);line-height:1.75;font-family:'DM Sans',sans-serif;}
 .cream-section{background:linear-gradient(180deg,var(--bg2) 0%,rgba(217,197,178,0.04) 30%,rgba(217,197,178,0.06) 60%,var(--bg2) 100%);position:relative;}
@@ -131,7 +131,7 @@ section{position:relative;z-index:2;}
 .feat-icon-wrap{width:44px;height:44px;border-radius:12px;background:var(--gsoft);border:1px solid var(--gline);display:flex;align-items:center;justify-content:center;margin-bottom:20px;transition:all 0.3s;}
 .feat-card:hover .feat-icon-wrap{background:rgba(217,197,178,0.1);border-color:rgba(217,197,178,0.2);}
 .feat-icon{width:18px;height:18px;stroke:var(--gold2);fill:none;stroke-width:1.5;}
-.feat-num{font-family:'Playfair Display',serif;font-size:0.66rem;letter-spacing:2.5px;color:var(--dim3);margin-bottom:10px;text-transform:uppercase;}
+.feat-num{font-family:'Playfair Display',serif;font-size:0.66rem;letter-spacing:2.5px;color:var(--gold2);margin-bottom:10px;text-transform:uppercase;opacity:0.75;}
 .feat-title{font-size:0.95rem;font-weight:500;color:var(--text);margin-bottom:10px;letter-spacing:0.2px;font-family:'DM Sans',sans-serif;}
 .feat-text{font-size:0.8rem;font-weight:300;color:var(--dim2);line-height:1.75;font-family:'DM Sans',sans-serif;}
 .highlight-wrap{padding:120px 60px;max-width:1400px;margin:0 auto;}
@@ -290,10 +290,6 @@ footer{border-top:1px solid var(--gline);padding:80px 60px 40px;position:relativ
   </div>
   <div class="hero-visual">
     <div class="visual-frame"><img src="images/mindnook.jpeg" alt="MindNook reflective journaling interface" class="hero-img"></div>
-    <div class="visual-badge">
-      <div class="visual-badge-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <div><div class="visual-badge-title">Personal Baseline</div><div class="visual-badge-text">Scored against your own history, not a generic average.</div></div>
-    </div>
   </div>
 </section>
 <div class="ticker-wrap">
@@ -458,7 +454,7 @@ document.getElementById('theme-toggle').addEventListener('click',()=>{const curr
     showingA=!showingA;
   }
   titleB.style.display='none';
-  setInterval(swapTitles,15000);
+  setInterval(swapTitles,10000);
 })();
 
 const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:0.07});
