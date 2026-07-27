@@ -408,14 +408,16 @@ function buildMonthData(entries){
 function computeStreak(entries){
   if(!entries.length)return 0;
   const days=new Set(entries.map(e=>new Date(e.created_at).toDateString()));
-  let streak=0,d=new Date();
+  let d=new Date();
+  if(!days.has(d.toDateString()))d.setDate(d.getDate()-1);
+  let streak=0;
   while(days.has(d.toDateString())){streak++;d.setDate(d.getDate()-1);}
   return streak;
 }
 
-function computeConsistency(entries){
+function computeConsistency(entries,earliestDate){
   if(!entries.length)return 0;
-  const first=new Date(entries[entries.length-1].created_at);
+  const first=earliestDate?new Date(earliestDate):new Date(entries[entries.length-1].created_at);
   const totalDays=Math.max(1,Math.ceil((Date.now()-first.getTime())/86400000));
   const activeDays=new Set(entries.map(e=>new Date(e.created_at).toDateString())).size;
   return Math.round((activeDays/totalDays)*100);
@@ -538,6 +540,13 @@ async function initDashboard(){
   const{data:entries,error}=await sb.from('journal_entries').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
   if(error){console.error(error);document.getElementById('bannerText').textContent='Error: '+error.message;return;}
   allEntries=entries||[];
+  let trueTotal=allEntries.length,earliestDate=null;
+  if(allEntries.length){
+    const{count}=await sb.from('journal_entries').select('id',{count:'exact',head:true}).eq('user_id',user.id);
+    if(typeof count==='number')trueTotal=count;
+    const{data:oldest}=await sb.from('journal_entries').select('created_at').eq('user_id',user.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
+    if(oldest&&oldest.created_at)earliestDate=oldest.created_at;
+  }
   const total=allEntries.length;
   if(total===0){
     document.getElementById('emptyState').style.display='block';
@@ -553,7 +562,7 @@ async function initDashboard(){
   document.getElementById('emptyState').style.display='none';
   document.getElementById('analyticsSection').style.display='block';
   const streak=computeStreak(allEntries);
-  const consistency=computeConsistency(allEntries);
+  const consistency=computeConsistency(allEntries,earliestDate);
   const avgWords=Math.round(allEntries.reduce((a,e)=>a+(e.word_count||0),0)/total);
   const avgMistakes=(allEntries.reduce((a,e)=>a+(e.mistake_count||0),0)/total).toFixed(1);
   const moodCounts={};
@@ -568,13 +577,13 @@ async function initDashboard(){
   const dayCount={};allEntries.forEach(e=>{const d=new Date(e.created_at).toLocaleDateString('en-US',{weekday:'long'});dayCount[d]=(dayCount[d]||0)+1;});
   const bestDay=Object.entries(dayCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'N/A';
   document.getElementById('streakVal').textContent=streak;
-  document.getElementById('totalEntries').textContent=total;
+  document.getElementById('totalEntries').textContent=trueTotal;
   document.getElementById('consistency').textContent=consistency+'%';
   const circ=2*Math.PI*38;
-  document.getElementById('streakRing').style.strokeDashoffset=circ-(streak/Math.max(streak,7))*circ*0.8;
-  document.getElementById('stat-entries').textContent=total;
+  document.getElementById('streakRing').style.strokeDashoffset=circ-Math.min(streak/30,1)*circ;
+  document.getElementById('stat-entries').textContent=trueTotal;
   document.getElementById('trend-entries').textContent=thisWeek.length+' this week';
-  setBar('bar-entries',Math.min(total/50,1)*100);
+  setBar('bar-entries',Math.min(trueTotal/50,1)*100);
   document.getElementById('stat-words').textContent=avgWords;
   document.getElementById('trend-words').textContent=weekWordAvg>lastWeekWordAvg?`↑ up from ${lastWeekWordAvg} last week`:`${weekWordAvg} words this week`;
   setBar('bar-words',Math.min(avgWords/500,1)*100);
@@ -592,7 +601,7 @@ async function initDashboard(){
   drawChart(wd,wl);
   renderEntries(allEntries);
   document.getElementById('weeklySummary').innerHTML=`You wrote <b>${thisWeek.length} entries</b> this week averaging <b>${weekWordAvg} words</b>. Streak: <b>${streak} days</b>. Most active day: <b>${bestDay}</b>.`;
-  document.getElementById('bannerText').textContent=`${total} entries · streak ${streak} days · consistency ${consistency}% · updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('bannerText').textContent=`${trueTotal} entries · streak ${streak} days · consistency ${consistency}% · updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
 
   if(window.MindNookBaseline&&allEntries.length>=3){
     const sentimentBaseline=window.MindNookBaseline.computeSentimentBaseline(allEntries);
