@@ -224,6 +224,7 @@
       document.documentElement.setAttribute('data-theme',theme);
       writeTheme(theme);
       updateThemeLabel(theme);
+      document.dispatchEvent(new CustomEvent('mindnook:themechange',{detail:{theme:theme}}));
     });
 
     backdrop.addEventListener('click',closeMobile);

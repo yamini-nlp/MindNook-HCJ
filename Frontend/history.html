@@ -118,6 +118,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;ba
 <script>
 const sb=window.__sb;
 const SI={Positive:'↑',Negative:'↓',Neutral:'→'};
+let lastEntries=[];
+function themeVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+document.addEventListener('mindnook:themechange',function(){
+if(lastEntries.length)buildMoodChart(lastEntries);
+});
 function formatDate(iso){
 const d=new Date(iso);
 return{
@@ -145,12 +150,12 @@ borderWidth:1.5,fill:true,tension:0.4,
 options:{
 responsive:true,maintainAspectRatio:false,
 plugins:{legend:{display:false},tooltip:{
-backgroundColor:'rgba(13,26,24,0.95)',titleColor:'#d9c5b2',bodyColor:'rgba(240,236,226,0.7)',
-borderColor:'rgba(217,197,178,0.2)',borderWidth:1,padding:10,cornerRadius:8,
+backgroundColor:themeVar('--chart-tooltip-bg2'),titleColor:themeVar('--gold'),bodyColor:themeVar('--chart-tooltip-body'),
+borderColor:themeVar('--chart-tooltip-border'),borderWidth:1,padding:10,cornerRadius:8,
 callbacks:{label:ctx=>['Negative','Neutral','Positive'][ctx.raw]||''}
 }},
 scales:{
-x:{ticks:{color:'rgba(240,236,226,0.38)',font:{size:9}},grid:{display:false}},
+x:{ticks:{color:themeVar('--chart-tick2'),font:{size:9}},grid:{display:false}},
 y:{display:false,min:-0.3,max:2.3},
 }
 }
@@ -176,6 +181,7 @@ const days=new Set(entries.map(e=>new Date(e.created_at).toDateString()));
 for(let i=0;i<365;i++){const d=new Date(today);d.setDate(today.getDate()-i);if(days.has(d.toDateString()))streak++;else if(i>0)break;}
 document.getElementById('agg-streak').innerText=streak;
 document.getElementById('chart-strip').style.display='block';
+lastEntries=entries;
 buildMoodChart(entries);
 const months={};
 entries.forEach(e=>{

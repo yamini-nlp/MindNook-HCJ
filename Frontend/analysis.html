@@ -69,7 +69,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 .intensity-bar-wrap{margin-top:20px}
 .ibar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ibar-name{font-size:0.8rem;color:var(--text2);width:72px;flex-shrink:0}
-.ibar-track{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.ibar-track{flex:1;height:6px;background:var(--track);border-radius:3px;overflow:hidden}
 .ibar-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.16,1,0.3,1)}
 .ibar-val{font-size:0.75rem;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
 .growth-metrics{display:flex;flex-direction:column;gap:14px;margin-top:4px}
@@ -83,7 +83,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 .gmetric-compare{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-bottom:6px}
 .gmetric-compare span{font-size:0.7rem}
 .compare-dot{width:8px;height:8px;border-radius:50%}
-.gmetric-double-bar{height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;position:relative}
+.gmetric-double-bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden;position:relative}
 .gdb-prev{position:absolute;top:0;left:0;height:100%;border-radius:3px;opacity:0.4}
 .gdb-curr{position:absolute;top:0;left:0;height:100%;border-radius:3px}
 .progress-ring-wrap{display:flex;align-items:center;justify-content:center;gap:24px;padding:20px 0 8px}
@@ -94,7 +94,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 .style-bar-label{display:flex;justify-content:space-between;margin-bottom:5px}
 .style-bar-name{font-size:0.8rem;color:var(--text2)}
 .style-bar-pct{font-size:0.78rem;color:var(--text3)}
-.style-bar-track{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.style-bar-track{height:8px;background:var(--track);border-radius:4px;overflow:hidden}
 .style-bar-fill{height:100%;border-radius:4px}
 .divider{height:1px;background:var(--border);margin:20px 0}
 .full-row{grid-column:1/-1}
@@ -246,6 +246,17 @@ const sb=window.__sb;
 
 let moodLineChartInst=null,moodBarChartInst=null,toneChartInst=null,radarChartInst=null,trendMiniInst=null;
 let entries=[];
+
+function themeVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+
+document.addEventListener('mindnook:themechange',function(){
+  if(!entries.length)return;
+  buildMoodLineChart(entries);
+  buildTrendMini(entries);
+  if(document.getElementById('mood-bar-wrap')&&document.getElementById('mood-bar-wrap').style.display!=='none')buildMoodBarChart(entries);
+  if(document.getElementById('growth-style-wrap')&&document.getElementById('growth-style-wrap').style.display!=='none')buildToneChart(entries);
+  if(document.getElementById('growth-radar-wrap')&&document.getElementById('growth-radar-wrap').style.display!=='none')buildRadarChart(entries);
+});
 
 function sentimentScore(e){
     if(e.sentiment_score!=null)return e.sentiment_score;
@@ -409,7 +420,7 @@ function buildMoodLineChart(data){
     if(moodLineChartInst)moodLineChartInst.destroy();
     const labels=data.map(e=>new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}));
     const scores=data.map(e=>sentimentScore(e));
-    moodLineChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Mood Score',data:scores,borderColor:'#5bc4a8',backgroundColor:'rgba(91,196,168,0.08)',borderWidth:2,pointBackgroundColor:'#5bc4a8',pointRadius:4,pointHoverRadius:6,tension:0.4,fill:true},{label:'Moving Avg',data:scores.map((_,i,a)=>Math.round(a.slice(Math.max(0,i-2),i+1).reduce((s,v)=>s+v,0)/Math.min(i+1,3))),borderColor:'rgba(217,197,178,0.5)',borderWidth:1.5,pointRadius:0,tension:0.4,fill:false,borderDash:[4,4]}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1,padding:10}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}},y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}}}}});
+    moodLineChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Mood Score',data:scores,borderColor:'#5bc4a8',backgroundColor:'rgba(91,196,168,0.08)',borderWidth:2,pointBackgroundColor:'#5bc4a8',pointRadius:4,pointHoverRadius:6,tension:0.4,fill:true},{label:'Moving Avg',data:scores.map((_,i,a)=>Math.round(a.slice(Math.max(0,i-2),i+1).reduce((s,v)=>s+v,0)/Math.min(i+1,3))),borderColor:'rgba(217,197,178,0.5)',borderWidth:1.5,pointRadius:0,tension:0.4,fill:false,borderDash:[4,4]}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:themeVar('--chart-tooltip-bg'),titleColor:themeVar('--chart-tooltip-title'),bodyColor:themeVar('--chart-tooltip-body'),borderColor:themeVar('--chart-tooltip-border'),borderWidth:1,padding:10}},scales:{x:{grid:{color:themeVar('--chart-grid')},ticks:{color:themeVar('--chart-tick'),font:{size:11}}},y:{min:0,max:100,grid:{color:themeVar('--chart-grid')},ticks:{color:themeVar('--chart-tick'),font:{size:11}}}}}});
 }
 
 function buildMoodBarChart(data){
@@ -426,7 +437,7 @@ function buildMoodBarChart(data){
         else if(s.includes('negative'))negData[3-wi]++;
         else neuData[3-wi]++;
     });
-    moodBarChartInst=new Chart(ctx,{type:'bar',data:{labels:weeks,datasets:[{label:'Positive',data:posData,backgroundColor:'rgba(91,196,168,0.75)',borderRadius:6},{label:'Neutral',data:neuData,backgroundColor:'rgba(155,142,160,0.5)',borderRadius:6},{label:'Negative',data:negData,backgroundColor:'rgba(196,118,138,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:11}}}}}});
+    moodBarChartInst=new Chart(ctx,{type:'bar',data:{labels:weeks,datasets:[{label:'Positive',data:posData,backgroundColor:'rgba(91,196,168,0.75)',borderRadius:6},{label:'Neutral',data:neuData,backgroundColor:'rgba(155,142,160,0.5)',borderRadius:6},{label:'Negative',data:negData,backgroundColor:'rgba(196,118,138,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:themeVar('--chart-tooltip-bg'),titleColor:themeVar('--chart-tooltip-title'),bodyColor:themeVar('--chart-tooltip-body'),borderColor:themeVar('--chart-tooltip-border'),borderWidth:1}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:themeVar('--chart-tick'),font:{size:11}}},y:{stacked:true,grid:{color:themeVar('--chart-grid')},ticks:{color:themeVar('--chart-tick'),font:{size:11}}}}}});
 }
 
 function buildHeatmap(data){
@@ -474,7 +485,7 @@ function buildToneChart(data){
     const avgLex=(arr)=>arr.length?parseFloat((arr.reduce((a,e)=>a+(parseFloat(e.lexical_diversity)||0),0)/arr.length).toFixed(2)):0;
     const prevScores=[avgScore(prev),Math.round(avgLex(prev)*100),prev.length?Math.round(prev.reduce((a,e)=>a+(e.positive_word_count||0),0)/prev.length):0,prev.length?Math.round(100-prev.reduce((a,e)=>a+(e.mistake_count||0),0)/prev.length*5):0,prev.length?Math.round(prev.reduce((a,e)=>a+(parseInt(e.readability)||50),0)/prev.length):0];
     const currScores=[avgScore(curr),Math.round(avgLex(curr)*100),curr.length?Math.round(curr.reduce((a,e)=>a+(e.positive_word_count||0),0)/curr.length):0,curr.length?Math.round(100-curr.reduce((a,e)=>a+(e.mistake_count||0),0)/curr.length*5):0,curr.length?Math.round(curr.reduce((a,e)=>a+(parseInt(e.readability)||50),0)/curr.length):0];
-    toneChartInst=new Chart(ctx,{type:'bar',data:{labels:['Sentiment','Vocabulary','Positivity','Grammar','Readability'],datasets:[{label:'Previous',data:prevScores,backgroundColor:'rgba(240,236,226,0.12)',borderRadius:4},{label:'Current',data:currScores,backgroundColor:'rgba(91,196,168,0.65)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:'rgba(240,236,226,0.4)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.4)',font:{size:10}}}}}});
+    toneChartInst=new Chart(ctx,{type:'bar',data:{labels:['Sentiment','Vocabulary','Positivity','Grammar','Readability'],datasets:[{label:'Previous',data:prevScores,backgroundColor:themeVar('--gsoft'),borderRadius:4},{label:'Current',data:currScores,backgroundColor:'rgba(91,196,168,0.65)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:themeVar('--chart-tooltip-bg'),titleColor:themeVar('--chart-tooltip-title'),bodyColor:themeVar('--chart-tooltip-body'),borderColor:themeVar('--chart-tooltip-border'),borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:themeVar('--chart-tick'),font:{size:10}}},y:{grid:{color:themeVar('--chart-grid')},ticks:{color:themeVar('--chart-tick'),font:{size:10}}}}}});
 }
 
 function buildRadarChart(data){
@@ -492,7 +503,7 @@ function buildRadarChart(data){
         const avgWc=arr.length?Math.min(100,arr.reduce((a,e)=>a+(e.word_count||0),0)/arr.length/3):50;
         return[Math.round(avgLd),Math.round(avgR),Math.round(Math.max(0,avgG)),Math.round(avgWc),Math.round(avgEd),Math.round(avgUw/2)];
     };
-    radarChartInst=new Chart(ctx,{type:'radar',data:{labels:['Vocabulary','Clarity','Grammar','Depth','Emotion','Style'],datasets:[{label:'Previous',data:mk(prev),borderColor:'rgba(240,236,226,0.3)',backgroundColor:'rgba(240,236,226,0.04)',borderWidth:1.5,pointRadius:3,pointBackgroundColor:'rgba(240,236,226,0.4)',borderDash:[4,4]},{label:'Current',data:mk(curr),borderColor:'#5bc4a8',backgroundColor:'rgba(91,196,168,0.1)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#5bc4a8'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},scales:{r:{grid:{color:'rgba(255,255,255,0.08)'},angleLines:{color:'rgba(255,255,255,0.08)'},pointLabels:{color:'rgba(240,236,226,0.5)',font:{size:11}},ticks:{display:false},min:0,max:100}}}});
+    radarChartInst=new Chart(ctx,{type:'radar',data:{labels:['Vocabulary','Clarity','Grammar','Depth','Emotion','Style'],datasets:[{label:'Previous',data:mk(prev),borderColor:themeVar('--text3'),backgroundColor:themeVar('--gsoft'),borderWidth:1.5,pointRadius:3,pointBackgroundColor:themeVar('--text3'),borderDash:[4,4]},{label:'Current',data:mk(curr),borderColor:'#5bc4a8',backgroundColor:'rgba(91,196,168,0.1)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#5bc4a8'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:themeVar('--chart-tooltip-bg'),titleColor:themeVar('--chart-tooltip-title'),bodyColor:themeVar('--chart-tooltip-body'),borderColor:themeVar('--chart-tooltip-border'),borderWidth:1}},scales:{r:{grid:{color:themeVar('--chart-grid2')},angleLines:{color:themeVar('--chart-grid2')},pointLabels:{color:themeVar('--chart-tick'),font:{size:11}},ticks:{display:false},min:0,max:100}}}});
     const half2=Math.max(1,Math.floor(data.length/2));
     const currData=data.slice(0,half2);
     const avgLd2=currData.length?parseFloat((currData.reduce((a,e)=>a+(parseFloat(e.lexical_diversity)||0),0)/currData.length).toFixed(2)):0;
@@ -502,7 +513,7 @@ function buildRadarChart(data){
     document.getElementById('radarRings').innerHTML=rings.map(r=>{
         const circ=2*Math.PI*36;
         const offset=circ-(r.pct/100)*circ;
-        return`<div class="ring-item"><svg width="88" height="88" viewBox="0 0 88 88"><circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/><circle cx="44" cy="44" r="36" fill="none" stroke="${r.color}" stroke-width="8" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 44 44)"/><text x="44" y="48" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="var(--text)">${r.pct}%</text></svg><div class="ring-label">${r.label}</div></div>`;
+        return`<div class="ring-item"><svg width="88" height="88" viewBox="0 0 88 88"><circle cx="44" cy="44" r="36" fill="none" stroke="var(--track)" stroke-width="8"/><circle cx="44" cy="44" r="36" fill="none" stroke="${r.color}" stroke-width="8" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 44 44)"/><text x="44" y="48" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="var(--text)">${r.pct}%</text></svg><div class="ring-label">${r.label}</div></div>`;
     }).join('');
 }
 
@@ -518,7 +529,7 @@ function buildTrendMini(data){
         negData.push(Math.round(chunk.reduce((a,e)=>a+(e.negative_word_count||0),0)/chunk.length));
         labels.push(new Date(chunk[0].created_at).toLocaleDateString('en-GB',{month:'short'}));
     }
-    trendMiniInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Positive',data:posData,borderColor:'#5bc4a8',borderWidth:2,pointRadius:2,tension:0.4,fill:false},{label:'Negative',data:negData,borderColor:'#c47a8a',borderWidth:2,pointRadius:2,tension:0.4,fill:false,borderDash:[3,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#152422',titleColor:'#f0ece2',bodyColor:'rgba(240,236,226,0.7)',borderColor:'rgba(217,197,178,0.2)',borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:'rgba(240,236,226,0.35)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(240,236,226,0.35)',font:{size:10}}}}}});
+    trendMiniInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Positive',data:posData,borderColor:'#5bc4a8',borderWidth:2,pointRadius:2,tension:0.4,fill:false},{label:'Negative',data:negData,borderColor:'#c47a8a',borderWidth:2,pointRadius:2,tension:0.4,fill:false,borderDash:[3,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:themeVar('--chart-tooltip-bg'),titleColor:themeVar('--chart-tooltip-title'),bodyColor:themeVar('--chart-tooltip-body'),borderColor:themeVar('--chart-tooltip-border'),borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:themeVar('--chart-tick2'),font:{size:10}}},y:{grid:{color:themeVar('--chart-grid')},ticks:{color:themeVar('--chart-tick2'),font:{size:10}}}}}});
 }
 
 function buildMonthTimeline(data){
@@ -546,7 +557,7 @@ function buildMonthTimeline(data){
             else bg=`rgba(91,196,168,${0.15+score/150})`;
             dot.style.background=bg;
             dot.title=`Entry ${idx+1} · ${score}`;
-            dot.innerHTML=`<span style="font-size:0.65rem;color:rgba(240,236,226,0.5)">${score}</span>`;
+            dot.innerHTML=`<span style="font-size:0.65rem;color:${themeVar('--chart-tick')}">${score}</span>`;
             dotsWrap.appendChild(dot);
         });
         container.appendChild(col);

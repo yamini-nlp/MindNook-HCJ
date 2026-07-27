@@ -34,16 +34,16 @@
         .metric-box .lbl{font-size:0.62rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
         .lex-score{font-family:'Playfair Display',serif;font-size:3rem;color:var(--gold);line-height:1;}
         .lex-label{font-size:0.66rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:5px;}
-        .lex-bar-track{height:5px;background:rgba(255,255,255,0.05);border-radius:50px;margin:12px 0 7px;overflow:hidden;}
+        .lex-bar-track{height:5px;background:var(--track2);border-radius:50px;margin:12px 0 7px;overflow:hidden;}
         .lex-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--teal2),var(--teal));transition:width 1.2s cubic-bezier(0.16,1,0.3,1);}
         .lex-feedback{font-size:0.82rem;color:var(--text2);line-height:1.6;}
         .chip-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
-        .chip{padding:4px 14px;border-radius:50px;font-size:0.76rem;background:rgba(240,236,226,0.04);border:1px solid var(--border);color:var(--text2);}
+        .chip{padding:4px 14px;border-radius:50px;font-size:0.76rem;background:var(--gsoft);border:1px solid var(--border);color:var(--text2);}
         .chip.warn{border-color:rgba(196,118,138,0.3);background:rgba(196,118,138,0.08);color:var(--rose);}
         .chip.suggest{border-color:rgba(91,196,168,0.3);background:rgba(91,196,168,0.08);color:var(--teal);}
         .replace-table{width:100%;border-collapse:collapse;margin-top:8px;}
         .replace-table th{font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-weight:500;text-align:left;padding:8px 0;border-bottom:1px solid var(--border);}
-        .replace-table td{padding:10px 0;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text2);vertical-align:middle;}
+        .replace-table td{padding:10px 0;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
         .replace-table td:first-child{color:var(--rose);width:36%;}
         .replace-table td:last-child{color:var(--teal);}
         .arrow{color:var(--text3);margin:0 8px;}
@@ -176,6 +176,11 @@
 <script>
 const SUPABASE_URL=window._env.SUPABASE_URL;
 const ANON=window._env.SUPABASE_ANON_KEY;
+function themeVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+let lastTone=null;
+document.addEventListener('mindnook:themechange',function(){
+if(lastTone)drawDonut(lastTone.pos,lastTone.neg,lastTone.neu);
+});
 
 const POS=new Set(['happy','happiness','joy','joyful','glad','grateful','gratitude','thankful','love','loved','loving','hopeful','hope','peace','peaceful','calm','content','contented','proud','pride','excited','excitement','inspired','inspiration','motivated','motivation','amazing','wonderful','fantastic','great','good','excellent','beautiful','blessed','cheerful','delight','delighted','energised','energized','enthusiastic','optimistic','pleased','positive','radiant','refreshed','satisfied','uplifted','warm','bright','elated','ecstatic','confident','empowered','fulfilled','lively','playful','serene','sunny','thrilled','vibrant','alive','appreciative','brave','caring','creative','eager','free','generous','gentle','glowing','healing','kind','light','mindful','nurturing','open','patient','resilient','safe','strong','tender','trusting','whole','wise','fun','laugh','smile','enjoy','enjoyed','celebrate','celebration','accomplish','accomplished','success','successful','progress','grow','growth','adventure']);
 const NEG=new Set(['sad','sadness','angry','anger','tired','tiredness','stress','stressed','worry','worried','fear','fearful','lonely','loneliness','hurt','pain','painful','lost','dark','difficult','struggle','struggling','hopeless','anxious','anxiety','frustrated','frustration','overwhelmed','exhausted','exhaustion','upset','depressed','depression','nervous','scared','terrible','awful','horrible','miserable','disappointed','disappointment','annoyed','confused','helpless','weak','broken','cry','crying','tears','grief','grieving','regret','shame','ashamed','guilt','guilty','hate','bored','burned','chaos','cruel','defeated','desperate','doubt','dread','dull','empty','fail','failure','gloomy','heavy','hollow','ignored','insecure','irritated','jealous','meaningless','numb','panicked','paralysed','powerless','rejection','resentment','restless','shattered','sorrow','stuck','suffering','tense','tension','tragic','trapped','troubled','uncertain','uncomfortable','unfair','unhappy','unloved','unworthy','useless','vulnerable','worthless','wrong','mistake','hard','bad','worse','worst','never','alone','miss','missing']);
@@ -199,8 +204,10 @@ function countTone(text){
 function countUnique(text){return new Set(tokenise(text)).size;}
 
 function drawDonut(pos,neg,neu){
+    lastTone={pos,neg,neu};
     const ctx=document.getElementById('tone-chart').getContext('2d');
-    new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[pos||0.001,neg||0.001,neu||0.001],backgroundColor:['rgba(91,196,168,0.82)','rgba(196,118,138,0.82)','rgba(155,142,160,0.55)'],borderColor:['#152422','#152422','#152422'],borderWidth:3}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:1000}}});
+    const bc=themeVar('--chart-doughnut-border');
+    new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[pos||0.001,neg||0.001,neu||0.001],backgroundColor:['rgba(91,196,168,0.82)','rgba(196,118,138,0.82)','rgba(155,142,160,0.55)'],borderColor:[bc,bc,bc],borderWidth:3}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:1000}}});
     document.getElementById('tone-pos-n').innerText=pos;
     document.getElementById('tone-neg-n').innerText=neg;
     document.getElementById('tone-neu-n').innerText=neu;
