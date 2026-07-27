@@ -61,7 +61,7 @@ describe('pragmatic-analysis edge function (mocked Supabase + Groq)', () => {
   let createHandler;
 
   beforeAll(async () => {
-    const mod = await import('../../supabase/functions/pragmatic-analysis/handler.ts');
+    const mod = await import('../../../supabase/functions/pragmatic-analysis/handler.ts');
     createHandler = mod.createHandler;
   });
 

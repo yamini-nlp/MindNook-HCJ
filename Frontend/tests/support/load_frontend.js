@@ -1,7 +1,7 @@
 const path = require('path');
 
 function loadFrontendModules() {
-  const frontendDir = path.join(__dirname, '..', '..', 'Frontend');
+  const frontendDir = path.join(__dirname, '..', '..');
   delete require.cache[require.resolve(path.join(frontendDir, 'hyperbole_lexicon.js'))];
   delete require.cache[require.resolve(path.join(frontendDir, 'utility_decomposition.js'))];
   delete require.cache[require.resolve(path.join(frontendDir, 'personal_baseline.js'))];
