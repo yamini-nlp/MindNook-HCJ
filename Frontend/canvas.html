@@ -23,54 +23,131 @@
     <link rel="stylesheet" href="sidebar_nav.css">
     <link rel="stylesheet" href="design-tokens.css">
     <link rel="stylesheet" href="shared-components.css">
-        <title>MindNook | Canvas Editor</title>
+    <title>MindNook | Canvas Editor</title>
     <style>
         html.mn-auth-pending body{visibility:hidden}
         html.mn-auth-ready body{visibility:visible}
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+
+        /* ---------- Canvas picker ---------- */
         .canvas-picker-view{background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:80px 20px;color:var(--text)}
         .picker-headline{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4.5vw,2.8rem);font-weight:400;letter-spacing:1px;line-height:1.1;margin-bottom:8px;text-align:center}
         .picker-headline em{font-style:italic;color:var(--gold2)}
         .picker-sub{color:var(--text2);font-size:0.9rem;letter-spacing:0.3px;margin-bottom:10px}
         .page-title-rule{width:40px;height:2px;background:var(--gold2);border-radius:2px;margin:10px auto 48px}
+
+        .draft-banner{max-width:560px;width:100%;background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:32px;animation:mn-fade-in 0.3s ease}
+        .draft-banner p{font-size:0.82rem;color:var(--text2);line-height:1.5}
+        .draft-banner strong{color:var(--gold2)}
+        .draft-banner-actions{display:flex;gap:8px;flex-shrink:0}
+        .draft-btn{border:none;border-radius:30px;padding:7px 16px;font-size:0.76rem;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s}
+        .draft-btn.resume{background:var(--gold);color:var(--bg3);font-weight:500}
+        .draft-btn.resume:hover{background:var(--gold3)}
+        .draft-btn.discard{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+        .draft-btn.discard:hover{color:var(--rose);border-color:var(--rose)}
+
         .canvas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:900px;width:100%}
         .canvas-square{padding:28px 15px;background:var(--card);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);position:relative;overflow:hidden}
         .canvas-square::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;background:transparent;transition:background 0.3s}
         .canvas-square:hover{background:var(--card2);transform:translateY(-4px);border-color:var(--border2)}
         .canvas-square:hover::before{background:var(--teal)}
+        .canvas-square:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
         .canvas-square.active{background:var(--card2);border-color:var(--gold2)}
         .canvas-square.active::before{background:var(--gold2)}
         .canvas-square-icon{font-size:2rem}
         .canvas-square p{font-size:0.8rem;color:var(--text2);letter-spacing:0.5px;font-family:'DM Sans',sans-serif;font-weight:400;text-align:center}
         .canvas-square.active p{color:var(--gold)}
+        .canvas-square-check{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:var(--gold2);color:var(--bg3);font-size:0.65rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.6);transition:all 0.25s}
+        .canvas-square.active .canvas-square-check{opacity:1;transform:scale(1)}
+
         .picker-footer-nav{margin-top:48px;display:flex;gap:14px;align-items:center}
-        .nav-btn{padding:10px 28px;border-radius:50px;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;letter-spacing:0.5px}
+        .nav-btn{padding:10px 28px;border-radius:50px;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;border:none}
         .nav-btn.secondary{background:transparent;border:1px solid var(--border2);color:var(--text2);text-decoration:none;display:inline-block}
         .nav-btn.secondary:hover{background:rgba(217,197,178,0.08);color:var(--text);border-color:var(--gold)}
         .nav-btn.primary{background:var(--gold);color:var(--bg3);border:none;font-weight:500}
-        .nav-btn.primary:hover{background:var(--gold3)}
+        .nav-btn.primary:hover:not(.disabled){background:var(--gold3)}
         .nav-btn.primary.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed;border:1px solid var(--border)}
-        .editor-view{min-height:100vh;background:var(--bg);padding-bottom:50px}
-        .editor-top-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 60px;border-bottom:1px solid var(--border)}
+        .nav-btn:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+
+        /* ---------- Editor ---------- */
+        .editor-view{min-height:100vh;background:var(--bg);padding-bottom:50px;animation:mn-fade-in 0.35s ease}
+        @keyframes mn-fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+        .editor-top-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 60px;border-bottom:1px solid var(--border);gap:16px;flex-wrap:wrap}
+        .editor-top-left{display:flex;align-items:center;gap:14px}
         .nav-action-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:8px 20px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.25s;letter-spacing:0.5px}
         .nav-action-btn:hover{background:rgba(217,197,178,0.08);color:var(--text)}
+        .nav-action-btn:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
         .nav-action-btn.primary{background:var(--gold);color:var(--bg3);border-color:var(--gold);font-weight:500}
-        .nav-action-btn.primary:hover{background:var(--gold3)}
-        .canvas-badge{font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--gold2);opacity:0.9;letter-spacing:1px}
+        .nav-action-btn.primary:hover:not(:disabled){background:var(--gold3)}
+        .nav-action-btn.primary:disabled{opacity:0.45;cursor:not-allowed}
+        .canvas-badge{font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--gold2);opacity:0.9;letter-spacing:1px;white-space:nowrap}
+        .autosave-indicator{font-size:0.72rem;color:var(--text3);letter-spacing:0.3px;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.3s}
+        .autosave-indicator.show{opacity:1}
+        .autosave-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
+
         .paper-container{display:flex;flex-direction:column;align-items:center;padding:32px 20px}
-        .ql-toolbar.ql-snow{background:var(--card)!important;border:1px solid var(--border2)!important;border-radius:50px!important;padding:8px 24px!important;margin-bottom:24px;box-shadow:none;display:flex;justify-content:center;width:fit-content}
+
+        .ql-toolbar.ql-snow{background:var(--card)!important;border:1px solid var(--border2)!important;border-radius:50px!important;padding:8px 22px!important;margin-bottom:20px;box-shadow:0 2px 18px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;width:fit-content;gap:2px}
+        .ql-toolbar.ql-snow .ql-formats{margin-right:10px!important;display:flex;align-items:center}
         .ql-toolbar.ql-snow .ql-stroke{stroke:var(--text2)!important}
         .ql-toolbar.ql-snow .ql-fill{fill:var(--text2)!important}
+        .ql-toolbar.ql-snow button{border-radius:8px;transition:background 0.15s}
+        .ql-toolbar.ql-snow button:hover{background:rgba(217,197,178,0.08)}
         .ql-toolbar.ql-snow button:hover .ql-stroke,.ql-toolbar.ql-snow button.ql-active .ql-stroke{stroke:var(--gold)!important}
         .ql-toolbar.ql-snow button:hover .ql-fill,.ql-toolbar.ql-snow button.ql-active .ql-fill{fill:var(--gold)!important}
-        .ql-toolbar.ql-snow .ql-picker-label{color:var(--text2)!important}
-        .ql-toolbar.ql-snow .ql-picker-label:hover{color:var(--gold)!important}
-        .ql-toolbar.ql-snow .ql-picker-options{background:var(--card2)!important;border:1px solid var(--border2)!important;border-radius:12px!important;color:var(--text)!important}
-        .ql-toolbar.ql-snow .ql-picker-item{color:var(--text2)!important}
+        .ql-toolbar.ql-snow button.ql-active{background:rgba(217,197,178,0.12)}
+
+        /* Picker base */
+        .ql-toolbar.ql-snow .ql-picker{height:28px}
+        .ql-toolbar.ql-snow .ql-picker-label{color:var(--text2)!important;border-radius:8px;display:flex!important;align-items:center;padding-left:10px!important;transition:background 0.15s}
+        .ql-toolbar.ql-snow .ql-picker-label:hover{color:var(--gold)!important;background:rgba(217,197,178,0.08)}
+        .ql-toolbar.ql-snow .ql-picker-label.ql-active{color:var(--gold)!important}
+        .ql-toolbar.ql-snow .ql-picker-label svg{right:8px!important}
+        .ql-toolbar.ql-snow .ql-picker-options{background:var(--card2)!important;border:1px solid var(--border2)!important;border-radius:12px!important;color:var(--text)!important;padding:6px!important;box-shadow:0 8px 30px rgba(0,0,0,0.35);max-height:260px;overflow-y:auto}
+        .ql-toolbar.ql-snow .ql-picker-item{color:var(--text2)!important;border-radius:6px;padding:6px 12px!important}
         .ql-toolbar.ql-snow .ql-picker-item:hover{color:var(--gold)!important;background:rgba(217,197,178,0.08)!important}
+        .ql-toolbar.ql-snow .ql-picker-item.ql-selected{color:var(--gold)!important}
+
+        /* Font picker: fixed collision between long font names and the caret icon */
+        .ql-toolbar.ql-snow .ql-picker.ql-font{width:176px}
+        .ql-toolbar.ql-snow .ql-picker.ql-font .ql-picker-label{
+            width:100%;
+            padding-right:28px!important;
+            font-size:0.82rem;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .ql-toolbar.ql-snow .ql-picker.ql-font .ql-picker-label::before{
+            display:inline-block;
+            max-width:100%;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            line-height:26px;
+        }
+        .ql-toolbar.ql-snow .ql-picker.ql-font .ql-picker-options{width:220px}
+        .ql-toolbar.ql-snow .ql-picker.ql-font .ql-picker-item::before{
+            display:inline-block;
+            max-width:100%;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            vertical-align:middle;
+        }
+
+        /* Size picker gets the same treatment for consistency */
+        .ql-toolbar.ql-snow .ql-picker.ql-size{width:88px}
+        .ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-label{width:100%;padding-right:26px!important;font-size:0.82rem}
+
         .ql-container.ql-snow{border:none!important;width:100%;max-width:800px;margin:0 auto}
         .ql-editor{background-color:#fff!important;min-height:75vh;padding:50px!important;box-shadow:0 4px 40px rgba(0,0,0,0.3);border-radius:4px;font-family:'Times New Roman',serif!important;font-size:1.1rem!important;color:#333!important}
+        .ql-editor.ql-blank::before{color:rgba(0,0,0,0.35)!important;font-style:normal!important}
+
+        .word-count-pill{margin-top:14px;font-size:0.75rem;color:var(--text3);letter-spacing:0.4px;display:flex;gap:14px}
+        .word-count-pill span b{color:var(--text2);font-weight:500}
+
         .theme-floral .ql-editor{background-color:#f5c9d7!important;background-image:url('https://www.transparenttextures.com/patterns/rose-petals.png')!important}
         .theme-ruled .ql-editor{background-image:linear-gradient(#e0e0e0 1px,transparent 1px)!important;background-size:100% 3rem!important;line-height:3rem!important;background-color:#fffaf0!important}
         .theme-midnight .ql-editor{background-color:#001f3f!important;color:#77ffff!important;text-shadow:0 0 5px #77ffff,0 0 10px #77ffff,0 0 20px #00d2ff}
@@ -81,7 +158,9 @@
         .theme-sunset .ql-editor{background:linear-gradient(180deg,#ffef96 0%,#ffb458 50%,#f96161 100%)!important;color:#fffaf0!important}
         .theme-noir .ql-editor{background-color:#000000!important;color:#d4af37!important;font-family:'Snell Roundhand',cursive!important}
         .theme-ocean .ql-editor{background:linear-gradient(180deg,#001f3f 0%,#003366 50%,#005b96 100%)!important;color:#e0f7fa!important}
+
         .ql-size-10px{font-size:10px!important}.ql-size-11px{font-size:11px!important}.ql-size-12px{font-size:12px!important}.ql-size-13px{font-size:13px!important}.ql-size-14px{font-size:14px!important}.ql-size-15px{font-size:15px!important}.ql-size-16px{font-size:16px!important}.ql-size-17px{font-size:17px!important}.ql-size-18px{font-size:18px!important}.ql-size-19px{font-size:19px!important}.ql-size-20px{font-size:20px!important}.ql-size-21px{font-size:21px!important}.ql-size-22px{font-size:22px!important}.ql-size-23px{font-size:23px!important}.ql-size-24px{font-size:24px!important}.ql-size-25px{font-size:25px!important}.ql-size-26px{font-size:26px!important}.ql-size-27px{font-size:27px!important}.ql-size-28px{font-size:28px!important}.ql-size-29px{font-size:29px!important}.ql-size-30px{font-size:30px!important}
+
         .ql-picker.ql-font .ql-picker-label::before{content:'Times'!important}
         .ql-picker.ql-font .ql-picker-label[data-value="times"]::before,.ql-picker.ql-font .ql-picker-item[data-value="times"]::before{content:'Times'!important}
         .ql-picker.ql-font .ql-picker-label[data-value="bookman"]::before,.ql-picker.ql-font .ql-picker-item[data-value="bookman"]::before{content:'Bookman'!important}
@@ -101,6 +180,23 @@
         .ql-picker.ql-size .ql-picker-label::before{content:'10px'!important}
         .ql-picker.ql-size .ql-picker-label[data-value]::before{content:attr(data-value)!important}
         .ql-picker.ql-size .ql-picker-item::before{content:attr(data-value)!important}
+
+        /* ---------- Toast ---------- */
+        .mn-toast-stack{position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99998;display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none}
+        .mn-toast{pointer-events:auto;background:var(--card2);border:1px solid var(--border2);color:var(--text);padding:12px 22px;border-radius:50px;font-size:0.82rem;box-shadow:0 8px 28px rgba(0,0,0,0.35);display:flex;align-items:center;gap:10px;animation:mn-toast-in 0.25s ease;max-width:90vw}
+        .mn-toast.warn{border-color:rgba(196,120,138,0.5);color:var(--rose)}
+        @keyframes mn-toast-in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+        /* ---------- Explain view ---------- */
+        .explain-view{min-height:100vh;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px}
+        .explain-view-card{width:100%;max-width:640px;background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:32px;animation:mn-fade-in 0.35s ease}
+        .explain-view-title{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gold2);margin-bottom:6px}
+        .explain-view-sub{color:var(--text2);font-size:0.85rem;margin-bottom:24px}
+        .explain-continue-row{display:flex;justify-content:flex-end;margin-top:24px}
+        #explain-continue-btn{padding:10px 28px;border-radius:50px;font-size:0.85rem;font-weight:500;cursor:pointer;background:var(--gold);color:var(--bg3);border:none;font-family:'DM Sans',sans-serif}
+        #explain-continue-btn:hover{background:var(--gold3)}
+        #explain-continue-btn:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+
         @media(max-width:900px){
             .editor-top-nav{padding:14px 20px}
             .canvas-picker-view{padding:40px 16px}
@@ -109,47 +205,62 @@
             .canvas-square-icon{font-size:1.6rem}
             .picker-footer-nav{flex-direction:column;align-items:stretch;gap:10px;margin-top:32px}
             .nav-btn{width:100%;text-align:center;padding:12px 20px;font-size:0.88rem}
+            .draft-banner{flex-direction:column;align-items:stretch;text-align:center}
+            .draft-banner-actions{justify-content:center}
             .paper-container{padding:16px 10px}
             .ql-toolbar.ql-snow{border-radius:12px!important;padding:6px 12px!important;flex-wrap:wrap;width:100%!important}
+            .ql-toolbar.ql-snow .ql-picker.ql-font{width:150px}
             .ql-container.ql-snow{max-width:100%}
             .ql-editor{padding:24px 18px!important;font-size:1rem!important;min-height:60vh}
         }
         @media(max-width:380px){
             .canvas-grid{grid-template-columns:1fr 1fr;gap:10px}
+            .ql-toolbar.ql-snow .ql-picker.ql-font{width:128px}
         }
-        .explain-view{min-height:100vh;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px}
-        .explain-view-card{width:100%;max-width:640px;background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:32px}
-        .explain-view-title{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gold2);margin-bottom:6px}
-        .explain-view-sub{color:var(--text2);font-size:0.85rem;margin-bottom:24px}
-        .explain-continue-row{display:flex;justify-content:flex-end;margin-top:24px}
-        #explain-continue-btn{padding:10px 28px;border-radius:50px;font-size:0.85rem;font-weight:500;cursor:pointer;background:var(--gold);color:var(--bg3);border:none;font-family:'DM Sans',sans-serif}
-        #explain-continue-btn:hover{background:var(--gold3)}
-        @media(max-width:600px){
-            .explain-view{padding:32px 16px}
-            .explain-view-card{padding:22px}
+        @media(prefers-reduced-motion:reduce){
+            *{animation-duration:0.001ms!important;animation-iteration-count:1!important;transition-duration:0.001ms!important}
         }
     </style>
 </head>
 <body>
 <script src="sidebar_nav.js"></script>
+
+    <div class="mn-toast-stack" id="mn-toast-stack" aria-live="polite"></div>
+
     <div id="picker-view" class="canvas-picker-view">
         <h1 class="picker-headline">Select Your <em>Canvas</em></h1>
         <p class="picker-sub">Choose a style that matches your mood today</p>
         <div class="page-title-rule"></div>
+
+        <div id="draft-banner" class="draft-banner" style="display:none">
+            <p><strong>You have an unfinished entry.</strong><br>Pick up where you left off, or start fresh.</p>
+            <div class="draft-banner-actions">
+                <button type="button" class="draft-btn resume" id="draft-resume-btn">Resume</button>
+                <button type="button" class="draft-btn discard" id="draft-discard-btn">Discard</button>
+            </div>
+        </div>
+
         <div class="canvas-grid" id="canvas-grid"></div>
         <div class="picker-footer-nav">
-            <button id="start-writing" class="nav-btn primary disabled" disabled>Start Writing →</button>
+            <button id="start-writing" class="nav-btn primary disabled" disabled aria-disabled="true">Start Writing →</button>
         </div>
     </div>
 
     <div id="editor-view" class="editor-view" style="display:none">
         <div class="editor-top-nav">
-            <button class="nav-action-btn" id="back-btn">← Back</button>
+            <div class="editor-top-left">
+                <button class="nav-action-btn" id="back-btn">← Back</button>
+                <span class="autosave-indicator" id="autosave-indicator"><span class="autosave-dot"></span><span id="autosave-text">Draft saved</span></span>
+            </div>
             <span class="canvas-badge" id="badge"></span>
-            <button class="nav-action-btn primary" id="save-btn">Save & Analyze ✓</button>
+            <button class="nav-action-btn primary" id="save-btn" disabled>Save &amp; Analyze ✓</button>
         </div>
         <div class="paper-container">
             <div id="editor"></div>
+            <div class="word-count-pill" id="word-count-pill">
+                <span><b id="wc-words">0</b> words</span>
+                <span><b id="wc-sentences">0</b> sentences</span>
+            </div>
         </div>
     </div>
 
@@ -232,8 +343,81 @@
             'papyrus':'Papyrus,fantasy'
         };
 
+        const DRAFT_KEY='mindnook_canvas_draft';
         let selectedTemplate=null;
         let quill=null;
+        let hasUnsavedProgress=false;
+        let autosaveTimer=null;
+
+        function showToast(message,{warn=false,duration=3600}={}){
+            const stack=document.getElementById('mn-toast-stack');
+            if(!stack)return;
+            const toast=document.createElement('div');
+            toast.className='mn-toast'+(warn?' warn':'');
+            toast.setAttribute('role',warn?'alert':'status');
+            toast.textContent=message;
+            stack.appendChild(toast);
+            setTimeout(()=>{
+                toast.style.transition='opacity 0.25s ease';
+                toast.style.opacity='0';
+                setTimeout(()=>toast.remove(),260);
+            },duration);
+        }
+
+        function readDraft(){
+            try{
+                const raw=localStorage.getItem(DRAFT_KEY);
+                if(!raw)return null;
+                const draft=JSON.parse(raw);
+                if(!draft||!draft.text||draft.text.trim().length<5)return null;
+                return draft;
+            }catch(e){return null;}
+        }
+
+        function saveDraft(){
+            if(!quill||!selectedTemplate)return;
+            const text=quill.getText().trim();
+            if(text.length<5){localStorage.removeItem(DRAFT_KEY);return;}
+            const draft={
+                text:text,
+                html:quill.root.innerHTML,
+                templateId:selectedTemplate.id,
+                templateName:selectedTemplate.name,
+                savedAt:Date.now()
+            };
+            try{
+                localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+                const indicator=document.getElementById('autosave-indicator');
+                const label=document.getElementById('autosave-text');
+                if(indicator&&label){
+                    label.textContent='Draft saved';
+                    indicator.classList.add('show');
+                }
+            }catch(e){}
+        }
+
+        function clearDraft(){
+            localStorage.removeItem(DRAFT_KEY);
+            hasUnsavedProgress=false;
+        }
+
+        function scheduleAutosave(){
+            clearTimeout(autosaveTimer);
+            const indicator=document.getElementById('autosave-indicator');
+            const label=document.getElementById('autosave-text');
+            if(indicator&&label){label.textContent='Saving draft…';indicator.classList.add('show');}
+            autosaveTimer=setTimeout(saveDraft,900);
+        }
+
+        function updateWordCount(){
+            const text=quill.getText().trim();
+            const words=text.length?text.split(/\s+/).filter(Boolean):[];
+            const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+            const wcWords=document.getElementById('wc-words');
+            const wcSentences=document.getElementById('wc-sentences');
+            if(wcWords)wcWords.textContent=words.length;
+            if(wcSentences)wcSentences.textContent=sentences.length;
+        }
 
         function initCanvas(){
             const grid=document.getElementById('canvas-grid');
@@ -243,16 +427,49 @@
             templates.forEach(t=>{
                 const div=document.createElement('div');
                 div.className='canvas-square';
-                div.innerHTML=`<div class="canvas-square-icon">${t.icon}</div><p>${t.name}</p>`;
-                div.onclick=()=>{
-                    document.querySelectorAll('.canvas-square').forEach(el=>el.classList.remove('active'));
+                div.setAttribute('tabindex','0');
+                div.setAttribute('role','button');
+                div.setAttribute('aria-pressed','false');
+                div.setAttribute('aria-label',`${t.name} canvas theme`);
+                div.innerHTML=`<div class="canvas-square-check">✓</div><div class="canvas-square-icon" aria-hidden="true">${t.icon}</div><p>${t.name}</p>`;
+                const selectTemplate=()=>{
+                    document.querySelectorAll('.canvas-square').forEach(el=>{el.classList.remove('active');el.setAttribute('aria-pressed','false');});
                     div.classList.add('active');
+                    div.setAttribute('aria-pressed','true');
                     selectedTemplate=t;
                     startBtn.disabled=false;
+                    startBtn.setAttribute('aria-disabled','false');
                     startBtn.classList.remove('disabled');
+                };
+                div.onclick=selectTemplate;
+                div.onkeydown=(e)=>{
+                    if(e.key==='Enter'||e.key===' '){e.preventDefault();selectTemplate();}
                 };
                 grid.appendChild(div);
             });
+
+            const existingDraft=readDraft();
+            if(existingDraft){
+                const banner=document.getElementById('draft-banner');
+                banner.style.display='flex';
+                document.getElementById('draft-resume-btn').onclick=()=>{
+                    const match=templates.find(t=>t.id===existingDraft.templateId);
+                    selectedTemplate=match||templates[0];
+                    document.querySelectorAll('.canvas-square').forEach((el,i)=>{
+                        if(templates[i].id===selectedTemplate.id){el.classList.add('active');el.setAttribute('aria-pressed','true');}
+                    });
+                    launchEditor();
+                    quill.root.innerHTML=existingDraft.html;
+                    updateWordCount();
+                    hasUnsavedProgress=true;
+                    showToast('Draft restored.');
+                };
+                document.getElementById('draft-discard-btn').onclick=()=>{
+                    clearDraft();
+                    banner.style.display='none';
+                    showToast('Draft discarded.');
+                };
+            }
 
             const Parchment=Quill.import('parchment');
             const FontAttributor=new Parchment.Attributor.Style('font','font-family',{scope:Parchment.Scope.INLINE,whitelist:Object.keys(FONT_MAP)});
@@ -266,6 +483,7 @@
 
             quill=new Quill('#editor',{
                 theme:'snow',
+                placeholder:'Start writing whatever is on your mind…',
                 modules:{
                     toolbar:[
                         [{'font':Object.keys(FONT_MAP)}],
@@ -280,23 +498,20 @@
 
             const saveBtn=document.getElementById('save-btn');
             saveBtn.disabled=true;
-            saveBtn.style.opacity='0.4';
-            saveBtn.style.cursor='not-allowed';
 
             quill.on('text-change',()=>{
                 const text=quill.getText().trim();
-                if(text.length>10){
-                    saveBtn.disabled=false;
-                    saveBtn.style.opacity='1';
-                    saveBtn.style.cursor='pointer';
-                }else{
-                    saveBtn.disabled=true;
-                    saveBtn.style.opacity='0.4';
-                    saveBtn.style.cursor='not-allowed';
-                }
+                saveBtn.disabled=text.length<=10;
+                updateWordCount();
+                hasUnsavedProgress=text.length>0;
+                scheduleAutosave();
             });
 
             document.getElementById('start-writing').onclick=()=>{
+                launchEditor();
+            };
+
+            function launchEditor(){
                 document.getElementById('picker-view').style.display='none';
                 const editorView=document.getElementById('editor-view');
                 editorView.style.display='block';
@@ -304,16 +519,28 @@
                 document.getElementById('badge').innerText=`${selectedTemplate.icon} ${selectedTemplate.name}`;
                 localStorage.setItem('mindnook_canvas_name',selectedTemplate.name);
                 localStorage.setItem('mindnook_canvas_id',selectedTemplate.id);
-            };
+                setTimeout(()=>quill.focus(),50);
+            }
 
             document.getElementById('back-btn').onclick=()=>{
+                if(hasUnsavedProgress){
+                    const confirmed=window.confirm('You have unsaved writing. Your draft is saved automatically, but leaving now will discard anything after your last autosave. Go back anyway?');
+                    if(!confirmed)return;
+                }
                 document.getElementById('editor-view').style.display='none';
                 document.getElementById('picker-view').style.display='flex';
             };
 
+            window.addEventListener('beforeunload',(e)=>{
+                if(hasUnsavedProgress&&document.getElementById('editor-view').style.display!=='none'){
+                    e.preventDefault();
+                    e.returnValue='';
+                }
+            });
+
             saveBtn.onclick=async()=>{
                 const textContent=quill.getText().trim();
-                if(textContent.length<20){alert('Please write at least a few sentences before saving.');return;}
+                if(textContent.length<20){showToast('Please write at least a few sentences before saving.',{warn:true});return;}
 
                 if(window.MindNookCrisisScreen){
                     const acuteResult=window.MindNookCrisisScreen.screenForAcuteRisk(textContent);
@@ -324,13 +551,11 @@
 
                 saveBtn.innerText='Analyzing…';
                 saveBtn.disabled=true;
-                saveBtn.style.opacity='0.6';
-                saveBtn.style.cursor='not-allowed';
                 const htmlContent=quill.root.innerHTML;
                 localStorage.setItem('latestJournalText',textContent);
 
                 const{data:{session}}=await supabaseClient.auth.getSession();
-                if(!session){alert('Session expired. Please sign in again.');window.location.href='login.html';return;}
+                if(!session){showToast('Session expired. Please sign in again.',{warn:true});setTimeout(()=>{window.location.href='login.html';},1200);return;}
 
                 if(window.MindNookBaseline){
                     try{await window.MindNookBaseline.syncGoalsFromSupabase(supabaseClient,session.user.id);}catch(e){}
@@ -514,6 +739,7 @@
 
                 localStorage.setItem('mindnook_last_entry_content',textContent);
                 localStorage.setItem('mindnook_last_entry_sentiment',analysis.sentiment);
+                clearDraft();
 
                 showPostSaveExplanation({
                     l1:{sentiment:analysis.sentiment,confidence:analysis.sentimentConfidence},
@@ -529,6 +755,7 @@
         }
 
         function showPostSaveExplanation(ctx){
+            hasUnsavedProgress=false;
             document.getElementById('editor-view').style.display='none';
             const explainView=document.getElementById('explain-view');
             explainView.style.display='flex';
