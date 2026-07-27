@@ -474,7 +474,12 @@
             const Parchment=Quill.import('parchment');
             const FontAttributor=new Parchment.Attributor.Style('font','font-family',{scope:Parchment.Scope.INLINE,whitelist:Object.keys(FONT_MAP)});
             FontAttributor.add=function(node,value){if(FONT_MAP[value]){node.style.fontFamily=FONT_MAP[value];return true;}return false;};
-            FontAttributor.value=function(node){const f=node.style.fontFamily;if(!f)return false;const found=Object.keys(FONT_MAP).find(k=>FONT_MAP[k].split(',')[0].trim()===f.replace(/['"]/g,'').trim());return found||false;};
+            FontAttributor.value=function(node){
+                const raw=(node.style.fontFamily||'').replace(/['"]/g,'').split(',')[0].trim().toLowerCase();
+                if(!raw)return false;
+                const found=Object.keys(FONT_MAP).find(k=>FONT_MAP[k].split(',')[0].trim().toLowerCase()===raw);
+                return found||false;
+            };
             Quill.register(FontAttributor,true);
 
             const Size=Quill.import('formats/size');
