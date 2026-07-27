@@ -28,7 +28,9 @@
     signout:'<path d="M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9"/><path d="M15.5 16.5 20 12l-4.5-4.5"/><path d="M20 12H9"/>',
     collapse:'<path d="M14.5 5 8 12l6.5 7"/>',
     menu:'<path d="M3.5 6.5h17"/><path d="M3.5 12h17"/><path d="M3.5 17.5h17"/>',
-    close:'<path d="M5.5 5.5 18.5 18.5"/><path d="M18.5 5.5 5.5 18.5"/>'
+    close:'<path d="M5.5 5.5 18.5 18.5"/><path d="M18.5 5.5 5.5 18.5"/>',
+    moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+    sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
   };
 
   function svgIcon(name,cls){
@@ -46,6 +48,13 @@
   }
   function writeCollapsed(val){
     try{window.localStorage.setItem('mn_sidebar_collapsed',val?'true':'false');}catch(e){}
+  }
+
+  function readTheme(){
+    try{return window.localStorage.getItem('mindnook_theme')||'dark';}catch(e){return 'dark';}
+  }
+  function writeTheme(val){
+    try{window.localStorage.setItem('mindnook_theme',val);}catch(e){}
   }
 
   function trapFocus(container,onEscape){
@@ -108,6 +117,11 @@
           '<span class="mn-user-avatar" id="navAvatar">?</span>'+
           '<span class="mn-nav-label mn-user-label">Account</span>'+
         '</div>'+
+        '<button type="button" class="mn-nav-link mn-theme-btn" id="mnThemeBtn" data-tooltip="Toggle theme">'+
+          svgIcon('moon','mn-theme-icon-moon')+
+          svgIcon('sun','mn-theme-icon-sun')+
+          '<span class="mn-nav-label" id="mnThemeLabel">Dark Mode</span>'+
+        '</button>'+
         '<button type="button" class="mn-nav-link mn-signout-btn" id="mnSignOutBtn" data-tooltip="Sign out">'+
           svgIcon('signout')+
           '<span class="mn-nav-label">Sign out</span>'+
@@ -123,6 +137,8 @@
     if(!document.body)return;
     var page=getPageName();
     var collapsed=readCollapsed();
+    var theme=readTheme();
+    document.documentElement.setAttribute('data-theme',theme);
 
     var aside=document.createElement('aside');
     aside.className='mn-sidebar'+(collapsed?' collapsed':'');
@@ -150,7 +166,15 @@
 
     var collapseBtn=document.getElementById('mnCollapseBtn');
     var signOutBtn=document.getElementById('mnSignOutBtn');
+    var themeBtn=document.getElementById('mnThemeBtn');
+    var themeLabel=document.getElementById('mnThemeLabel');
     var releaseMobileFocus=null;
+
+    function updateThemeLabel(val){
+      themeLabel.textContent=val==='dark'?'Dark Mode':'Light Mode';
+      themeBtn.setAttribute('data-tooltip',val==='dark'?'Switch to light mode':'Switch to dark mode');
+    }
+    updateThemeLabel(theme);
 
     function isMobile(){
       return window.matchMedia('(max-width:900px)').matches;
@@ -194,6 +218,12 @@
     });
     bindActivation(signOutBtn,function(){
       if(typeof window.signOut==='function'){window.signOut();}
+    });
+    bindActivation(themeBtn,function(){
+      theme=theme==='dark'?'light':'dark';
+      document.documentElement.setAttribute('data-theme',theme);
+      writeTheme(theme);
+      updateThemeLabel(theme);
     });
 
     backdrop.addEventListener('click',closeMobile);

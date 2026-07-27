@@ -199,6 +199,18 @@ body.mn-has-sidebar.mn-sidebar-collapsed{
 .mn-signout-btn{
   font-family:inherit;
 }
+.mn-theme-btn{
+  font-family:inherit;
+}
+.mn-theme-icon-sun{
+  display:none;
+}
+[data-theme="light"] .mn-theme-icon-moon{
+  display:none;
+}
+[data-theme="light"] .mn-theme-icon-sun{
+  display:block;
+}
 .mn-collapse-btn{
   display:flex;
   align-items:center;

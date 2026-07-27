@@ -112,10 +112,26 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
 .intervention-section{margin-top:20px;}
 .intervention-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 @media(max-width:560px){.goals-grid{grid-template-columns:1fr;}}
+.mn-theme-btn{
+  position:fixed;top:24px;right:24px;z-index:10;
+  width:38px;height:38px;border-radius:50%;
+  background:none;border:1px solid var(--gline);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--dim);transition:all 0.22s;
+}
+.mn-theme-btn:hover{border-color:var(--gold);color:var(--gold);}
+.mn-theme-icon{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;}
+.mn-theme-icon-sun{display:none;}
+[data-theme="light"] .mn-theme-icon-moon{display:none;}
+[data-theme="light"] .mn-theme-icon-sun{display:block;}
 </style>
 </head>
 <body>
 <canvas id="particles"></canvas>
+<button type="button" class="mn-theme-btn" id="mnThemeBtn" title="Toggle theme" aria-label="Toggle dark or light theme">
+  <svg class="mn-theme-icon mn-theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="mn-theme-icon mn-theme-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
 <div class="ob-wrap">
   <div class="card">
     <div class="card-header" id="cardHeader" style="display:none;">
@@ -266,6 +282,16 @@ h1 em{font-style:italic;color:var(--gold2);font-weight:400;}
   </div>
 </div>
 <script>
+  (function(){
+  var saved=(function(){try{return localStorage.getItem('mindnook_theme')||'dark';}catch(e){return 'dark';}})();
+  document.documentElement.setAttribute('data-theme',saved);
+  document.getElementById('mnThemeBtn').addEventListener('click',function(){
+    var current=document.documentElement.getAttribute('data-theme');
+    var next=current==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('mindnook_theme',next);}catch(e){}
+  });
+})();
 const SUPABASE_URL=window._env.SUPABASE_URL;
 const SUPABASE_ANON_KEY=window._env.SUPABASE_ANON_KEY;
 const sb=window.__sb;
