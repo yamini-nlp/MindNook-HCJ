@@ -145,6 +145,31 @@
         .ql-editor{background-color:#fff!important;min-height:75vh;padding:50px!important;box-shadow:0 4px 40px rgba(0,0,0,0.3);border-radius:4px;font-family:'Times New Roman',serif!important;font-size:1.1rem!important;color:#333!important}
         .ql-editor.ql-blank::before{color:rgba(0,0,0,0.35)!important;font-style:normal!important}
 
+        .ql-editor .ql-font-times{font-family:'Times New Roman',Times,serif!important}
+        .ql-editor .ql-font-bookman{font-family:'Bookman Old Style',serif!important}
+        .ql-editor .ql-font-apple-chancery{font-family:'Apple Chancery',cursive!important}
+        .ql-editor .ql-font-big-caslon{font-family:'Big Caslon',serif!important}
+        .ql-editor .ql-font-bradley-hand{font-family:'Bradley Hand',cursive!important}
+        .ql-editor .ql-font-chalkduster{font-family:'Chalkduster',cursive!important}
+        .ql-editor .ql-font-copperplate{font-family:'Copperplate',serif!important}
+        .ql-editor .ql-font-impact{font-family:'Impact',sans-serif!important}
+        .ql-editor .ql-font-market-felt{font-family:'Market Felt',cursive!important}
+        .ql-editor .ql-font-luminari{font-family:'Luminari',fantasy!important}
+        .ql-editor .ql-font-noteworthy{font-family:'Noteworthy',sans-serif!important}
+        .ql-editor .ql-font-palatino{font-family:'Palatino',serif!important}
+        .ql-editor .ql-font-rockhand{font-family:'Rockwell',cursive!important}
+        .ql-editor .ql-font-snell-roundhand{font-family:'Snell Roundhand',cursive!important}
+        .ql-editor .ql-font-papyrus{font-family:'Papyrus',fantasy!important}
+
+        .ql-toolbar.ql-snow .ql-picker.ql-align .ql-picker-label::before,
+        .ql-toolbar.ql-snow .ql-picker.ql-align .ql-picker-item::before{
+            filter:invert(88%) brightness(1.2);
+        }
+        .ql-toolbar.ql-snow .ql-picker.ql-align .ql-picker-item:hover::before{
+            filter:invert(78%) sepia(22%) saturate(380%) hue-rotate(3deg) brightness(1.05);
+        }
+        .ql-toolbar.ql-snow .ql-picker-options{z-index:20}
+
         .word-count-pill{margin-top:14px;font-size:0.75rem;color:var(--text3);letter-spacing:0.4px;display:flex;gap:14px}
         .word-count-pill span b{color:var(--text2);font-weight:500}
 
@@ -472,15 +497,8 @@
             }
 
             const Parchment=Quill.import('parchment');
-            const FontAttributor=new Parchment.Attributor.Style('font','font-family',{scope:Parchment.Scope.INLINE,whitelist:Object.keys(FONT_MAP)});
-            FontAttributor.add=function(node,value){if(FONT_MAP[value]){node.style.fontFamily=FONT_MAP[value];return true;}return false;};
-            FontAttributor.value=function(node){
-                const raw=(node.style.fontFamily||'').replace(/['"]/g,'').split(',')[0].trim().toLowerCase();
-                if(!raw)return false;
-                const found=Object.keys(FONT_MAP).find(k=>FONT_MAP[k].split(',')[0].trim().toLowerCase()===raw);
-                return found||false;
-            };
-            Quill.register(FontAttributor,true);
+            const FontClass=new Parchment.Attributor.Class('font','ql-font',{scope:Parchment.Scope.INLINE,whitelist:Object.keys(FONT_MAP)});
+            Quill.register(FontClass,true);
 
             const Size=Quill.import('formats/size');
             Size.whitelist=['10px','11px','12px','13px','14px','15px','16px','17px','18px','19px','20px','21px','22px','23px','24px','25px','26px','27px','28px','29px','30px'];
