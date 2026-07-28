@@ -245,7 +245,10 @@ const SUPABASE_ANON_KEY=window._env.SUPABASE_ANON_KEY;
 const sb=window.__sb;
 
 let moodLineChartInst=null,moodBarChartInst=null,toneChartInst=null,radarChartInst=null,trendMiniInst=null;
+let allEntries=[];
 let entries=[];
+let currentUser=null;
+let currentPeriod='7d';
 
 function themeVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
 
@@ -331,8 +334,8 @@ function computeStyleBreakdown(data){
 function computeGrowthMetrics(data){
     if(data.length<2)return null;
     const half=Math.max(1,Math.floor(data.length/2));
-    const prev=data.slice(half);
-    const curr=data.slice(0,half);
+    const prev=data.slice(0,half);
+    const curr=data.slice(half);
     const avg=(arr,key)=>arr.length?arr.reduce((a,e)=>a+(parseFloat(e[key])||0),0)/arr.length:0;
 
     const prevVocab=Math.round(avg(prev,'unique_words'));
@@ -479,8 +482,8 @@ function buildToneChart(data){
     const ctx=document.getElementById('toneChart').getContext('2d');
     if(toneChartInst)toneChartInst.destroy();
     const half=Math.max(1,Math.floor(data.length/2));
-    const prev=data.slice(half);
-    const curr=data.slice(0,half);
+    const prev=data.slice(0,half);
+    const curr=data.slice(half);
     const avgScore=(arr)=>arr.length?Math.round(arr.reduce((a,e)=>a+sentimentScore(e),0)/arr.length):0;
     const avgLex=(arr)=>arr.length?parseFloat((arr.reduce((a,e)=>a+(parseFloat(e.lexical_diversity)||0),0)/arr.length).toFixed(2)):0;
     const prevScores=[avgScore(prev),Math.round(avgLex(prev)*100),prev.length?Math.round(prev.reduce((a,e)=>a+(e.positive_word_count||0),0)/prev.length):0,prev.length?Math.round(100-prev.reduce((a,e)=>a+(e.mistake_count||0),0)/prev.length*5):0,prev.length?Math.round(prev.reduce((a,e)=>a+(parseInt(e.readability)||50),0)/prev.length):0];
@@ -492,8 +495,8 @@ function buildRadarChart(data){
     const ctx=document.getElementById('radarChart').getContext('2d');
     if(radarChartInst)radarChartInst.destroy();
     const half=Math.max(1,Math.floor(data.length/2));
-    const prev=data.slice(half);
-    const curr=data.slice(0,half);
+    const prev=data.slice(0,half);
+    const curr=data.slice(half);
     const mk=(arr)=>{
         const avgUw=arr.length?arr.reduce((a,e)=>a+(e.unique_words||0),0)/arr.length:0;
         const avgR=arr.length?arr.reduce((a,e)=>a+(parseInt(e.readability)||50),0)/arr.length:50;
@@ -566,7 +569,20 @@ function buildMonthTimeline(data){
 
 function updateStatsStrip(data){
     const total=data.length;
-    if(!total)return;
+    if(!total){
+        document.getElementById('avg-sentiment-val').textContent='—';
+        document.getElementById('avg-sentiment-delta').textContent='No entries in this period';
+        document.getElementById('entries-val').textContent='0';
+        document.getElementById('entries-delta').textContent='No entries in this period';
+        document.getElementById('lexical-val').textContent='—';
+        document.getElementById('lexical-delta').textContent='No entries in this period';
+        document.getElementById('words-val').textContent='—';
+        document.getElementById('words-delta').textContent='No entries in this period';
+        document.getElementById('dist-pos').textContent='—';
+        document.getElementById('dist-neu').textContent='—';
+        document.getElementById('dist-neg').textContent='—';
+        return;
+    }
     const avgScore=Math.round(data.reduce((a,e)=>a+sentimentScore(e),0)/total);
     const totalWords=data.reduce((a,e)=>a+(e.word_count||0),0);
     const avgLex=data.reduce((a,e)=>a+(parseFloat(e.lexical_diversity)||0),0)/total;
@@ -609,9 +625,48 @@ function switchGrowthView(btn,view){
     else{document.getElementById('growth-radar-wrap').style.display='block';setTimeout(()=>buildRadarChart(entries),50);}
 }
 
-function setPeriod(btn,period){
+function renderAll(){
+    updateStatsStrip(entries);
+    buildMoodLineChart(entries);
+    buildHeatmap(entries);
+    buildMonthTimeline(entries);
+    buildTrendMini(entries);
+    renderEmotionTags(entries);
+    renderGrowthMetrics(computeGrowthMetrics(entries));
+    renderStyleBreakdown(entries);
+    renderRepeatedWords(entries);
+    const moodBarWrap=document.getElementById('mood-bar-wrap');
+    if(moodBarWrap&&moodBarWrap.style.display!=='none')buildMoodBarChart(entries);
+    const styleWrap=document.getElementById('growth-style-wrap');
+    if(styleWrap&&styleWrap.style.display!=='none')buildToneChart(entries);
+    const radarWrap=document.getElementById('growth-radar-wrap');
+    if(radarWrap&&radarWrap.style.display!=='none')buildRadarChart(entries);
+}
+
+async function updateTrendCard(){
+    if(window.MindNookBaseline&&currentUser&&entries.length>=3){
+        const trend=await window.MindNookBaseline.classifyTemporalTrend(entries,{supabaseUrl:SUPABASE_URL,accessToken:window.__session?.access_token,userId:currentUser.id,mode:'read'});
+        injectTrendCard(trend,currentUser.id);
+    }else{
+        const existing=document.getElementById('trendCard');
+        if(existing)existing.remove();
+    }
+}
+
+async function applyPeriodFilter(period){
+    const daysMap={'7d':7,'30d':30,'90d':90};
+    const days=daysMap[period]||7;
+    const cutoff=Date.now()-days*24*60*60*1000;
+    entries=allEntries.filter(e=>new Date(e.created_at).getTime()>=cutoff);
+    renderAll();
+    await updateTrendCard();
+}
+
+async function setPeriod(btn,period){
     document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
+    currentPeriod=period;
+    await applyPeriodFilter(period);
 }
 
 function injectTrendCard(trend,userId){
@@ -670,6 +725,7 @@ function injectTrendCard(trend,userId){
 async function init(){
     const user=window.mnRequireUser();
     if(!user)return;
+    currentUser=user;
     try{
         if(window.MindNookBaseline){
             await window.MindNookBaseline.loadConsentScopes(sb,user.id);
@@ -677,29 +733,16 @@ async function init(){
         }
         const rows=await window.MindNookHistory.getHistory(user.id,1000);
         if(rows&&rows.length>0){
-            entries=rows.slice().sort((a,b)=>new Date(a.t||a.created_at)-new Date(b.t||b.created_at));
+            allEntries=rows.slice().sort((a,b)=>new Date(a.t||a.created_at)-new Date(b.t||b.created_at));
         }
     }catch(e){console.warn('Could not load entries:',e);}
 
-    if(!entries.length){
+    if(!allEntries.length){
         document.querySelector('.stats-strip').innerHTML='<div style="padding:20px;color:var(--text3);font-size:0.88rem">No entries yet. Start journaling to see your analytics.</div>';
         return;
     }
 
-    updateStatsStrip(entries);
-    buildMoodLineChart(entries);
-    buildHeatmap(entries);
-    buildMonthTimeline(entries);
-    buildTrendMini(entries);
-    renderEmotionTags(entries);
-    renderGrowthMetrics(computeGrowthMetrics(entries));
-    renderStyleBreakdown(entries);
-    renderRepeatedWords(entries);
-
-    if(window.MindNookBaseline&&entries.length>=3){
-        const trend=await window.MindNookBaseline.classifyTemporalTrend(entries,{supabaseUrl:SUPABASE_URL,accessToken:window.__session?.access_token,userId:user.id,mode:'read'});
-        injectTrendCard(trend,user.id);
-    }
+    await applyPeriodFilter(currentPeriod);
 }
 
 if(window.__authReady){init();}
