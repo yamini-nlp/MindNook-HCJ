@@ -37,6 +37,16 @@ serve(async (req) => {
     }
     const userId = userData.user.id;
 
+    const tables = [
+      "journal_entries",
+      "user_goals",
+      "user_preferences",
+      "user_consent_scopes",
+      "action_feedback",
+      "explanation_feedback",
+      "user_temporal_state",
+    ];
+
     const [
       journalEntriesRes,
       userGoalsRes,
@@ -45,22 +55,20 @@ serve(async (req) => {
       actionFeedbackRes,
       explanationFeedbackRes,
       temporalStateRes,
-    ] = await Promise.all([
-      userClient.from("journal_entries").select("*").eq("user_id", userId),
-      userClient.from("user_goals").select("*").eq("user_id", userId),
-      userClient.from("user_preferences").select("*").eq("user_id", userId),
-      userClient.from("user_consent_scopes").select("*").eq("user_id", userId),
-      userClient.from("action_feedback").select("*").eq("user_id", userId),
-      userClient.from("explanation_feedback").select("*").eq("user_id", userId),
-      userClient.from("user_temporal_state").select("*").eq("user_id", userId),
-    ]);
+    ] = await Promise.all(
+      tables.map((table) => userClient.from(table).select("*").eq("user_id", userId))
+    );
 
-    const firstError = [
+    const results = [
       journalEntriesRes, userGoalsRes, userPreferencesRes,
       consentScopesRes, actionFeedbackRes, explanationFeedbackRes, temporalStateRes,
-    ].find((r) => r.error);
-    if (firstError?.error) {
-      return jsonResponse({ error: "Failed to gather export data" }, 500);
+    ];
+    const firstErrorIndex = results.findIndex((r) => r.error);
+    if (firstErrorIndex !== -1) {
+      const failedTable = tables[firstErrorIndex];
+      const dbMessage = results[firstErrorIndex].error?.message || "Unknown database error";
+      console.error(`privacy-export: query failed for table "${failedTable}":`, dbMessage);
+      return jsonResponse({ error: `Failed to gather export data (${failedTable}): ${dbMessage}` }, 500);
     }
 
     const exportPayload = {
