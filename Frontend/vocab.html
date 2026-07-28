@@ -217,9 +217,11 @@ async function callAI(promptText){
     const r=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':window.__authHeader||'Bearer '+ANON},
-        body:JSON.stringify({text:promptText})
+        body:JSON.stringify({text:promptText,mode:'chat'})
     });
-    return await r.json();
+    const raw=await r.json();
+    const replyText=(raw.reply||'').replace(/```json|```/g,'').trim();
+    try{return JSON.parse(replyText);}catch{return{};}
 }
 
 async function fetchGrammarMistakes(jtext,mistakeCount){
