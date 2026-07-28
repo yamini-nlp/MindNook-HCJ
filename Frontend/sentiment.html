@@ -314,9 +314,12 @@ async function fetchContent(a,jtext){
         const r=await fetch(`${SUPABASE_URL}/functions/v1/analyze-journal`,{
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':window.__authHeader||'Bearer '+ANON},
-            body:JSON.stringify({text:prompt})
+            body:JSON.stringify({text:prompt,mode:'chat'})
         });
-        const d=await r.json();
+        const raw=await r.json();
+        const replyText=(raw.reply||'').replace(/```json|```/g,'').trim();
+        let d={};
+        try{d=JSON.parse(replyText);}catch{d={};}
         loadEl.style.display='none';bodyEl.style.display='block';
         if(isStory){
             const storyText=d.story||d.moodLifter||Object.values(d).find(v=>typeof v==='string'&&v.length>40)||'Every step forward is a step toward the light.';
