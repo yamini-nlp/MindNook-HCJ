@@ -249,16 +249,28 @@ function hideTyping(){const t=document.getElementById('typingIndicator');if(t)t.
 async function loadUserData(){
   if(!session)return;
   try{
-    const entries=await window.MindNookHistory.getHistory(session.user.id,20);
+    const[entries,totalCount]=await Promise.all([
+      window.MindNookHistory.getHistory(session.user.id,20),
+      fetchTotalEntryCount(session.user.id)
+    ]);
     if(!entries||!entries.length){setEmptySidebar();return;}
     userEntries=entries;
-    buildSidebar(entries);
+    buildSidebar(entries,totalCount!=null?totalCount:entries.length);
     if(consentScopes.ai_full_history){
       buildContext(entries);
     }else{
       journalContext='Full journal history access is disabled in this user\'s privacy settings. Respond using only the current conversation, without referencing past entries.';
     }
   }catch(e){console.warn('Failed to load user data:',e);setEmptySidebar();}
+}
+
+async function fetchTotalEntryCount(userId){
+  if(!sb)return null;
+  try{
+    const{count,error}=await sb.from('journal_entries').select('id',{count:'exact',head:true}).eq('user_id',userId);
+    if(error)throw error;
+    return typeof count==='number'?count:null;
+  }catch(e){console.warn('Could not fetch total entry count:',e);return null;}
 }
 
 function setEmptySidebar(){
@@ -307,7 +319,8 @@ function buildContext(entries){
   journalContext=`USER JOURNAL HISTORY (${entries.length} total entries, showing most recent):\n\n${recentSnippets}\n\nAGGREGATE STATS:\n- Total entries: ${entries.length}\n- Positive entries: ${posCount} (${Math.round(posCount/entries.length*100)}%)\n- Negative entries: ${negCount} (${Math.round(negCount/entries.length*100)}%)\n- Neutral entries: ${neuCount} (${Math.round(neuCount/entries.length*100)}%)\n- Average word count: ${avgWords}\n- Average unique words per entry: ${avgUnique}\n- Average lexical diversity: ${avgLex}\n- Average readability score: ${avgReadability}\n- Recent sentiment sequence: ${recentSentiments}\n- Recurring emotional themes: ${topThemes.join(', ')||'not enough data yet'}${sentimentBaselineNote}`;
 }
 
-function buildSidebar(entries){
+function buildSidebar(entries,totalCount){
+  const resolvedTotal=typeof totalCount==='number'?totalCount:entries.length;
   const sentiments=entries.map(e=>e.sentiment||'Neutral');
   const posCount=sentiments.filter(s=>s==='Positive').length;
   const negCount=sentiments.filter(s=>s==='Negative').length;
@@ -324,10 +337,10 @@ function buildSidebar(entries){
   document.getElementById('ctx-streak').innerText=streak;
   document.getElementById('ctx-streak-sub').innerText=streak>0?`${streak} day${streak>1?'s':''} in a row`:'Write today to start';
   document.getElementById('ctx-stability').innerText=stability;
-  document.getElementById('ctx-stability-sub').innerText=`${entries.length} entries analyzed`;
+  document.getElementById('ctx-stability-sub').innerText=`${entries.length} recent entries analyzed`;
   document.getElementById('ctx-vocab').innerText=avgLex||'—';
   document.getElementById('ctx-vocab-sub').innerText='Lexical diversity score';
-  document.getElementById('ctx-entries').innerText=entries.length;
+  document.getElementById('ctx-entries').innerText=resolvedTotal;
   document.getElementById('ctx-entries-sub').innerText='Total reflections';
   const allEmotionWords=entries.flatMap(e=>{try{return Array.isArray(e.emotion_words)?e.emotion_words:(JSON.parse(e.emotion_words||'[]'));}catch{return[];}});
   const wordFreq={};
