@@ -247,12 +247,23 @@ async function exportData(){
   btn.disabled=true;
   setStatus(statusEl,'Preparing your export…');
   try{
+    if(!session||!session.access_token){throw new Error('You need to be signed in to export your data.');}
     const res=await fetch(`${SUPABASE_URL}/functions/v1/privacy-export`,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
     });
-    if(!res.ok)throw new Error('export_failed');
-    const data=await res.json();
+    let data=null;
+    try{
+      data=await res.json();
+    }catch(parseErr){
+      throw new Error(`Export failed (${res.status}) — the server did not return a valid response.`);
+    }
+    if(!res.ok){
+      throw new Error(data?.error||data?.message||`Export failed (${res.status}) — please try again.`);
+    }
+    if(!data||typeof data!=='object'){
+      throw new Error('Export failed — the server returned an empty response.');
+    }
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
@@ -264,7 +275,8 @@ async function exportData(){
     URL.revokeObjectURL(url);
     setStatus(statusEl,`Export complete — ${data.journal_entries?.length||0} entries included.`,'success');
   }catch(e){
-    setStatus(statusEl,'Export failed — please try again.','error');
+    console.error('Export failed:',e);
+    setStatus(statusEl,e.message||'Export failed — please try again.','error');
   }finally{
     btn.disabled=false;
   }
