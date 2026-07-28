@@ -7,6 +7,8 @@
 <link rel="icon" type="image/x-icon" href="./images/mindnook-logo.ico">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="env.js"></script>
 <script src="auth.js"></script>
 <script src="a11y_utils.js"></script>
@@ -114,8 +116,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
   <div class="pcard">
     <h2>Export your data</h2>
-    <p class="pcard-sub">Download a JSON copy of your journal entries, goals, preferences, and every layer of analysis MindNook has generated for you.</p>
-    <button class="pbtn filled" id="exportBtn" onclick="exportData()">Download my data</button>
+    <p class="pcard-sub">Download a beautifully formatted PDF report of your journal entries, goals, preferences, and every layer of analysis MindNook has generated for you.</p>
+    <button class="pbtn filled" id="exportBtn" onclick="exportData()">Download my data (PDF)</button>
     <div class="status-line" id="exportStatus"></div>
   </div>
 
@@ -241,6 +243,216 @@ async function loadCalibrationWizard(){
   });
 }
 
+function pdfPad(v){return v===null||v===undefined||v===''?'\u2014':String(v);}
+function pdfTitleCase(s){if(!s)return'\u2014';const t=String(s);return t.charAt(0).toUpperCase()+t.slice(1);}
+function pdfPct(v){return v===null||v===undefined?'\u2014':Math.round(v*100)+'%';}
+function pdfDate(iso){
+  if(!iso)return'\u2014';
+  try{return new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+  catch(e){return String(iso);}
+}
+
+function buildDataPdf(data,session){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const pageWidth=doc.internal.pageSize.getWidth();
+  const pageHeight=doc.internal.pageSize.getHeight();
+  const margin=42;
+  const inkDark=[27,46,43];
+  const gold=[217,197,178];
+  const gold2=[184,140,96];
+  const textGray=[110,118,114];
+
+  function sectionTitle(text,y){
+    if(y>pageHeight-90){doc.addPage();y=48;}
+    doc.setFont('times','normal');
+    doc.setFontSize(14);
+    doc.setTextColor(inkDark[0],inkDark[1],inkDark[2]);
+    doc.text(text,margin,y);
+    doc.setDrawColor(gold2[0],gold2[1],gold2[2]);
+    doc.setLineWidth(1.2);
+    doc.line(margin,y+6,margin+34,y+6);
+    return y+24;
+  }
+
+  function ensureRoom(y,needed){
+    if(y+needed>pageHeight-60){doc.addPage();return 48;}
+    return y;
+  }
+
+  doc.setFillColor(inkDark[0],inkDark[1],inkDark[2]);
+  doc.rect(0,0,pageWidth,88,'F');
+  doc.setFont('times','italic');
+  doc.setFontSize(22);
+  doc.setTextColor(gold[0],gold[1],gold[2]);
+  doc.text('MindNook',margin,40);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor(232,227,218);
+  doc.text('Personal Data Export',margin,60);
+  doc.setFontSize(8.5);
+  doc.setTextColor(190,185,175);
+  doc.text(`Generated ${pdfDate(data.exported_at)}  \u00b7  Account: ${session?.user?.email||data.user_id||'\u2014'}`,margin,75);
+
+  let y=118;
+
+  const prefs=(data.user_preferences&&data.user_preferences[0])||{};
+  y=sectionTitle('Account Overview',y);
+  doc.autoTable({
+    startY:y,
+    margin:{left:margin,right:margin},
+    theme:'plain',
+    styles:{fontSize:9,textColor:[50,55,53],cellPadding:{top:3,bottom:3,left:0,right:8}},
+    columnStyles:{0:{fontStyle:'bold',cellWidth:160,textColor:inkDark},1:{cellWidth:pageWidth-margin*2-160}},
+    body:[
+      ['Journaling frequency',pdfPad(prefs.journaling_frequency)],
+      ['Preferred time',pdfPad(prefs.preferred_time)],
+      ['Initial stress level',prefs.stress_level!=null?`${prefs.stress_level} / 10`:'\u2014'],
+      ['Initial emotions',Array.isArray(prefs.initial_emotions)?prefs.initial_emotions.join(', '):'\u2014'],
+      ['Country',pdfPad(prefs.country)],
+      ['Intervention preference',pdfTitleCase(prefs.intervention_preference)],
+      ['Calibration weights',`task ${prefs.w_task??'\u2014'} \u00b7 safety ${prefs.w_safety??'\u2014'} \u00b7 privacy \u03bb ${prefs.lambda_privacy??'\u2014'} \u00b7 autonomy \u03bb ${prefs.lambda_autonomy??'\u2014'}`],
+    ],
+  });
+  y=doc.lastAutoTable.finalY+30;
+
+  const scopes=(data.consent_scopes&&data.consent_scopes[0])||{};
+  y=sectionTitle('Privacy & Consent Scopes',y);
+  doc.autoTable({
+    startY:y,
+    margin:{left:margin,right:margin},
+    theme:'grid',
+    headStyles:{fillColor:inkDark,textColor:[236,230,220],fontSize:9},
+    bodyStyles:{fontSize:9,textColor:[50,55,53]},
+    head:[['Scope','Status']],
+    body:[
+      ['Sentiment analysis',scopes.sentiment?'On':'Off'],
+      ['Pragmatic analysis',scopes.pragmatic?'On':'Off'],
+      ['Temporal trend tracking',scopes.temporal?'On':'Off'],
+      ['Goal inference',scopes.goal_inference?'On':'Off'],
+      ['Nook AI full history access',scopes.ai_full_history?'On':'Off'],
+    ],
+  });
+  y=doc.lastAutoTable.finalY+30;
+
+  const goals=data.user_goals||[];
+  y=sectionTitle('Goals',y);
+  if(goals.length){
+    doc.autoTable({
+      startY:y,
+      margin:{left:margin,right:margin},
+      theme:'grid',
+      styles:{fontSize:8.5},
+      headStyles:{fillColor:inkDark,textColor:[236,230,220],fontSize:8.5},
+      bodyStyles:{textColor:[50,55,53]},
+      head:[['Goal','Type','Status','Confidence','Set on']],
+      body:goals.map(g=>[pdfPad(g.text),pdfTitleCase(g.type),pdfTitleCase(g.status),pdfPct(g.confidence),pdfDate(g.created_at)]),
+    });
+    y=doc.lastAutoTable.finalY+30;
+  }else{
+    doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(textGray[0],textGray[1],textGray[2]);
+    doc.text('No goals set.',margin,y);
+    y+=26;
+  }
+
+  const entries=(data.journal_entries||[]).slice().sort((a,b)=>new Date(b.created_at||b.t)-new Date(a.created_at||a.t));
+  doc.addPage();y=48;
+  y=sectionTitle(`Journal Entries (${entries.length})`,y);
+  if(entries.length){
+    doc.autoTable({
+      startY:y,
+      margin:{left:margin,right:margin},
+      theme:'grid',
+      styles:{fontSize:8},
+      headStyles:{fillColor:inkDark,textColor:[236,230,220],fontSize:8},
+      bodyStyles:{textColor:[50,55,53]},
+      head:[['Date','Sentiment','Score','Words','Goal Alignment','AI Response','Utility']],
+      body:entries.map(e=>{
+        const l4=e.layer4_goal||{};
+        const l5=e.layer5_action||{};
+        return[
+          pdfDate(e.created_at||e.t),
+          pdfTitleCase(e.sentiment),
+          e.sentiment_score!=null?String(e.sentiment_score):'\u2014',
+          e.word_count!=null?String(e.word_count):'\u2014',
+          l4.alignment?`${pdfTitleCase(l4.alignment)} (${pdfPct(l4.alignment_score)})`:'\u2014',
+          l5.action?pdfTitleCase(l5.action):'\u2014',
+          l5.utility!=null?Number(l5.utility).toFixed(3):'\u2014',
+        ];
+      }),
+    });
+    y=doc.lastAutoTable.finalY+30;
+  }else{
+    doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(textGray[0],textGray[1],textGray[2]);
+    doc.text('No journal entries yet.',margin,y);
+    y+=26;
+  }
+
+  const actionFeedback=data.action_feedback||[];
+  const explanationFeedback=data.explanation_feedback||[];
+  if(actionFeedback.length||explanationFeedback.length){
+    doc.addPage();y=48;
+    y=sectionTitle('Feedback History',y);
+    if(actionFeedback.length){
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(inkDark[0],inkDark[1],inkDark[2]);
+      doc.text('Action Feedback',margin,y);
+      y+=10;
+      doc.autoTable({
+        startY:y,
+        margin:{left:margin,right:margin},
+        theme:'striped',
+        styles:{fontSize:8.5},
+        headStyles:{fillColor:gold2,textColor:[255,255,255]},
+        head:[['Date','Entry ID','Action','Rating']],
+        body:actionFeedback.map(f=>[pdfDate(f.created_at),pdfPad(f.entry_id),pdfTitleCase(f.action),pdfTitleCase(f.rating)]),
+      });
+      y=doc.lastAutoTable.finalY+26;
+    }
+    if(explanationFeedback.length){
+      y=ensureRoom(y,60);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(inkDark[0],inkDark[1],inkDark[2]);
+      doc.text('Explanation Disagreements',margin,y);
+      y+=10;
+      doc.autoTable({
+        startY:y,
+        margin:{left:margin,right:margin},
+        theme:'striped',
+        styles:{fontSize:8.5},
+        headStyles:{fillColor:gold2,textColor:[255,255,255]},
+        head:[['Date','Entry ID','Disagreed Layer','Comment']],
+        body:explanationFeedback.map(f=>[pdfDate(f.created_at),pdfPad(f.entry_id),pdfTitleCase(f.disagreed_layer),f.comment||'\u2014']),
+      });
+      y=doc.lastAutoTable.finalY+26;
+    }
+  }
+
+  const temporal=data.temporal_state||[];
+  if(temporal.length){
+    y=ensureRoom(y,80);
+    y=sectionTitle('Temporal Trend State',y);
+    doc.autoTable({
+      startY:y,
+      margin:{left:margin,right:margin},
+      theme:'grid',
+      styles:{fontSize:8.5},
+      headStyles:{fillColor:inkDark,textColor:[236,230,220]},
+      head:[['Updated','Direction','Slope','Variance']],
+      body:temporal.map(t=>[pdfDate(t.updated_at||t.created_at),pdfTitleCase(t.direction),t.slope!=null?String(t.slope):'\u2014',t.variance!=null?String(t.variance):'\u2014']),
+    });
+  }
+
+  const pageCount=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(150,150,150);
+    doc.text(`MindNook \u00b7 Personal Data Export \u00b7 Page ${i} of ${pageCount}`,margin,pageHeight-24);
+  }
+
+  return doc;
+}
+
 async function exportData(){
   const btn=document.getElementById('exportBtn');
   const statusEl=document.getElementById('exportStatus');
@@ -248,6 +460,7 @@ async function exportData(){
   setStatus(statusEl,'Preparing your export…');
   try{
     if(!session||!session.access_token){throw new Error('You need to be signed in to export your data.');}
+    if(!window.jspdf||!window.jspdf.jsPDF){throw new Error('PDF generator failed to load — check your connection and try again.');}
     const res=await fetch(`${SUPABASE_URL}/functions/v1/privacy-export`,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
@@ -264,15 +477,8 @@ async function exportData(){
     if(!data||typeof data!=='object'){
       throw new Error('Export failed — the server returned an empty response.');
     }
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=`mindnook-export-${session.user.id}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    const doc=buildDataPdf(data,session);
+    doc.save(`mindnook-export-${session.user.id}.pdf`);
     setStatus(statusEl,`Export complete — ${data.journal_entries?.length||0} entries included.`,'success');
   }catch(e){
     console.error('Export failed:',e);
