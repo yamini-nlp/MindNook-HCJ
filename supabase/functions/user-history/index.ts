@@ -41,7 +41,7 @@ serve(async (req) => {
     try {
       const body = await req.json();
       if (body && Number.isFinite(body.limit)) {
-        limit = Math.max(1, Math.min(200, Math.floor(body.limit)));
+        limit = Math.max(1, Math.min(2000, Math.floor(body.limit)));
       }
     } catch (_e) {
       limit = 50;
