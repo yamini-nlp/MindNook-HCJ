@@ -3,6 +3,7 @@
 A full-stack journaling platform implementing a five-layer NLP framework for real-time sentiment analysis, longitudinal mood tracking, and utility-based AI response selection — built as the reference implementation of a published system-level framework, with client-side safety screening, per-user privacy controls, and an automated test suite.
 
 **Repository:** https://github.com/yamini-nlp/MindNook-HCJ
+
 **Preprint:** https://doi.org/10.36227/techrxiv.177274130.07417144/v1
 
 ![Stack](https://img.shields.io/badge/Stack-HTML%20%7C%20JS%20%7C%20Deno%20%7C%20Supabase-blue?style=flat-square)
