@@ -2,6 +2,8 @@
 
 A full-stack journaling platform implementing a five-layer NLP framework for real-time sentiment analysis, longitudinal mood tracking, and utility-based AI response selection — built as the reference implementation of a published system-level framework, with client-side safety screening, per-user privacy controls, and an automated test suite.
 
+**Live Demo:** https://mindnook-hcj.vercel.app/
+
 **Repository:** https://github.com/yamini-nlp/MindNook-HCJ
 
 **Preprint:** https://doi.org/10.36227/techrxiv.177274130.07417144/v1
