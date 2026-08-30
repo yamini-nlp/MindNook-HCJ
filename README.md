@@ -12,6 +12,7 @@ A full-stack journaling platform implementing a five-layer NLP framework for rea
 ![LLM](https://img.shields.io/badge/LLM-LLaMA%203.3%2070B%20%7C%20Groq-orange?style=flat-square)
 ![DB](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-green?style=flat-square)
 ![Tests](https://img.shields.io/badge/Tests-35%20passing%20(Vitest)-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey?style=flat-square)
 
 ---
 
@@ -36,7 +37,7 @@ The application computes all five framework layers on every journal entry, persi
 - **Reflective journaling** — a distraction-free rich-text editor (Quill.js) for daily entries.
 - **Real-time linguistic feedback** — lexical diversity (type-token ratio), tone-word ratios, and repeated/emotion-word extraction computed on every save.
 - **Personal baseline tracking** — each entry's sentiment score is compared against the user's own historical mean (`computeSentimentBaseline`, μ_user), reported as a z-score deviation (`computePersonalBaselineDelta`), alongside a separate fixed-reference comparison against a constant population point (mean 50, stdDev 15, `computePopulationDelta`) shown side-by-side on the dashboard.
-- **Longitudinal mood modelling** — a recurrent (LSTM-architecture) model maintains a per-user hidden/cell state across entries and attends back over recent history to classify the current trend (stable / declining / improving / cyclical), with a deterministic OLS-regression fallback when the model call is unavailable.
+- **Longitudinal mood modelling** — a recurrent (LSTM-architecture) model maintains a per-user hidden/cell state across entries and attends back over recent history to classify the current trend across five labels (stable / declining / improving / cyclical / stabilizing), with a deterministic OLS-regression fallback when the model call is unavailable.
 - **Hyperbole-aware crisis screening** — a client-side, negation-aware lexicon distinguishes figurative catastrophizing ("this ruined my whole week") from genuine acute-risk language before anything reaches the AI or an escalation banner.
 - **LLM output moderation** — every AI reply is checked against a moderation pass before being shown; an unsafe verdict triggers one regeneration attempt, with a fixed safe template as the final fallback (`ethical_guardrail.js` + `analyze-journal`'s `mode=moderate`).
 - **Nook AI companion** — a chat interface whose system prompt is rebuilt per conversation from the live values of all five framework layers, so its tone is derived from the user's actual current state.
@@ -55,7 +56,7 @@ The application computes all five framework layers on every journal entry, persi
 | Layer | Function | Implementation |
 |---|---|---|
 | L1 — Sentiment Detection | Polarity + numeric score (0–100) | Client lexicon + LLM enrichment |
-| L2 — Pragmatic Analysis | Speech-act classification (assertion / expression / help-seeking / question) | `classifyPragmatic()` (client, lexical) + async LLM enrichment via `pragmatic-analysis` |
+| L2 — Pragmatic Analysis | Speech-act classification across five categories (assertion / expression / help-seeking / question / request) | `classifyPragmatic()` (client, lexical) + async LLM enrichment via `pragmatic-analysis` |
 | L3 — Temporal Pattern Recognition | Per-user recurrent trend model with attention over recent history | `temporal-lstm` edge function (deterministically seeded weights — Mulberry32, seed `1337`; see Limitations), with an OLS-regression fallback in `personal_baseline.js` when the model call fails or is unauthenticated |
 | L4 — Goal Alignment | Scoring against user-stated goals (typed explicit/implicit/meta), with a clarification loop for low-confidence inferred goals | `computeGoalAlignment()` + `user_goals` table + `goal_clarification.js` |
 | L5 — Utility-Based Action Selection | Response directive under a configurable, feedback-adjusted cost asymmetry τ* = C_fp / (C_fp + C_fn) | `buildUtilityScore()` + `applyEthicalFilter()`, with weights nudged server-side by `preference-learning` |
@@ -73,10 +74,10 @@ These sit around the five-layer framework rather than inside it, and are as load
 | `crisis_screen.js` | Client-side, negation-aware lexicon match for acute-risk phrasing; does not call an LLM, so it works even if the network is unavailable |
 | `hyperbole_lexicon.js` | Distinguishes superlative/absolutist figurative language ("worst day ever") from literal risk statements, reducing false escalation on ordinary venting |
 | `crisis_banner.js` + escalation logging | Renders an acute-risk banner with crisis resources, or a softer pattern-level note for sustained low mood |
-| `ethical_guardrail.js` + moderation prompt in `analyze-journal` | Every AI-generated reply is passed back through the LLM in a moderation pass before display; an unsafe verdict triggers one regeneration attempt, then falls back to a fixed safe template |
+| `ethical_guardrail.js` + moderation prompt in `analyze-journal` | Every AI-generated reply is passed back through the LLM in a moderation pass before display; an unsafe verdict triggers one regeneration attempt, then falls back to a fixed safe template. If the moderation call itself errors (e.g. network failure), the guardrail fails open and shows the original reply rather than blocking it |
 | `user_consent_scopes` + Privacy Center | Sentiment, pragmatic, temporal, goal-inference, and full-history-chat-access are each independently toggleable; turning one off stops that computation, it doesn't just hide the output |
-| `privacy-export` / `privacy-delete` edge functions | Full export of entries, goals, preferences, and every analysis layer; deletion requires a confirmation step server-side, cascading across all user-linked tables while leaving the auth account active |
-| `preference-learning` edge function | Reads the user's feedback history; once enough events exist, nudges `w_task` / `w_safety` / `lambda_autonomy` / `cfp_weight` / `cfn_weight` by a fixed ±0.02 step per direction, clamped to hand-set bounds — a bounded heuristic adjustment, not a trained model |
+| `privacy-export` / `privacy-delete` edge functions | Full export of entries, goals, preferences, and every analysis layer; deletion requires a typed confirmation phrase (or fresh re-authentication) server-side, cascading across all user-linked tables while leaving the auth account active |
+| `preference-learning` edge function | Reads the user's feedback history; once at least 10 feedback events exist (evaluated over a rolling window of 20), nudges `w_task` / `w_safety` / `lambda_autonomy` / `cfp_weight` / `cfn_weight` by fixed steps (up to ±0.02, with some weights stepped at half that) clamped to hand-set bounds — a bounded heuristic adjustment, not a trained model |
 | `research-metrics` edge function + Research view | Computes false-intervention rate, missed-support rate, perceived appropriateness, and an autonomy-preservation proxy from the user's own feedback/escalation rows — explicitly single-user descriptive statistics, not a validation study |
 | `a11y_utils.js` | Shared focus-trap and `aria-live` helpers applied to the explanation panel, consent toggles, crisis banner, goal-clarification dialog, and calibration wizard |
 
@@ -92,7 +93,7 @@ User Entry (Quill Rich Text Editor)
   ├── Tokenisation, TTR, tone classification (negation-aware, phrase matching)
   ├── Individual baseline: μ_user = mean(sentiment_scores), Δ_personal = z-score vs μ_user
   ├── Fixed-reference comparison against a constant population point (mean 50, stdDev 15)
-  ├── L2: Pragmatic classification (assertion / expression / help-seeking / question)
+  ├── L2: Pragmatic classification (assertion / expression / help-seeking / question / request)
   ├── L3: temporal-lstm call (hidden/cell state per user) → OLS regression fallback
   ├── L4: Goal alignment vs typed user_goals
   └── L5: τ* = C_fp / (C_fp + C_fn); applyEthicalFilter()
@@ -138,7 +139,7 @@ Computed independently of the LLM on every entry save, so the app has usable out
 - **Tone word ratio:** positive / negative / neutral counts via custom lexicons, with phrase-level matching for help-seeking and expressive speech
 - **Individual baseline deviation:** `computeSentimentBaseline()` computes μ_user from entry history; `computePersonalBaselineDelta()` returns the current entry's z-score deviation from it
 - **Fixed population reference:** `computePopulationDelta()` compares the current score against a constant reference point (`{ mean: 50, stdDev: 15 }` in `baseline_constants.js`) rather than any measured population — shown on the dashboard alongside the personal baseline, not in place of it
-- **L2 pragmatic classification:** `classifyPragmatic()` — sentence-level speech-act detection via lexical pattern matching, no LLM required
+- **L2 pragmatic classification:** `classifyPragmatic()` — sentence-level speech-act detection across five categories (assertion, expression, help-seeking, question, request) via lexical pattern matching, no LLM required
 - **L3 temporal trend:** calls the `temporal-lstm` edge function when authenticated, falling back to a local OLS slope comparison when it isn't
 - **L4 goal alignment:** `computeGoalAlignment()` — weighted scoring against goals synced from the typed `user_goals` table, with `goal_clarification.js` prompting the user directly when an inferred goal has low confidence
 - **L5 utility score:** `buildUtilityScore()` computes τ* and a bounded utility value from sentiment, trend, goal, and pragmatic signals; `applyEthicalFilter()` overrides the resulting action to prevent clinical/diagnostic response labels and to suppress intervention when entry history is too short or sentiment isn't actually negative
@@ -155,7 +156,7 @@ Users set asymmetric misclassification costs through a calibration wizard during
 | Balanced (default) | 0.4 | 0.6 | 0.40 | Standard intervention threshold |
 | Proactive | 0.25 | 0.75 | 0.25 | Earlier support on negative patterns |
 
-Beyond the initial choice, `preference-learning` reads the user's own feedback history and nudges `cfp_weight`, `cfn_weight`, and the utility weights (`w_task`, `w_safety`, `lambda_autonomy`) by a fixed `±0.02` step within hand-set bounds — repeated negative feedback on `intervene`/`support` actions gradually raises the bar for intervention, and vice versa. This is a bounded heuristic adjustment on top of user-set defaults, not a trained model, and a one-click "revert to defaults" is always available.
+Beyond the initial choice, `preference-learning` reads the user's own feedback history (once at least 10 feedback events exist, over a rolling window of 20) and nudges `cfp_weight`, `cfn_weight`, and the utility weights (`w_task`, `w_safety`, `lambda_autonomy`) within hand-set bounds — repeated negative feedback on `intervene`/`support` actions gradually raises the bar for intervention, and vice versa. This is a bounded heuristic adjustment on top of user-set defaults, not a trained model, and a one-click "revert to defaults" is always available.
 
 ---
 
@@ -166,7 +167,7 @@ Beyond the initial choice, `preference-learning` reads the user's own feedback h
 | Model | `llama-3.3-70b-versatile` via Groq |
 | Deployment | Supabase Edge Functions (Deno runtime) |
 | Temperature | `0` for moderation, `0.2` for L2/L4 enrichment (`pragmatic-analysis`), `0.3` for insight generation, `0.7` for Nook AI chat |
-| Auth on inference calls | Every edge function that touches the LLM or the database requires a valid Supabase JWT (`supabase.auth.getUser()`) before proceeding |
+| Auth on inference calls | `pragmatic-analysis`, `temporal-lstm`, `preference-learning`, `research-metrics`, `privacy-export`, `privacy-delete`, and `user-history` all reject requests without a valid Supabase JWT (`supabase.auth.getUser()`) before proceeding. `analyze-journal` validates a JWT when one is supplied, but does not require it — a request with no bearer token (or the public anon key) still reaches the LLM without an authenticated user attached |
 
 ---
 
@@ -212,8 +213,8 @@ npm test
 ## 🔒 Security
 
 - Row-Level Security is enabled on every user-scoped table, with per-user policies and cascading foreign keys to `auth.users(id)`.
-- Every edge function that performs inference or touches user data validates the caller's Supabase JWT before doing anything else.
-- Data deletion requires a server-side confirmation step, not just a client-side button click.
+- Most edge functions that perform inference or touch user data validate the caller's Supabase JWT before doing anything else and reject the request otherwise; `analyze-journal` is the one exception — it accepts and validates a JWT when present but will still serve a request without one (see LLM Configuration above).
+- Data deletion requires a server-side confirmation step (a typed confirmation phrase or fresh re-authentication), not just a client-side button click.
 - The Supabase anon key is a public, RLS-scoped key by design and safe to ship client-side. The Groq key lives only in edge function environments (`supabase secrets set GROQ_API_KEY=...`). `Frontend/env.js` (holding the Supabase URL/anon key) is generated at build time by `generate-env.js` from environment variables and is excluded via `.gitignore`, along with `node_modules/` and `package-lock.json`.
 
 ---
@@ -221,8 +222,10 @@ npm test
 ## ⚠️ Limitations
 
 - **L3 model weights are fixed, not learned:** the LSTM-architecture forward pass in `temporal-lstm` uses deterministically seeded (Mulberry32, seed `1337`) weight matrices, not weights trained via backpropagation on labelled sequences. It provides a real recurrent computation and attention-weighted historical context, but should be read as a structured, reproducible feature extractor rather than a trained sequence model. The OLS-regression fallback remains the mathematically simpler, fully interpretable alternative.
-- **Preference learning is a heuristic, not model training:** `preference-learning` applies a fixed `±0.02` step per feedback direction within hand-set bounds. It adapts to the user but does not fit a model to their feedback data in any statistical sense.
+- **Preference learning is a heuristic, not model training:** `preference-learning` applies a fixed step (up to ±0.02, halved for some weights) per feedback direction within hand-set bounds, after at least 10 qualifying feedback events. It adapts to the user but does not fit a model to their feedback data in any statistical sense.
 - **The population comparison is a constant, not a measured norm:** `computePopulationDelta()` compares against a hardcoded `{ mean: 50, stdDev: 15 }`, not a value derived from real aggregate user data.
+- **`analyze-journal` accepts unauthenticated requests:** unlike the other edge functions, a request with no Authorization header (or the public anon key) still reaches the LLM, without an associated user for row-level scoping. This is fine for the chat/insights flow as currently wired from an authenticated client, but is worth hardening before treating it as a trust boundary.
+- **Moderation fails open on transport errors:** if the call to the moderation pass itself throws (e.g. a network error), `ethical_guardrail.js` shows the original, unmoderated reply rather than blocking it — the regeneration/fallback-template path only runs when the moderation pass actually returns an "unsafe" verdict.
 - **LLM non-determinism:** repeated analysis of the same entry may return slightly different sentiment labels due to temperature.
 - **Lexicon coverage:** hand-curated word sets (sentiment, hyperbole, crisis-phrase) miss domain-specific or culturally nuanced expressions; a distributional lexicon (e.g. NRC Emotion Lexicon) would improve recall.
 - **TTR length sensitivity:** TTR decreases as text length increases; MATTR or MTLD would be more robust for cross-entry vocabulary comparison.
@@ -239,6 +242,7 @@ npm test
 - Fine-tune a smaller classification model (e.g. DistilBERT) on journal-domain data for consistent L1 classification with calibrated probability output.
 - Formal accuracy evaluation against a labelled, multi-user held-out set to complement the current single-user descriptive metrics in the Research view.
 - Replace the fixed-step preference nudging with a proper online-learning method (e.g. contextual bandit) fit across a larger feedback dataset.
+- Require authentication uniformly on `analyze-journal`, matching the other edge functions.
 - Named entity and topic extraction to surface recurring themes across entries in the analytics dashboard.
 - Privacy-preserving personalisation via federated learning and on-device processing.
 - Multi-language support extending the lexicon and prompt pipeline to non-English entries.
@@ -380,7 +384,7 @@ MindNook-HCJ/
     │   │   ├── deno.json · index.ts · handler.ts · core_logic.ts
     │   ├── temporal-lstm/            # LSTM forward pass, seeded weights, attention
     │   │   ├── deno.json · index.ts
-    │   ├── preference-learning/      # Bounded ±0.02-step weight nudging
+    │   ├── preference-learning/      # Bounded weight nudging (fixed step, up to ±0.02)
     │   │   ├── deno.json · index.ts
     │   ├── research-metrics/         # Self-evaluation metrics
     │   │   ├── deno.json · index.ts
@@ -412,8 +416,14 @@ MindNook-HCJ/
 
 ---
 
+## 📜 License
+
+Released under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSE) license.
+
+---
+
 <div align="center">
 
-*Built by Yamini G · [GitHub](https://github.com/yamini-nlp/MindNook-HCJ) · [Preprint](https://doi.org/10.36227/techrxiv.177274130.07417144/v1)*
+*Built by Yamini G*
 
 </div>
