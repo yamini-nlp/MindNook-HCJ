@@ -424,6 +424,6 @@ Released under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](
 
 <div align="center">
 
-*Built by Yamini G*
+*Built by [Yamini G](https://github.com/yamini-nlp)*
 
 </div>
